@@ -14,6 +14,8 @@ mpl.rcParams['lines.linewidth'] = 2
 mpl.rcParams['axes.labelsize'] = 15
 mpl.rcParams['axes.titlesize'] = 20
 mpl.rcParams['figure.figsize'] = 15., 10.    # figure size in inches
+
+mpl.rcParams['legend.fontsize'] = 16
 # --------------------------- ----------------------- -------------------------------------
 
 # Functions following from here should be put into another class, PlottingData 

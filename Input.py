@@ -17,6 +17,33 @@ class DataReader:
     
     def __init__(self, path):
         self.path = path
+    
+    def readParams(file, output = 0, filetype = 'csv'):
+        """
+        Function to read the parameters for FCC-ee and write data to csv. Also allows to do other stuff like 
+        changing parameters once an update is released.
+            -- file:     input file (spreadsheet)
+            -- output:   select if the DF is printed to a text file
+            -- filetype: choose a file type for the output; defaults to csv ==> LaTeX csvsimple input!
+        
+        returns: dataframe containing the 
+        """
+        # set some variables
+        path = '/home/mlueckhof/PhD/Notes/IRDesign/data/'
+        # read spreadsheet with parameters
+        DF = pd.read_excel(file)
+        DF.name = 'FCCeeParam'
+        
+        if output:
+            if filetype == 'csv':
+                DF.to_csv(path+'FCCeeParamList.csv')
+                print ("Created output:", path+'FCCeeParamList.csv')
+            else: 
+                print (" *** Error: No other filetypes supported yet")
+        
+        return DF
+        
+        
         
     def getBeam_and_Aper_Info(self, file):
         
