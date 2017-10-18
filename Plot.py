@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt 
+import matplotlib.ticker as ticker
 import numpy as np
 import collections as clt
 import sys
@@ -169,13 +170,14 @@ def plot_diffApers(df, aperList, plotpath, selection = 'SR', Type = 'hit', apert
                 print ("saved plot as", plotpath,"SR_origin_def.pdf")
 
 
-def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, beam = 'all', size = 'all', selection = 'SR', Type = 'hit', nBin = 100, verbose = 0, save = 0):
+def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', selection = 'SR', Type = 'hit', nBin = 100, ticks = 5, verbose = 0, save = 0):
     """
     Function to plot data from secondary events, taking into account different beam shapes and sizes. 
         -- df:          pass data frame to fct. 
         -- plotpath:    point to a directory for storing plots
         -- beamTypes:
         -- beamSizes:
+        -- zlim:		array to put zmin and zmax; allows to plot only certain region; default empty 
         -- beam:        allows to select the beam shape. Available are pencil, gauss, flat and ring
         -- size:        choose beam sizes; gauss,flat and ring have to start with >0; defaults to 'all'
         -- Type:        choose which spectrum to plot - hits or origin
@@ -276,6 +278,8 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, beam = 'all', size = 
     ax = plt.subplot(111)
     plt.rc('grid', linestyle = "--", color = 'grey')
     plt.grid()
+    
+    if zlim: plt.xlim(zlim[0], zlim[1])
 
     for name, frame in grouped:
         
@@ -316,6 +320,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, beam = 'all', size = 
             plt.legend()
     
     ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = 4)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(ticks))
     
     if (Type == 'hit' and save ==1):
         plt.savefig(plotpath + 'SR_hits_beamshape.pdf', bbox_inches='tight')
