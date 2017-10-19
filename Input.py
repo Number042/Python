@@ -301,7 +301,6 @@ class DataSelection:
         
         """
         Function to select specific optics, put these into a new dataframe that can be passed for further processing. 
-            -- df:      dataframe to work on
             -- optics:  choose which otics to be put into the new frame, defaults to 'all'
         
         returns: another frame, holding only data from selected optics
@@ -310,7 +309,6 @@ class DataSelection:
         
         
         df_opt = pd.DataFrame()
-        df_opt.name = df.name
         tmpList = []
         
         if optics == 'all':
@@ -321,7 +319,7 @@ class DataSelection:
             for opt in optics:
                 tmp_df = df[df.optics == opt]
                 tmpList.append(tmp_df)
-                if verbose >1: print  (tmp_df.head())
+                if verbose >1: print (tmp_df.head())
             if tmpList == []: raise RuntimeError('No data collected. List of frames empty:', tmpList)
         
             else:
@@ -329,10 +327,11 @@ class DataSelection:
                 df_opt.name = df.name
                 
                 
+        df_opt.name = df.name
         return df_opt
+        
     
     def get_beamShapes_and_Size(self, verbose = 0):
-        
         """
         Function to read all beam types and sizes from a given frame. Allows to check for plotting if desired 
         type and/or size is/are available.
@@ -349,6 +348,43 @@ class DataSelection:
         
         return beamTypes, beamSize
 
+    def splitNames(df, verbose = 0):
+        """
+        Function to split the content of the 'Name' column that is written in the default frame by 'readG4out' and 'opticsSelection'.
+        It splits the strings of that column into 4 different columns for element, type, number and vacuum.
+            -- df:      user needs to pass in the data frame to be splitted. If just using self object, another frame would be created
+                        from class instance, regardless of possible previous optics selection.
+            -- verbose: set the verbosity level
+        returns: a frame with appended columns holding the splitted content
+        """
+        
+        dfName = df.name
+        
+        if verbose==1: 
+            print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Selected following data frame:", df.name)
+        elif verbose>1:
+            print (df.head())
+            print (df.Name)
+            
+        df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element','type','eleNumber','vacuum'])
+        
+        if verbose==1: 
+            print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Splitted 'Name' into: \n", cols)
+        elif verbose>1:
+            print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Split-Frame contains: \n", df_split.dtypes)
+        
+        if verbose >1: print (df_split.head())
+        
+        # concat the new frame to original, join on 'inner' to insert additional columns
+        #
+        frames = [df, df_split]
+        df = pd.concat(frames, axis = 1, join = 'inner')
+        
+        if verbose: print("*-*-*-*-*-*-*-*-*-*-*-*-* \n dataframe holds following keys and dtypes: \n", df.dtypes)
+        
+        df.name = dfName
+        return df
+        
 # read twiss files, should be as flexible as possible
 
 def read_twiss(twissFile, verbose=0):
