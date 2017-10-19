@@ -369,7 +369,7 @@ class DataSelection:
         df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element','type','eleNumber','vacuum'])
         
         if verbose==1: 
-            print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Splitted 'Name' into: \n", cols)
+            print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Splitted 'Name' into: \n", ['element','type','eleNumber','vacuum'])
         elif verbose>1:
             print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Split-Frame contains: \n", df_split.dtypes)
         

@@ -170,7 +170,7 @@ def plot_diffApers(df, aperList, plotpath, selection = 'SR', Type = 'hit', apert
                 print ("saved plot as", plotpath,"SR_origin_def.pdf")
 
 
-def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', selection = 'SR', Type = 'hit', nBin = 100, ticks = 5, verbose = 0, save = 0):
+def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', selection = 'SR', magnet = [], Type = 'hit', nBin = 100, ticks = 5, verbose = 0, save = 0):
     """
     Function to plot data from secondary events, taking into account different beam shapes and sizes. 
         -- df:          pass data frame to fct. 
@@ -202,16 +202,19 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     if selection == 'SR':
         df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0)]
         df_sliced.name = df.name
-    else:
-        raise RuntimeError('Other selections not yet implemented!')
-    if verbose > 1: df_sliced.to_csv(path_or_buf = '/home/mlueckhof/temporary/plot_diffBeamShape.csv', sep = '\t', index = True, header = True)
+    
+    # additional option to select certain magnet(s)
+    #
+    if magnet:
+        df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0) & (df.element == magnet[0])]
+        df_sliced.name = df.name
     
     # case 1
     #
     if beam == 'all' and size == 'all':
               
         print ('selected all beam types and sizes!')
-        grouped = df_sliced.groupby(['optics','BeamShape','BeamSize'])
+        grouped = df_sliced.groupby(['optics','BeamShape','BeamSize']) 
         
     # case 2
     #
@@ -222,7 +225,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
             print ("All beam types of size", j, "selected")
                 
             if j in beamSizes:
-                tmp = df_sliced[df_sliced.BeamSize == j]
+                tmp = df_sliced[df_sliced.BeamSize == j] 
                 DF = DF.append(tmp)
                 if verbose: print (tmp.head())
             else:
@@ -260,7 +263,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
         for i in beam:
             print ("Type", i, "selected with all sizes.")
             if i in beamTypes:
-                tmp = df_sliced[df_sliced.BeamShape == i]
+                tmp = df_sliced[df_sliced.BeamShape == i] 
                 DF = DF.append(tmp)
                 #if verbose: print (tmp.head())
             else:
