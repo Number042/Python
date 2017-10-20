@@ -311,19 +311,18 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
         if Type == 'hit':
             plt.title("SR photons hitting beampipe")
             plt.hist(Z_hit, bins = nBin, range = (-300, 100), histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)
-            plt.xlabel("z [m]")
-            plt.ylabel("photons/bin")
-            plt.legend()
-                
+               
         elif Type == 'origin':
             plt.title("Origin of SR photons")
             plt.hist(Z_org, bins = nBin, range = (-550, 0), histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)
-            plt.xlabel("z [m]")
-            plt.ylabel("photons/bin")
-            plt.legend()
     
-    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = 4)
+    plt.ylabel("photons/bin")
+
+    plt.xlabel("z [m]")
     ax.xaxis.set_major_locator(ticker.MultipleLocator(ticks))
+
+    plt.legend()
+    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = 4)
     
     if (Type == 'hit' and save ==1):
         plt.savefig(plotpath + 'SR_hits_beamshape.pdf', bbox_inches='tight')
