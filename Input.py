@@ -150,6 +150,7 @@ class DataReader:
         path = self.path
         
         primDataFiles = []; secoDataFiles = []
+        check_strings = '_prim|_seco'
         
         print ("files are in:", path) 
         print (" *********************************************** ")
@@ -177,10 +178,23 @@ class DataReader:
                     
                 else:
                     print ("    ==> no subdirectories.")
+                    if verbose > 1: print ("opticsList from directories empty: \n", opticsList)
                 
+                # check if the opticsList is empty before filling by files --> useful for working on temporary!
+                # 
                 if files != []:
-                    print ("    ==> found data.")
-                    if verbose: print (files)
+                    print ("    ==> found data. \n")
+                    if verbose > 1: print (files)
+                    if opticsList == []:
+                        for f in files:
+                            if read == 'primaries' and  'prim' in f:
+                                optic = f.split('_b1_prim') 
+                                opticsList.append(str(optic[0])) 
+                            elif read == 'secondaries' and 'seco' in f:
+                                optic = f.split('_b1_seco')
+                                opticsList.append(str(optic[0]))
+                             
+                        if verbose > 1: print ("optics read from files: \n", opticsList)
                 
                 # collect data based on certain parameters
                 #
@@ -386,42 +400,65 @@ class DataSelection:
         return df
         
 # read twiss files, should be as flexible as possible
-
-def read_twiss(twissFile, verbose=0):
-    """
-    Function to read general twiss files.
-    """
-
-    df = pd.read_table(twissFile, sep = "\s+", skiprows = 45, index_col = False) 
+class TfsReader:
     
-    # read columns and drop the first one (*) to actually match the right header
-    #
-    cols = df.columns
-    twissHeader = cols[1:]
-    
-    # drop NaN column and reset header
-    #
-    df = df.dropna(axis = 1, how='any')
-    df.columns = twissHeader
-    
-    df = df.drop(df.index[0])
-    df = df.convert_objects(convert_numeric = True)
-    
-    if verbose:
-        print("----------------------------------")
-        print(" DF contains: \n", df.keys(), "\n data tpes are: \n", df.dtypes)
-        print("----------------------------------")
+    def __init__(self, tfs):
+        self.tfs = tfs
         
-    return df
-
-def read_survey(surveyFile):
-    """
-    Function to read general survey files.
-    """
-
-    surveyHeader = ['S', 'X', 'Y', 'Z', 'THETA', 'PHI', 'PSI']
-    
         
+    def read_twiss(self, verbose = 0):
+        """
+        Function to read general twiss files.
+        """
+        tfs = self.tfs
+
+        df = pd.read_table(tfs, sep = "\s+", skiprows = 45, index_col = False) 
+
+        # read columns and drop the first one (*) to actually match the right header
+        #
+        cols = df.columns
+        twissHeader = cols[1:]
+
+        # drop NaN column and reset header
+        #
+        df = df.dropna(axis = 1, how = 'any')
+        df.columns = twissHeader
+
+        df = df.drop(df.index[0])
+        df = df.convert_objects(convert_numeric = True)
+
+        if verbose:
+            print("----------------------------------")
+            print(" DF contains: \n", df.keys(), "\n data tpes are: \n", df.dtypes)
+            print("----------------------------------")
+
+        return df
+    
+    def read_survey(self, verbose = 0):
+        """
+        Function to read general survey files.
+        """
+
+        surveyHeader = ['S', 'X', 'Y', 'Z', 'THETA', 'PHI', 'PSI']
+    
+     
+    
+def checkRing(df, verbose = 0):
+    """
+    Method to quickly check, if a sequence is closed (ring) or not. If not closed, give fudge factor (2pi - offset)
+        -- df:    pass data frame to the function, for example from read_twiss
+    """
+    angleSum = df.ANGLE.sum()
+    if verbose: print ("check")
+    print ("---------------------------------- \n Checking, if ring is closed: \n", "angleSum = ", angleSum)
+    twoPi = 2*np.pi
+    
+    if angleSum != twoPi:
+        fudge = 2*np.pi - angleSum
+        print (" ** Ring not closed - offset of: ", fudge)           
+        
+
+   
 
             
 
