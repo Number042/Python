@@ -170,7 +170,7 @@ def plot_diffApers(df, aperList, plotpath, selection = 'SR', Type = 'hit', apert
                 print ("saved plot as", plotpath,"SR_origin_def.pdf")
 
 
-def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', selection = 'SR', magnet = [], Type = 'hit', nBin = 100, ticks = 5, verbose = 0, save = 0):
+def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', selection = 'SR', name = [], magnet = [], Type = 'hit', nBin = 100, ticks = 5, verbose = 0, save = 0):
     """
     Function to plot data from secondary events, taking into account different beam shapes and sizes. 
         -- df:          pass data frame to fct. 
@@ -203,11 +203,15 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
         df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0)]
         df_sliced.name = df.name
     
-    # additional option to select certain magnet(s)
+    # additional option to select certain magnet(s) or element(s)
     #
     if magnet:
         df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0) & (df.element == magnet[0])]
         df_sliced.name = df.name
+    elif name:
+        df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0) & (df.Name == name[0])]
+        df_sliced.name = df.name
+
     
     # case 1
     #
