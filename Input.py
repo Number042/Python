@@ -374,20 +374,25 @@ class DataSelection:
         
         dfName = df.name
         
-        if verbose==1: 
+        if verbose == 1: 
             print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Selected following data frame:", df.name)
-        elif verbose>1:
+        elif verbose > 1:
             print (df.head())
             print (df.Name)
-            
-        df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element','type','eleNumber','vacuum'])
         
-        if verbose==1: 
+        # do a selection here, depending on the optics
+        #
+        if 'SingleBend' in df.optics.tolist():
+            df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element', 'type', 'vacuum'])
+        else:
+            df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element','type','eleNumber','vacuum'])
+        
+        if verbose == 1: 
             print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Splitted 'Name' into: \n", ['element','type','eleNumber','vacuum'])
-        elif verbose>1:
+        elif verbose > 1:
             print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Split-Frame contains: \n", df_split.dtypes)
         
-        if verbose >1: print (df_split.head())
+        if verbose > 1: print (df_split.head())
         
         # concat the new frame to original, join on 'inner' to insert additional columns
         #
