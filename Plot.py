@@ -310,11 +310,11 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
                     
         if Type == 'hit':
             plt.title("SR photons hitting beampipe")
-            plt.hist(Z_hit, bins = nBin, range = (-300, 100), histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)
+            plt.hist(Z_hit, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)  # range = (-300, 100),
                
         elif Type == 'origin':
             plt.title("Origin of SR photons")
-            plt.hist(Z_org, bins = nBin, range = (-550, 0), histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)
+            plt.hist(Z_org, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False) #, range = (-550, 0)
     
     plt.ylabel("photons/bin")
 
