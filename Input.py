@@ -404,6 +404,60 @@ class DataSelection:
         df.name = dfName
         return df
         
+class Tracking:
+    
+    """
+    Tool kit to do extended selection on tracking information from G4
+    """
+    
+    def __init__(self, frame):
+        self.frame = frame
+        
+    def collectInfo(self, verbose = 0):
+        """
+        Method to collect basic information from the .out of G4 in arrays (basically for plotting)
+            -- frame:   refers to the data frame object resulting from a groupby operation
+        """
+        frame = self.frame
+        if verbose: print ("Selected frame contains: \n", frame)
+        
+        event_last = 999999999
+        track_last = 999999999
+ 
+        # initiate all necessary arrays
+        #
+        Z_pos = []; Z_org = []; Z_hit = []; 
+        E_org = []; E_hit = []
+
+        for row in frame.index:
+            
+            event = frame.get_value(row,'Event')
+            track = frame.get_value(row,'Track')
+            z_eu  = frame.get_value(row,'z_eu')
+            mat   = frame.get_value(row,'Material')
+            energ = frame.get_value(row,'ptot')
+            process = frame.get_value(row, 'ProcName')
+            creator = frame.get_value(row, 'Creator')
+            
+            if(event_last != event or track_last != track):
+                event_last = event
+                track_last = track
+                Z_pos.append(z_eu)
+                
+            if(process == 'initStep' and creator == 'SynRad'):
+                Z_org.append(z_eu)
+                E_org.append(energ*10**6)
+                
+            elif(mat == 'Cu'): # 'Fe'
+                Z_hit.append(z_eu)
+                E_hit.append(energ)
+                
+        if verbose > 1: print ("Collected data in \n", "Z_pos: \n ------------------------- \n", Z_pos, "\n Z_org: \n ------------------------- \n", Z_org, "\n Z_hit: \n ------------------------- \n", Z_hit)
+        
+        # returns only spatial data for the moment
+        #
+        return Z_pos, Z_org, Z_hit 
+            
 # read twiss files, should be as flexible as possible
 class TfsReader:
     
