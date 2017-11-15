@@ -10,6 +10,8 @@ import difflib as dl
 import re
 import timeit
 
+from Input import Tracking 
+
 # --------------------------- RC PARAMS STYLE SECTION -------------------------------------
 mpl.rcParams['lines.linewidth'] = 2
 mpl.rcParams['axes.labelsize'] = 15
@@ -188,9 +190,6 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     returns: nothing. Simple plottig tool
     """
     
-    event_last = 999999999
-    track_last = 999999999
-    
     if re.findall('col', df.name):
         print ("Found collimator frame - groupby 'CollDim' \n", "-----------------------------")
     else:
@@ -296,31 +295,37 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
         if verbose:
             print ("current group:", name)
         
-        Z_pos = []; Z_org = []; Z_hit = []; 
-        E_org = []; E_hit = []
+        # invoke new function from Input.py -- initiate tracking object from class
+        #
+        tracking = Tracking(frame)
+        Z_pos, Z_org, Z_hit = tracking.collectInfo(verbose = verbose)
+         
 
-        for row in frame.index:
+        #~ Z_pos = []; Z_org = []; Z_hit = []; 
+        #~ E_org = []; E_hit = []
+
+        #~ for row in frame.index:
             
-            event = frame.get_value(row,'Event')
-            track = frame.get_value(row,'Track')
-            z_eu  = frame.get_value(row,'z_eu')
-            mat   = frame.get_value(row,'Material')
-            energ = frame.get_value(row,'ptot')
-            process = frame.get_value(row, 'ProcName')
-            creator = frame.get_value(row, 'Creator')
+            #~ event = frame.get_value(row,'Event')
+            #~ track = frame.get_value(row,'Track')
+            #~ z_eu  = frame.get_value(row,'z_eu')
+            #~ mat   = frame.get_value(row,'Material')
+            #~ energ = frame.get_value(row,'ptot')
+            #~ process = frame.get_value(row, 'ProcName')
+            #~ creator = frame.get_value(row, 'Creator')
             
-            if(event_last != event or track_last != track):
-                event_last = event
-                track_last = track
-                Z_pos.append(z_eu)
+            #~ if(event_last != event or track_last != track):
+                #~ event_last = event
+                #~ track_last = track
+                #~ Z_pos.append(z_eu)
                 
-            if(process == 'initStep' and creator == 'SynRad'):
-                Z_org.append(z_eu)
-                E_org.append(energ*10**6)
+            #~ if(process == 'initStep' and creator == 'SynRad'):
+                #~ Z_org.append(z_eu)
+                #~ E_org.append(energ*10**6)
                 
-            elif(mat == 'Cu'): # 'Fe'
-                Z_hit.append(z_eu)
-                E_hit.append(energ)
+            #~ elif(mat == 'Cu'): # 'Fe'
+                #~ Z_hit.append(z_eu)
+                #~ E_hit.append(energ)
                     
         if Type == 'hit':
             plt.title("SR photons hitting beampipe")
@@ -347,6 +352,9 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     if (Type == 'hit' and save == 1):
         plt.savefig(plotpath + 'SR_hits_beamshape.pdf', bbox_inches = 'tight')
         print ("saved plot as", plotpath, "SR_hits_beamshape.pdf")
+    elif (Type == 'position' and save == 1):
+        plt.savefig(plotpath + 'SR_position_beamshape.pdf', bbox_inches = 'tight')
+        print ("saved plot as", plotpath, "SR_position_beamshape.pdf")
     elif(Type == 'origin' and save == 1):
         plt.savefig(plotpath + 'SR_origin_beamshape.pdf', bbox_inches = 'tight')
         print ("saved plot as", plotpath, "SR_origin_beamshape.pdf")
