@@ -296,6 +296,11 @@ class DataReader:
         
         GlobDatFrame = GlobDatFrame.append(frameList)
         
+        # do some forward filling on the origin-volume column to have 
+        # source information available throughout the track object
+        #
+        GlobDatFrame['OrigVol'] = GlobDatFrame.OrigVol.replace('None', np.nan).ffill()
+        
         if GlobDatFrame.empty: print ("WARNING: overall dataframe empty!")
         else:
             GlobDatFrame.name = name
@@ -380,10 +385,12 @@ class DataSelection:
             print (df.head())
             print (df.Name)
         
-        # do a selection here, depending on the optics
+        # do a selection here, depending on the optics 
+        # -- mlu 11-16-2017 -- has to be made more intelligent 
+        # to deal with complex 'Name' expressions or left out!
         #
         if 'SingleBend' in df.optics.tolist():
-            df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element', 'type', 'vacuum'])
+            df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element', 'type', 'eleNumber', 'vacuum']) # ['element', 'type', 'vacuum']
         else:
             df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element','type','eleNumber','vacuum'])
         
@@ -418,8 +425,11 @@ class Tracking:
         Method to collect basic information from the .out of G4 in arrays (basically for plotting)
             -- frame:   refers to the data frame object resulting from a groupby operation
         """
+        
         frame = self.frame
-        if verbose: print ("Selected frame contains: \n", frame)
+        if verbose: print ("Selected frame contains: \n", frame.head())
+        
+        elif verbose > 1: print ("Selected frame contains: \n", frame)
         
         event_last = 999999999
         track_last = 999999999
@@ -439,14 +449,14 @@ class Tracking:
             process = frame.get_value(row, 'ProcName')
             creator = frame.get_value(row, 'Creator')
             
+            if(process == 'initStep' and creator == 'SynRad'):
+                Z_org.append(z_eu)
+                E_org.append(energ*10**6)
+
             if(event_last != event or track_last != track):
                 event_last = event
                 track_last = track
                 Z_pos.append(z_eu)
-                
-            if(process == 'initStep' and creator == 'SynRad'):
-                Z_org.append(z_eu)
-                E_org.append(energ*10**6)
                 
             elif(mat == 'Cu'): # 'Fe'
                 Z_hit.append(z_eu)
