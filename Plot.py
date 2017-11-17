@@ -296,37 +296,13 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
             print ("current group:", name)
         
         # invoke new function from Input.py -- initiate tracking object from class
+        # use collectInfo to select z data
         #
         tracking = Tracking(frame)
         Z_pos, Z_org, Z_hit = tracking.collectInfo(verbose = verbose)
          
-
-        #~ Z_pos = []; Z_org = []; Z_hit = []; 
-        #~ E_org = []; E_hit = []
-
-        #~ for row in frame.index:
-            
-            #~ event = frame.get_value(row,'Event')
-            #~ track = frame.get_value(row,'Track')
-            #~ z_eu  = frame.get_value(row,'z_eu')
-            #~ mat   = frame.get_value(row,'Material')
-            #~ energ = frame.get_value(row,'ptot')
-            #~ process = frame.get_value(row, 'ProcName')
-            #~ creator = frame.get_value(row, 'Creator')
-            
-            #~ if(event_last != event or track_last != track):
-                #~ event_last = event
-                #~ track_last = track
-                #~ Z_pos.append(z_eu)
-                
-            #~ if(process == 'initStep' and creator == 'SynRad'):
-                #~ Z_org.append(z_eu)
-                #~ E_org.append(energ*10**6)
-                
-            #~ elif(mat == 'Cu'): # 'Fe'
-                #~ Z_hit.append(z_eu)
-                #~ E_hit.append(energ)
-                    
+        # plot resulting data
+        #
         if Type == 'hit':
             plt.title("SR photons hitting beampipe")
             plt.hist(Z_hit, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)  # range = (-300, 100),
@@ -358,7 +334,42 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     elif(Type == 'origin' and save == 1):
         plt.savefig(plotpath + 'SR_origin_beamshape.pdf', bbox_inches = 'tight')
         print ("saved plot as", plotpath, "SR_origin_beamshape.pdf")
-        
-        
 
+
+def plotSrcHits(df, elements, nBin = 100, save = 0, verbose = 0):
+    """
+    Method to select certain elements as sources and plot hits caused by these elements.
+    Requires full element names, no groups implemented yet.
+        -- df:      dataframe to do the selection on
+        -- name:    list of names, has to be passes as list, even for single element
+        -- nBin:    set number of bins/binning level
+        -- save:    choose to whether or not save the plot
+        -- verbose: switch on/off or set level of verbosity
+    """
+    
+    plt.figure(figsize = (15,10))
+    plt.title("Hits from Element(s)")
+    plt.rc('grid', linestyle = '--', color = 'gray')
+    
+    # check, if elements is not empty
+    #
+    if elements == []:
+        raise RuntimeError("Elements is empty --> no elements to plot!")
         
+    # do the actual selection, based on passed elements
+    #
+    for elem in elements:
+        selection = df[df.OrigVol == elem]
+    
+        hits = selection[selection.Material == 'Cu']
+        zpos = hits.z_eu.tolist()
+    
+        plt.hist(zpos, bins = nBin, histtype = 'step', fill = False, label = str(elem))
+    
+    plt.grid(); plt.legend()
+    plt.ylabel('photons/bin')
+    plt.xlabel('z [m]')
+    
+    if save == 1: 
+        if verbose == 1: print ("Saving figure as ", plotpath, "SR_hitsFrmElmt.pdf")
+        plt.savefig(plotpath + "SR_hitsFrmElmt.pdf", bbox_inches = 'tight')
