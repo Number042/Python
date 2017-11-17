@@ -172,7 +172,7 @@ def plot_diffApers(df, aperList, plotpath, selection = 'SR', Type = 'hit', apert
                 print ("saved plot as", plotpath,"SR_origin_def.pdf")
 
 
-def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', selection = 'SR', name = [], magnet = [], Type = 'hit', nBin = 100, ticks = 5, verbose = 0, save = 0):
+def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', selection = 'SR', element = [], Type = 'hit', nBin = 100, ticks = 5, verbose = 0, save = 0):
     """
     Function to plot data from secondary events, taking into account different beam shapes and sizes. 
         -- df:          pass data frame to fct. 
@@ -182,6 +182,8 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
         -- zlim:		array to put zmin and zmax; allows to plot only certain region; default empty 
         -- beam:        allows to select the beam shape. Available are pencil, gauss, flat and ring
         -- size:        choose beam sizes; gauss,flat and ring have to start with >0; defaults to 'all'
+        -- selection:   select synchrotron radiation with SR
+        -- element:     choose single element to plot results for
         -- Type:        choose which spectrum to plot - hits or origin
         -- nBin:        choose the binnig, defaults to 100
         -- verbose:     switch on/off verbose output
@@ -204,12 +206,12 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     
     # additional option to select certain magnet(s) or element(s)
     #
-    if magnet:
-        df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0) & (df.element == magnet[0])]
+    if element:
+        df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0) & (df.element == element[0])]
         df_sliced.name = df.name
-    elif name:
-        df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0) & (df.Name == name[0])]
-        df_sliced.name = df.name
+    #~ elif name:
+        #~ df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0) & (df.Name == name[0])]
+        #~ df_sliced.name = df.name
     
     if verbose > 1: print ("Sliced data frame: \n", "----------------------------- \n", df_sliced)
     
