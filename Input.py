@@ -438,6 +438,7 @@ class Tracking:
         #
         Z_pos = []; Z_org = []; Z_hit = []; 
         E_org = []; E_hit = []
+        srcName = []
 
         for row in frame.index:
             
@@ -462,11 +463,13 @@ class Tracking:
                 Z_hit.append(z_eu)
                 E_hit.append(energ)
                 
-        if verbose > 1: print ("Collected data in \n", "Z_pos: \n ------------------------- \n", Z_pos, "\n Z_org: \n ------------------------- \n", Z_org, "\n Z_hit: \n ------------------------- \n", Z_hit)
+                
+        if verbose > 1: print ("Collected data in \n", "Z_pos: \n ------------------------- \n", Z_pos, "\n Z_org: \n ------------------------- \n", Z_org, 
+                               "\n Z_hit: \n ------------------------- \n", Z_hit) 
         
-        # returns only spatial data for the moment
+        # returns several lists
         #
-        return Z_pos, Z_org, Z_hit 
+        return Z_pos, Z_org, Z_hit
             
 # read twiss files, should be as flexible as possible
 class TfsReader:
