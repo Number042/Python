@@ -174,18 +174,19 @@ class DataReader:
                     for d in dirs:
                         opticsList.append(str(dirs[k]))
                         k += 1
-                    if verbose >2: print ("opticsList:", opticsList[0])
-                    
+                    if verbose >1: 
+                        print ("optics read from subdir:")
+                        for optic in opticsList: print(" -- ", optic)
                 else:
                     print ("    ==> no subdirectories.")
-                    if verbose > 1: print ("opticsList from directories empty: \n", opticsList)
-                
+                    
                 # check if the opticsList is empty before filling by files --> useful for working on temporary!
                 # 
                 if files != []:
                     print ("    ==> found data. \n")
                     if verbose > 1: print (files)
                     if opticsList == []:
+                        print ("Try now to read optics type from file names ...")
                         for f in files:
                             if read == 'primaries' and  'prim' in f:
                                 optic = f.split('_b1_prim') 
@@ -194,8 +195,14 @@ class DataReader:
                                 optic = f.split('_b1_seco')
                                 opticsList.append(str(optic[0]))
                              
-                        if verbose > 1: print ("optics read from files: \n", opticsList)
-                
+                        if verbose > 1: 
+                            print ("optics read from files:")
+                            for optic in opticsList:
+                                print (" -- ", optic)
+                        
+                if opticsList == []:
+                    raise RuntimeError("opticsList empty --> optics specification failed!")
+
                 # collect data based on certain parameters
                 #
 
@@ -204,7 +211,7 @@ class DataReader:
                     
                     name = 'def_primaries'
                     
-                    primDataFiles = [os.path.join(root, file) for file in files if re.findall('_prim_ntuple.out', file) and not re.findall('_coll', file)]
+                    primDataFiles = [os.path.join(root, file) for file in files if re.findall('_prim_', file) and not re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_prim_ntuple.out'
                     if verbose: print ("list of files:", primDataFiles)
                     
                     self.aperList = []; self.beamList = []; self.beamSizes = []
@@ -226,7 +233,7 @@ class DataReader:
                     DatFrame2 = pd.DataFrame()
                     name = 'def_secondaries'
                     
-                    secoDataFiles = [os.path.join(root, file) for file in files if re.findall('_seco_ntuple.out', file) and not re.findall('_coll', file)]
+                    secoDataFiles = [os.path.join(root, file) for file in files if re.findall('_seco_', file) and not re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_seco_ntuple.out'
                     if verbose: print ("list of files:", secoDataFiles)
 
                     self.aperList = []; self.beamList = []; self.beamSizes = []
@@ -248,7 +255,7 @@ class DataReader:
                     DatFrame3 = pd.DataFrame()
                     name = 'col_primaries'
                     
-                    primDataFiles = [os.path.join(root, file) for file in files if re.findall('_prim_ntuple.out', file) and re.findall('_coll', file)]
+                    primDataFiles = [os.path.join(root, file) for file in files if re.findall('_prim_', file) and re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_prim_ntuple.out'
                     if verbose: print ("list of files:", primDataFiles)
                     
                     self.aperList = []; self.beamList = []; self.beamSizes = []
@@ -270,7 +277,7 @@ class DataReader:
                     DatFrame4 = pd.DataFrame()
                     name = 'col_secondaries'
                     
-                    secoDataFiles = [os.path.join(root, file) for file in files if re.findall('_seco_ntuple.out', file) and re.findall('_coll', file)]
+                    secoDataFiles = [os.path.join(root, file) for file in files if re.findall('_seco_', file) and re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_seco_ntuple.out'
                     if verbose: print ("list of files:", secoDataFiles)
                     
                     self.aperList = []; self.beamList = []; self.beamSizes = []
@@ -299,7 +306,8 @@ class DataReader:
         # do some forward filling on the origin-volume column to have 
         # source information available throughout the track object
         #
-        GlobDatFrame['OrigVol'] = GlobDatFrame.OrigVol.replace('None', np.nan).ffill()
+        if 'OrigVol' in GlobDatFrame:
+            GlobDatFrame['OrigVol'] = GlobDatFrame.OrigVol.replace('None', np.nan).ffill()
         
         if GlobDatFrame.empty: print ("WARNING: overall dataframe empty!")
         else:
@@ -324,16 +332,26 @@ class DataSelection:
         
         returns: another frame, holding only data from selected optics
         """
+        # set dataframe to the one passed as class object
+        #
         df = self.df
         
-        
+        # set up default (empty) frame and list
+        #
         df_opt = pd.DataFrame()
         tmpList = []
         
+        # case 1: no specific optics selection
+        #
         if optics == 'all':
             df_opt = df
+        
+        # case 2: optics specified
+        #
         else:
-            if verbose: print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Following frame(s) selected: \n", optics)
+            if verbose: 
+                print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Following frame(s) selected:")
+                for optic in optics: print("--", optic)
             
             for opt in optics:
                 tmp_df = df[df.optics == opt]
