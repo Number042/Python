@@ -175,6 +175,7 @@ def plot_diffApers(df, aperList, plotpath, selection = 'SR', Type = 'hit', apert
 def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', selection = 'SR', element = [], Type = 'hit', nBin = 100, ticks = 5, verbose = 0, save = 0):
     """
     Function to plot data from secondary events, taking into account different beam shapes and sizes. 
+    In case of Type = hit allows to plot hits within a certain element. For Type == origin, it plots the origin of all elements or in a single element, if combined with selection in element
         -- df:          pass data frame to fct. 
         -- plotpath:    point to a directory for storing plots
         -- beamTypes:
@@ -338,20 +339,25 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
         print ("saved plot as", plotpath, "SR_origin_beamshape.pdf")
 
 
-def plotSrcHits(df, elements, nBin = 100, save = 0, verbose = 0):
+def plotSrcHits(df, plotpath, elements, zlim = [], nBin = 100, save = 0, verbose = 0):
     """
     Method to select certain elements as sources and plot hits caused by these elements.
     Requires full element names, no groups implemented yet.
         -- df:      dataframe to do the selection on
-        -- name:    list of names, has to be passes as list, even for single element
+        -- name:    list of names, has to be passed as list, even for single element
         -- nBin:    set number of bins/binning level
         -- save:    choose to whether or not save the plot
         -- verbose: switch on/off or set level of verbosity
     """
     
     plt.figure(figsize = (15,10))
+    ax = plt.subplot(111)
     plt.title("Hits from Element(s)")
     plt.rc('grid', linestyle = '--', color = 'gray')
+    
+    # allows to set the z range as option
+    #
+    if zlim: plt.xlim(zlim[0], zlim[1])
     
     # check, if elements is not empty
     #
@@ -367,11 +373,14 @@ def plotSrcHits(df, elements, nBin = 100, save = 0, verbose = 0):
         zpos = hits.z_eu.tolist()
     
         plt.hist(zpos, bins = nBin, histtype = 'step', fill = False, label = str(elem))
-    
+        
+        if verbose > 1: print (hits.Track)
+        
     plt.grid(); plt.legend()
+    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.25), ncol = 4)
     plt.ylabel('photons/bin')
     plt.xlabel('z [m]')
     
     if save == 1: 
-        if verbose == 1: print ("Saving figure as ", plotpath, "SR_hitsFrmElmt.pdf")
+        print ("Saving figure as ", plotpath, "SR_hitsFrmElmt.pdf")
         plt.savefig(plotpath + "SR_hitsFrmElmt.pdf", bbox_inches = 'tight')
