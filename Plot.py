@@ -172,7 +172,7 @@ def plot_diffApers(df, aperList, plotpath, selection = 'SR', Type = 'hit', apert
                 print ("saved plot as", plotpath,"SR_origin_def.pdf")
 
 
-def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', selection = 'SR', element = [], Type = 'hit', nBin = 100, ticks = 5, verbose = 0, save = 0):
+def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', elements = [], Type = 'hit', nBin = 100, ticks = 5, verbose = 0, save = 0):
     """
     Function to plot data from secondary events, taking into account different beam shapes and sizes. 
     In case of Type = hit allows to plot hits within a certain element. For Type == origin, it plots the origin of all elements or in a single element, if combined with selection in element
@@ -183,7 +183,6 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
         -- zlim:		array to put zmin and zmax; allows to plot only certain region; default empty 
         -- beam:        allows to select the beam shape. Available are pencil, gauss, flat and ring
         -- size:        choose beam sizes; gauss,flat and ring have to start with >0; defaults to 'all'
-        -- selection:   select synchrotron radiation with SR
         -- element:     choose single element to plot results for
         -- Type:        choose which spectrum to plot - hits or origin
         -- nBin:        choose the binnig, defaults to 100
@@ -199,21 +198,18 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
         print ("Found no collimator frame - analysing default data \n", "-----------------------------")
         if verbose: print ("beam types:", beamTypes, '\n' "beam sizes:", beamSizes)
     
-    # do the slicing based in the choice in 'selection'
+    # do the slicing based on Creator and charge to secure synchrotron radiation -- mlu 11-21-2017 now hardcoded!
     #
-    if selection == 'SR':
-        df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0)]
-        df_sliced.name = df.name
+    df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0)]
+    df_sliced.name = df.name
     
-    # additional option to select certain magnet(s) or element(s)
+    # additional option to select certain element(s), hsa to be able to accept a list
     #
-    if element:
-        df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0) & (df.element == element[0])]
-        df_sliced.name = df.name
-    #~ elif name:
-        #~ df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0) & (df.Name == name[0])]
-        #~ df_sliced.name = df.name
+    if elements:
+        df_sliced = df_sliced[df_sliced.element.isin(elements)] # slices the df based on selected elements 
     
+    # check result of selection above
+    #   
     if verbose > 1: print ("Sliced data frame: \n", "----------------------------- \n", df_sliced)
     
     # case 1
