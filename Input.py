@@ -242,14 +242,18 @@ class DataReader:
                         tmp_df = self.getBeam_and_Aper_Info(file)
 
                         if verbose: print ("   --> appending file:", file, "...")
+                        
+                        print ("counter j = ", j, "writing optics: ", opticsList[j], " to tmp_df ...") 
+                        tmp_df['optics'] = opticsList[j]
+                        
                         DatFrame2 = DatFrame2.append(tmp_df)
-
+                        j += 1
+                        
                     if DatFrame2.empty: print ("WARNING: DatFrame2 empty!")
-                    else: 
-                        DatFrame2['optics'] = opticsList[j]
+                    else:
                         frameList.append(DatFrame2)
                         print ("DatFrame2 appended")
-                        j += 1
+                        #~ j += 1
 
                 elif datType == 'collimation' and read == 'primaries':
                     DatFrame3 = pd.DataFrame()
@@ -407,13 +411,27 @@ class DataSelection:
         # -- mlu 11-16-2017 -- has to be made more intelligent 
         # to deal with complex 'Name' expressions or left out!
         #
-        if 'SingleBend' in df.optics.tolist():
-            df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element', 'type', 'eleNumber', 'vacuum']) # ['element', 'type', 'vacuum']
+        string = df.Name.str.split('_')
+        numbElements = len(string[0])
+        
+        if verbose: print ("number of elements from df: ", numbElements)
+        
+        if numbElements == 4:
+            columns = ['element', 'type', 'eleNumber', 'vacuum']
         else:
-            df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element','type','eleNumber','vacuum'])
+            columns = ['element', 'type', 'vacuum']
+            
+        if verbose: print ("columns selected: ", columns)
+
+        #~ if 'SingleBend' in df.optics.tolist():
+            #~ df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element', 'type', 'eleNumber', 'vacuum']) # ['element', 'type', 'vacuum']
+        #~ else:
+            #~ df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = ['element', 'type', 'vacuum']) # ['element','type','eleNumber','vacuum']
+
+        df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = columns)
         
         if verbose == 1: 
-            print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Splitted 'Name' into: \n", ['element','type','eleNumber','vacuum'])
+            print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Splitted 'Name' into: \n", columns) #['element','type','eleNumber','vacuum'])
         elif verbose > 1:
             print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Split-Frame contains: \n", df_split.dtypes)
         
