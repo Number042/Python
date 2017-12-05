@@ -425,10 +425,12 @@ class DataSelection:
         # -- mlu 11-16-2017 -- has to be made more intelligent 
         # to deal with complex 'Name' expressions or left out!
         #
-        string = df.Name.str.split('_')
-        numbElements = len(string[0])
+        names = df.Name.tolist()
+        maxString = max(names, key = len)
+        string = maxString.split('_')
+        numbElements = len(string)
         
-        if verbose: print ("number of elements from df: ", numbElements)
+        if verbose: print ("number of elements: ", numbElements, " from ", string)
         
         if numbElements == 4:
             columns = ['element', 'type', 'eleNumber', 'vacuum']
