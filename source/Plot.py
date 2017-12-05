@@ -26,22 +26,28 @@ mpl.rcParams['legend.fontsize'] = 16
 def plot_defaultData():
     pass
 
-def plot_diffApers(df, aperList, plotpath, selection = 'SR', Type = 'hit', aperture = 'all', verbose = 0, nBin = 100, save = 0):
+def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all', verbose = 0, zlim = [], nBin = 100, ticks = 10, save = 0):
             
     """
-    This is a function to plot selected collimation data.
-        -- frame is chosen as df 
-            ==> ATTENTION:  df requires a name given to it: in case of collimation, name must contain 'col', 
-                            else not.
-        -- Type: specify which data to be plotted: 'hits' or 'origin'; defaults to 'hits'
-        -- save: choose whether or not the plots are dumped as pdf
-        -- verbose: additional output
-        -- nBin: specify number of bins; defaults to 100
-        -- aperture: allows to choose only certain dimensions; defaults to 'all'
+    This is a function to plot selected collimation data and gives the option to select only certain or all dimensions. Dimensions refer to the collimator opening.
+        -- df:          dataframe that holds data to plot 
+                        ==> ATTENTION:  df requires a name given to it: in case of collimation, name must contain 'col', 
+                                        else not.
+        -- Type:        specify which data to be plotted: 'hits' or 'origin'; defaults to 'hits'
+        -- aperture:    defaults to 'all' but allows selecting only certain apertures
+        -- verbose:     additional output
+        -- zlim:        allows tp plot only certain z range, defaults to empty list
+        -- nBin:        specify number of bins; defaults to 100
+        -- ticks:       refine the tick frequenc if necessary
+        -- save:        choose whether or not the plots are dumped as pdf
+        
+    returns: nothing. Simple plottig tool
     """
-   
-    event_last = 999999999
-    track_last = 999999999
+    
+    # create a list of available apertures from the frame
+    #
+    aperList = df.CollDim.unique()
+    if verbose: print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
     
     # based on chose in 'selection', slice out SR data from overall frame df
     # pass name from df to sliced df
@@ -71,106 +77,68 @@ def plot_diffApers(df, aperList, plotpath, selection = 'SR', Type = 'hit', apert
                     DF = DF.append(tmp)
     #                 print (tmp.head())
                 else:
-                    raise ValueError('Selected aperture', i, 'not in the list.')
+                    raise ValueError('Selected aperture', i, 'not in the list. Available are:', aperList)
                 
             grouped = DF.groupby('CollDim')
 
 
-        plt.figure(figsize = (15,10))
-        plt.rc('grid', linestyle = "--", color = 'grey')
-        plt.grid()
-
-        for name, frame in grouped:
-            if verbose:
-                print (name)
-                
-            Z_org = []; Z_hit = []; E_org = []; E_hit = []
-
-            for row in frame.index:
-                event = frame.get_value(row,'Event')
-                track = frame.get_value(row,'Track')
-                z_eu  = frame.get_value(row,'z_eu')
-                mat   = frame.get_value(row,'Material')
-                energ = frame.get_value(row,'ptot')
-                if(event_last != event or track_last != track):
-                    event_last = event
-                    track_last = track
-                    Z_org.append(z_eu)
-                    E_org.append(energ*10**6)
-                elif(mat == 'Cu'): # 'Fe'
-                    Z_hit.append(z_eu)
-                    E_hit.append(energ)
-                    
-            if Type == 'hit':
-                plt.title("SR photons hitting beampipe")
-                plt.hist(Z_hit, bins = nBin, range = (-300, 100), histtype = 'step', fill = False, linewidth = 1.5, label = str(name))
-#                 frame[frame.Material == 'Cu'].hist(column = 'z_eu', bins = nBin, label = name)
-                plt.xlabel("z [m]")
-                plt.ylabel("photons/bin")
-                plt.legend()
-                if(save == 1):
-                    plt.savefig(plotpath + 'SR_hits_coll.pdf', bbox_inches='tight')
-                    print ("saved plot as", plotpath,"SR_hits_coll.pdf")
-                
-            elif Type == 'origin':
-                plt.title("Origin of SR photons")
-                plt.hist(Z_org, bins = nBin, range = (-550, 0), histtype = 'step', fill = False, linewidth = 1.5,
-                         label = 'dummy', stacked = False)
-                plt.xlabel("z [m]")
-                plt.ylabel("photons/bin")
-                plt.legend()
-                if(save == 1):
-                    plt.savefig(plotpath + 'SR_origin_coll.pdf', bbox_inches='tight')
-                    print ("saved plot as", plotpath,"SR_origin_coll.pdf")
-    
-    # if no collimation data selected the sliced frame is used without groupby
+    # settings for the plot
     #
-    else:
-        print ("no collimator frame - no groupby operation \n -----------------------------")
-        print (df_sliced.name)
-        
-        Z_org = []; Z_hit = []; E_org = []; E_hit = []
-        
-        plt.figure(figsize = (15,10))
-        plt.rc('grid', linestyle = "--", color = 'grey')
-        plt.grid()
-        
-        for row in df_sliced.index:
-            event = df.get_value(row,'Event')
-            track = df.get_value(row,'Track')
-            z_eu  = df.get_value(row,'z_eu')
-            mat   = df.get_value(row,'Material')
-            energ = df.get_value(row,'ptot')
-    #         print (row, event, event_last, track, track_last)
-            if(event_last != event or track_last != track):
-                event_last = event
-                track_last = track
-                Z_org.append(z_eu)
-                E_org.append(energ*10**6)
-            elif(mat == 'Cu'): # 'Fe'
-                Z_hit.append(z_eu)
-                E_hit.append(energ)
-            
+    plt.figure(figsize = (15,10))
+    ax = plt.subplot(111)
+    
+    plt.rc('grid', linestyle = "--", color = 'grey')
+    plt.grid()
+    
+    # allows to set the xlim
+    #
+    if zlim: plt.xlim(zlim[0], zlim[1])
+
+    for name, frame in grouped:
+                
+        if verbose: print ( "current group:", name )
+        elif verbose > 1: print ( "parent frame:", grouped )
+
+        tracking = Tracking(frame, verbose)
+        Z_pos, Z_org, Z_hit = tracking.collectInfo(verbose = verbose)
+
+                    
+        # plot resulting data
+        #
         if Type == 'hit':
             plt.title("SR photons hitting beampipe")
-            plt.hist(Z_hit, bins = nBin, range = (-300, 100), histtype = 'step', fill = False, linewidth = 1.5, label = str(df.name))
-            plt.xlabel("z [m]")
-            plt.ylabel("photons/bin")
-            plt.legend()
-            if(save == 1):
-                plt.savefig(plotpath + 'SR_hits_def.pdf', bbox_inches='tight')
-                print ("saved plot as", plotpath,"SR_hits_def.pdf")
+            plt.hist(Z_hit, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)  # range = (-300, 100),
+        elif Type == 'position':
+            plt.title("Position of SR photons")
+            plt.hist(Z_pos, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False) #, range = (-550, 0)
                 
         elif Type == 'origin':
             plt.title("Origin of SR photons")
-            plt.hist(Z_org, bins = nBin, range = (-550, 0), histtype = 'step', fill = False, linewidth = 1.5, label = str(df.name), stacked = False)
-            plt.xlabel("z [m]")
-            plt.ylabel("photons/bin")
-            plt.legend()
-            if(save == 1):
-                plt.savefig(plotpath + 'SR_origin_def.pdf', bbox_inches='tight')
-                print ("saved plot as", plotpath,"SR_origin_def.pdf")
+            plt.hist(Z_org, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False) #, range = (-550, 0)
+        else:
+            raise RuntimeError("Invalid selection of Type!")
+    
 
+    plt.locator_params(axis = 'x', nbins = ticks)
+
+    plt.ylabel("photons/bin")
+    plt.xlabel("z [m]")
+
+    plt.legend()
+    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = 4)
+    
+    if (Type == 'hit' and save == 1):
+        plt.savefig(plotpath + 'SR_hits_aper.pdf', bbox_inches = 'tight')
+        print ("saved plot as", plotpath, "SR_hits_aper.pdf")
+    elif (Type == 'position' and save == 1):
+        plt.savefig(plotpath + 'SR_position_aper.pdf', bbox_inches = 'tight')
+        print ("saved plot as", plotpath, "SR_position_aper.pdf")
+    elif(Type == 'origin' and save == 1):
+        plt.savefig(plotpath + 'SR_origin_aper.pdf', bbox_inches = 'tight')
+        print ("saved plot as", plotpath, "SR_origin_aper.pdf")
+    
+    
+    
 
 def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', elements = [], Type = 'hit', nBin = 100, ticks = 10, verbose = 0, save = 0):
     """
@@ -193,9 +161,13 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     returns: nothing. Simple plottig tool
     """
     
+    # check for collimation and use switch for groupby further below
+    #
     if re.findall('col', df.name):
+        collimation = 1
         print ("Found collimator frame - groupby 'CollDim' \n", "-----------------------------")
     else:
+        collimation = 0
         print ("Found no collimator frame - analysing default data \n", "-----------------------------")
         if verbose: print ("beam types:", beamTypes, '\n' "beam sizes:", beamSizes)
     
@@ -220,7 +192,9 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     if beam == 'all' and size == 'all':
               
         print ('selected all beam types and sizes!')
-        grouped = df_sliced.groupby(['optics','BeamShape','BeamSize']) 
+        
+        if collimation: grouped = df_sliced.groupby(['CollDim','optics','BeamShape','BeamSize'])
+        else: grouped = df_sliced.groupby(['optics','BeamShape','BeamSize']) 
         
     # case 2
     #
@@ -295,13 +269,15 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
 
     for name, frame in grouped:
         
-        if verbose:
-            print ("current group:", name)
-        
+        #~ if verbose:
+            #~ print ( "current group:", name )
+        #~ elif verbose > 1:
+            #~ print ( "parent frame:", grouped )
+            
         # invoke new function from Input.py -- initiate tracking object from class
         # use collectInfo to select z data
         #
-        tracking = Tracking(frame)
+        tracking = Tracking(frame, verbose)
         Z_pos, Z_org, Z_hit = tracking.collectInfo(verbose = verbose)
          
         # plot resulting data
@@ -337,6 +313,8 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     elif(Type == 'origin' and save == 1):
         plt.savefig(plotpath + 'SR_origin_beamshape.pdf', bbox_inches = 'tight')
         print ("saved plot as", plotpath, "SR_origin_beamshape.pdf")
+
+
 
 
 def plotSrcHits(df, plotpath, elements, zlim = [], nBin = 100, ticks = 5, save = 0, verbose = 0):
