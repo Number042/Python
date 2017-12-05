@@ -467,19 +467,25 @@ class Tracking:
     Tool kit to do extended selection on tracking information from G4
     """
     
-    def __init__(self, frame):
+    def __init__(self, frame, verbose):
         self.frame = frame
+        self.verbose = verbose
         
-    def collectInfo(self, verbose = 0):
+    def collectInfo(self, verbose):
         """
         Method to collect basic information from the .out of G4 in arrays (basically for plotting)
             -- frame:   refers to the data frame object resulting from a groupby operation
         """
         
         frame = self.frame
-        if verbose: print ("Selected frame contains: \n", frame.head())
+        verbose = self.verbose
         
-        elif verbose > 1: print ("Selected frame contains: \n", frame)
+        if verbose: 
+            print ("Selected frame contains: \n", " ------------------------ \n", frame.head())
+    
+        elif verbose > 1: 
+            print (sys._getframe().f_lineno)
+            print ("Selected frame complete: \n", " ------------------------ \n", frame)
         
         event_last = 999999999
         track_last = 999999999
@@ -514,8 +520,8 @@ class Tracking:
                 E_hit.append(energ)
                 
                 
-        if verbose > 1: print ("Collected data in \n", "Z_pos: \n ------------------------- \n", Z_pos, "\n Z_org: \n ------------------------- \n", Z_org, 
-                               "\n Z_hit: \n ------------------------- \n", Z_hit) 
+        #~ if verbose > 1: print ("Collected data in \n", "Z_pos: \n ------------------------- \n", Z_pos, "\n Z_org: \n ------------------------- \n", Z_org, 
+                               #~ "\n Z_hit: \n ------------------------- \n", Z_hit) 
         
         # returns several lists
         #
@@ -607,14 +613,23 @@ def get_apertures():
         files = [f for f in files if not f[0] == '.']
         dirs[:] = [d for d in dirs if not d[0] == '.']
         
+        # loop through elements and collect apertures, if existing
+        #
         for element in files:
             if element.endswith('seco_ntuple.out'):
                 dataFiles.append(element)
+                
+                aper = re.findall(r'\D(\d{4})\D', element)
+                if verbose: print ("appending aperture:", int(aper[0]), " ..." )
+                aperList.append(int(aper[0]))
+            else:
+                raise RuntimeError('No specifications found. List of apertures empty:', aperList)
+                
     # write out apertures
     #
-    for i in dataFiles:
-        aper = re.findall(r'\D(\d{4})\D', i) 
-        aperlist.append(int(aper[0]))
+    #~ for i in dataFiles:
+        #~ aper = re.findall(r'\D(\d{4})\D', i) 
+        #~ aperlist.append(int(aper[0]))
     
     return aperlist
 
