@@ -67,7 +67,7 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
             # add the aperture option here?
             print ('selected all apertures!')
             
-            grouped = df_sliced.groupby(['CollDim','BeamShape'])   #['CollDim','optics','BeamShape','BeamSize']
+            grouped = df_sliced.groupby(['CollDim', 'optics', 'BeamShape'])   #['CollDim','optics','BeamShape','BeamSize']
 
         else:
             DF = pd.DataFrame()
@@ -80,7 +80,7 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
                 else:
                     raise ValueError('Selected aperture', i, 'not in the list. Available are:', aperList)
                 
-            grouped = DF.groupby(['CollDim','BeamShape']) # ,'optics','BeamShape','BeamSize'
+            grouped = DF.groupby(['CollDim', 'optics', 'BeamShape']) # ,'optics','BeamShape','BeamSize'
 
 
     # settings for the plot
