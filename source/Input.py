@@ -186,8 +186,10 @@ class DataReader:
                     print ("    ==> found data. \n")
                     if verbose > 1: print (files)
                     if opticsList == []:
-                        print ("Try now to read optics type from file names ...")
+                        print ("Try now to read optics type from file names ... \n")
                         for f in files:
+                            
+                            if verbose > 1: print ( "current file: ", f )
                             
                             # distinction in data tpe: default vs. collimation
                             #
@@ -213,6 +215,8 @@ class DataReader:
                             print ("optics read from files:")
                             for optic in opticsList:
                                 print (" -- ", optic)
+                                
+                else: raise RuntimeError( "no files found -- given directory seems empty!" )
                         
                 if opticsList == []:
                     raise RuntimeError("opticsList empty --> optics specification failed!")
@@ -222,41 +226,41 @@ class DataReader:
 
                 if datType == 'default' and read == 'primaries':
                     DatFrame = pd.DataFrame()
-                    
                     name = 'def_primaries'
                     
                     primDataFiles = [os.path.join(root, file) for file in files if re.findall('_prim_', file) and not re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_prim_ntuple.out'
-                    if verbose: print ("list of files:", primDataFiles)
+                    if verbose: print ("list of files: \n", primDataFiles)
                     
                     self.aperList = []; self.beamList = []; self.beamSizes = []
                     for file in primDataFiles:
     
+                        if verbose: print ("   --> appending file:", file, "...")
                         tmp_df = self.getBeam_and_Aper_Info(file)
 
-                        if verbose: print ("   --> appending file:", file, "...")
+                        print( "counter j = ", j, "writing optic: ", opticsList[j], " to tmp_df ..." )
+                        tmp_df['optics'] = opticsList[j]
+                        
                         DatFrame = DatFrame.append(tmp_df)
+                        j += 1
                         
                     if DatFrame.empty: print ("WARNING: DatFrame empty!")
                     else: 
-                        DatFrame['optics'] = opticsList[j]
                         frameList.append(DatFrame)
                         print ("DatFrame appended")
-                        j += 1
                     
                 elif datType == 'default' and read == 'secondaries':
                     DatFrame2 = pd.DataFrame()
                     name = 'def_secondaries'
                     
                     secoDataFiles = [os.path.join(root, file) for file in files if re.findall('_seco_', file) and not re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_seco_ntuple.out'
-                    if verbose: print ("list of files:", secoDataFiles)
+                    if verbose: print ("list of files: \n", secoDataFiles)
 
                     self.aperList = []; self.beamList = []; self.beamSizes = []
                     for file in secoDataFiles:
 
+                        if verbose: print ("   --> appending file:", file, "...")
                         tmp_df = self.getBeam_and_Aper_Info(file)
 
-                        if verbose: print ("   --> appending file:", file, "...")
-                        
                         print ("counter j = ", j, "writing optics: ", opticsList[j], " to tmp_df ...") 
                         tmp_df['optics'] = opticsList[j]
                         
@@ -267,51 +271,55 @@ class DataReader:
                     else:
                         frameList.append(DatFrame2)
                         print ("DatFrame2 appended")
-                        #~ j += 1
 
                 elif datType == 'collimation' and read == 'primaries':
                     DatFrame3 = pd.DataFrame()
                     name = 'col_primaries'
                     
                     primDataFiles = [os.path.join(root, file) for file in files if re.findall('_prim_', file) and re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_prim_ntuple.out'
-                    if verbose: print ("list of files:", primDataFiles)
+                    if verbose: print ("list of files: \n", primDataFiles)
                     
                     self.aperList = []; self.beamList = []; self.beamSizes = []
                     for file in primDataFiles:
                         
+                        if verbose: print ("    --> appending file:", file, "...")
                         tmp_df = self.getBeam_and_Aper_Info(file)
                         
-                        if verbose: print ("    --> appending file:", file, "...")
+                        print( "counter j = ", j, "writing optic: ", opticsList[j], " to tmp_df ..." )
+                        tmp_df['optics'] = opticsList[j]
+                        
                         DatFrame3 = DatFrame3.append(tmp_df)
+                        j += 1
                     
                     if DatFrame3.empty: print ("WARNING: DatFrame3 empty!")
                     else: 
-                        DatFrame3['optics'] = opticsList[j]
                         frameList.append(DatFrame3)
                         print ("DatFrame3 appended")
-                        j += 1
 
                 elif datType == 'collimation' and read == 'secondaries':
                     DatFrame4 = pd.DataFrame()
                     name = 'col_secondaries'
                     
                     secoDataFiles = [os.path.join(root, file) for file in files if re.findall('_seco_', file) and re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_seco_ntuple.out'
-                    if verbose: print ("list of files:", secoDataFiles)
+                    if verbose: print ("list of files: \n", secoDataFiles)
                     
                     self.aperList = []; self.beamList = []; self.beamSizes = []
                     for file in secoDataFiles:
                         
-                        tmp_df = self.getBeam_and_Aper_Info(file)
-                        
                         if verbose: print ("    --> appending file:", file, "...")
+                        tmp_df = self.getBeam_and_Aper_Info(file)
+
+                        print ("counter j = ", j, "writing optics: ", opticsList[j], " to tmp_df ...") 
+                        tmp_df['optics'] = opticsList[j]
+                        
                         DatFrame4 = DatFrame4.append(tmp_df)
+                        j += 1                
                     
                     if DatFrame4.empty: print ("WARNING: DatFrame4 empty!")
+                    
                     else: 
-                        DatFrame4['optics'] = opticsList[j]
                         frameList.append(DatFrame4)
                         print ("DatFrame4 appended")
-                        j += 1                
                 
                 else:
                     raise RuntimeError('Invalid choice of "datType" and/or "read"')
