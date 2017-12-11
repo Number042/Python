@@ -196,20 +196,24 @@ class DataReader:
                             if datType == 'default':
                                 
                                 if read == 'primaries' and  'prim' in f:
-                                    optic = f.split('_b1_prim') 
-                                    opticsList.append(str(optic[0])) 
+                                    if not re.findall('_coll', f): 
+                                        optic = re.split('_b1_prim',f) 
+                                        opticsList.append(str(optic[0])) 
                                 elif read == 'secondaries' and 'seco' in f:
-                                    optic = f.split('_b1_seco')
-                                    opticsList.append(str(optic[0]))
+                                    if not re.findall('_coll_', f):
+                                        optic = f.split('_b1_seco')
+                                        opticsList.append(str(optic[0]))
                                     
                             elif datType == 'collimation':
                              
                                 if read == 'primaries' and  'prim' in f:
-                                    optic = f.split('_coll') 
-                                    opticsList.append(str(optic[0])) 
+                                    if re.findall('_coll_', f):
+                                        optic = re.split('_b\d{1}_\d{4}_', f) 
+                                        opticsList.append(str(optic[0])) 
                                 elif read == 'secondaries' and 'seco' in f:
-                                    optic = f.split('_coll')
-                                    opticsList.append(str(optic[0]))
+                                    if re.findall('_coll_', f):
+                                        optic = re.split('_b\d{1}_\d{4}_', f)
+                                        opticsList.append(str(optic[0]))
                                     
                         if verbose > 1: 
                             print ("optics read from files:")
