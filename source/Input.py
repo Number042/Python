@@ -187,38 +187,39 @@ class DataReader:
                     if verbose > 1: print (files)
                     if opticsList == []:
                         print ("Try now to read optics type from file names ... \n")
-                        for f in files:
+                        
+                    for f in files:
                             
-                            if verbose > 1: print ( "current file: ", f )
+                        if verbose > 1: print ( "current file: ", f )
                             
-                            # distinction in data tpe: default vs. collimation
-                            #
-                            if datType == 'default':
+                        # distinction in data tpe: default vs. collimation
+                        #
+                        if datType == 'default':
                                 
-                                if read == 'primaries' and  'prim' in f:
-                                    if not re.findall('_coll', f): 
-                                        optic = re.split('_b1_prim',f) 
-                                        opticsList.append(str(optic[0])) 
-                                elif read == 'secondaries' and 'seco' in f:
-                                    if not re.findall('_coll_', f):
-                                        optic = f.split('_b1_seco')
-                                        opticsList.append(str(optic[0]))
+                            if read == 'primaries' and  'prim' in f:
+                                if not re.findall('_coll', f): 
+                                    optic = re.split('_b1_prim',f) 
+                                    opticsList.append(str(optic[0])) 
+                            elif read == 'secondaries' and 'seco' in f:
+                                if not re.findall('_coll_', f):
+                                    optic = f.split('_b1_seco')
+                                    opticsList.append(str(optic[0]))
                                     
-                            elif datType == 'collimation':
+                        elif datType == 'collimation':
                              
-                                if read == 'primaries' and  'prim' in f:
-                                    if re.findall('_coll_', f):
-                                        optic = re.split('_b\d{1}_\d{4}_', f) 
-                                        opticsList.append(str(optic[0])) 
-                                elif read == 'secondaries' and 'seco' in f:
-                                    if re.findall('_coll_', f):
-                                        optic = re.split('_b\d{1}_\d{4}_', f)
-                                        opticsList.append(str(optic[0]))
+                            if read == 'primaries' and  'prim' in f:
+                                if re.findall('_coll_', f):
+                                    optic = re.split('_b\d{1}_\d{4}_', f) 
+                                    opticsList.append(str(optic[0])) 
+                            elif read == 'secondaries' and 'seco' in f:
+                                if re.findall('_coll_', f):
+                                    optic = re.split('_b\d{1}_\d{4}_', f)
+                                    opticsList.append(str(optic[0]))
                                     
-                        if verbose > 1: 
-                            print ("optics read from files:")
-                            for optic in opticsList:
-                                print (" -- ", optic)
+                    if verbose > 1: 
+                        print ("optics read from files:")
+                        for optic in opticsList:
+                            print (" -- ", optic)
                                 
                 else: raise RuntimeError( "no files found -- given directory seems empty!" )
                         
@@ -250,7 +251,7 @@ class DataReader:
                     if DatFrame.empty: print ("WARNING: DatFrame empty!")
                     else: 
                         frameList.append(DatFrame)
-                        print ("DatFrame appended")
+                        print ("DatFrame appended \n")
                     
                 elif datType == 'default' and read == 'secondaries':
                     DatFrame2 = pd.DataFrame()
@@ -274,7 +275,7 @@ class DataReader:
                     if DatFrame2.empty: print ("WARNING: DatFrame2 empty!")
                     else:
                         frameList.append(DatFrame2)
-                        print ("DatFrame2 appended")
+                        print ("DatFrame2 appended \n")
 
                 elif datType == 'collimation' and read == 'primaries':
                     DatFrame3 = pd.DataFrame()
@@ -298,7 +299,7 @@ class DataReader:
                     if DatFrame3.empty: print ("WARNING: DatFrame3 empty!")
                     else: 
                         frameList.append(DatFrame3)
-                        print ("DatFrame3 appended")
+                        print ("DatFrame3 appended \n")
 
                 elif datType == 'collimation' and read == 'secondaries':
                     DatFrame4 = pd.DataFrame()
@@ -323,10 +324,15 @@ class DataReader:
                     
                     else: 
                         frameList.append(DatFrame4)
-                        print ("DatFrame4 appended")
+                        print ("DatFrame4 appended \n")
                 
                 else:
                     raise RuntimeError('Invalid choice of "datType" and/or "read"')
+                    
+            # clear the opticsList for next run
+            #
+            if verbose: print ("clearing opticsList for next run ... \n")
+            del opticsList[:]
                 
         
         if frameList == []: raise ValueError('No data collected. List of frames empty:', frameList) 
