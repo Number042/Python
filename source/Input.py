@@ -216,15 +216,18 @@ class DataReader:
                                     optic = re.split('_b\d{1}_\d{4}_', f)
                                     opticsList.append(str(optic[0]))
                                     
-                    if verbose > 1: 
+                    if opticsList == []: 
+                        print("*** WARNING *** opticsList empty --> optics specification for \n", f, "\n failed!")
+                    
+                    elif opticsList != [] and verbose > 1: 
                         print ("optics read from files:")
                         for optic in opticsList:
                             print (" -- ", optic)
+                    
                                 
+                        
                 else: raise RuntimeError( "no files found -- given directory seems empty!" )
                         
-                if opticsList == []:
-                    raise RuntimeError("opticsList empty --> optics specification failed!")
 
                 # collect data based on certain parameters
                 #
@@ -248,7 +251,7 @@ class DataReader:
                         DatFrame = DatFrame.append(tmp_df)
                         j += 1
                         
-                    if DatFrame.empty: print ("WARNING: DatFrame empty!")
+                    if DatFrame.empty: print (" *** WARNING *** DatFrame empty!")
                     else: 
                         frameList.append(DatFrame)
                         print ("DatFrame appended \n")
@@ -272,7 +275,7 @@ class DataReader:
                         DatFrame2 = DatFrame2.append(tmp_df)
                         j += 1
                         
-                    if DatFrame2.empty: print ("WARNING: DatFrame2 empty!")
+                    if DatFrame2.empty: print ("*** WARNING *** DatFrame2 empty!")
                     else:
                         frameList.append(DatFrame2)
                         print ("DatFrame2 appended \n")
@@ -296,7 +299,7 @@ class DataReader:
                         DatFrame3 = DatFrame3.append(tmp_df)
                         j += 1
                     
-                    if DatFrame3.empty: print ("WARNING: DatFrame3 empty!")
+                    if DatFrame3.empty: print ("*** WARNING **** DatFrame3 empty!")
                     else: 
                         frameList.append(DatFrame3)
                         print ("DatFrame3 appended \n")
@@ -320,7 +323,7 @@ class DataReader:
                         DatFrame4 = DatFrame4.append(tmp_df)
                         j += 1                
                     
-                    if DatFrame4.empty: print ("WARNING: DatFrame4 empty!")
+                    if DatFrame4.empty: print ("*** WARNING *** DatFrame4 empty!")
                     
                     else: 
                         frameList.append(DatFrame4)
@@ -345,7 +348,7 @@ class DataReader:
         if 'OrigVol' in GlobDatFrame:
             GlobDatFrame['OrigVol'] = GlobDatFrame.OrigVol.replace('None', np.nan).ffill()
         
-        if GlobDatFrame.empty: print ("WARNING: overall dataframe empty!")
+        if GlobDatFrame.empty: print ("*** WARNING **** overall dataframe empty!")
         else:
             GlobDatFrame.name = name
             return GlobDatFrame
