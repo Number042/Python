@@ -26,7 +26,7 @@ mpl.rcParams['legend.fontsize'] = 16
 def plot_defaultData():
     pass
 
-def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all', verbose = 0, zlim = [], nBin = 100, ticks = 10, save = 0):
+def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all', verbose = 0, zlim = [], nBin = 100, ticks = 10, legCol = 2, save = 0):
             
     """
     This is a function to plot selected collimation data and gives the option to select only certain or all dimensions. Dimensions refer to the collimator opening.
@@ -39,6 +39,7 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
         -- zlim:        allows tp plot only certain z range, defaults to empty list
         -- nBin:        specify number of bins; defaults to 100
         -- ticks:       refine the tick frequenc if necessary
+        -- legCol:      specify number of columns in the legend box, defaults to 2
         -- save:        choose whether or not the plots are dumped as pdf
         
     returns: nothing. Simple plottig tool
@@ -122,11 +123,11 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
 
     plt.locator_params(axis = 'x', nbins = ticks)
 
-    plt.ylabel("photons/bin")
-    plt.xlabel("z [m]")
+    plt.ylabel( "photons/bin" )
+    plt.xlabel( "z [m]" )
 
     plt.legend()
-    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = 4)
+    ax.legend( loc = 'lower center', bbox_to_anchor = (0.5, -0.2), ncol = legCol )
     
     if (Type == 'hit' and save == 1):
         plt.savefig(plotpath + 'SR_hits_aper.pdf', bbox_inches = 'tight')
@@ -141,7 +142,7 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
     
     
 
-def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', elements = [], Type = 'hit', nBin = 100, ticks = 10, verbose = 0, save = 0):
+def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', elements = [], Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
     """
     Function to plot data from secondary events, taking into account different beam shapes and sizes. 
     In case of Type = hit allows to plot hits within a certain element. For Type == origin, it plots the origin of all elements or in a single element, if combined with selection in element
@@ -157,6 +158,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
         -- nBin:        choose the binnig, defaults to 100
         -- ticks:       set the number of tickss on the xaxis (acts on binning)
         -- verbose:     switch on/off verbose output
+        -- legCol:      specify number of columns in the legend box, defaults to 2
         -- save:        select whether or not the plots are dumped to pdf files
     
     returns: nothing. Simple plottig tool
@@ -303,7 +305,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     plt.xlabel("z [m]")
 
     plt.legend()
-    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = 4)
+    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = legCol)
     
     if (Type == 'hit' and save == 1):
         plt.savefig(plotpath + 'SR_hits_beamshape.pdf', bbox_inches = 'tight')
