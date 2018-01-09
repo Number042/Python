@@ -11,6 +11,7 @@ import re
 import timeit
 
 from Input import Tracking 
+from Input import DataSelection
 
 # --------------------------- RC PARAMS STYLE SECTION -------------------------------------
 mpl.rcParams['lines.linewidth'] = 2
@@ -44,44 +45,48 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
         
     returns: nothing. Simple plottig tool
     """
-    
-    # create a list of available apertures from the frame
+    # invoke aper_select from DataSelection
     #
-    aperList = df.CollDim.unique()
-    if verbose: print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
+    selection = DataSelection(df, verbose)
+    grouped = selection.aper_select(aperture, verbose)
     
-    # based on chose in 'selection', slice out SR data from overall frame df
-    # pass name from df to sliced df
-    #
-    if selection == 'SR':
-        df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0)]
-        df_sliced.name = df.name
-    else:
-        raise RuntimeError('Other selections not yet implemented!')
+    # ~ # create a list of available apertures from the frame
+    # ~ #
+    # ~ aperList = df.CollDim.unique()
+    # ~ if verbose: print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
     
-    # check the df name, if collimation data, groupby apertures
-    #
-    if re.findall('col', df_sliced.name):
-        print ("found collimator frame - groupby 'CollDim' \n", "-----------------------------")
+    # ~ # based on chose in 'selection', slice out SR data from overall frame df
+    # ~ # pass name from df to sliced df
+    # ~ #
+    # ~ if selection == 'SR':
+        # ~ df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0)]
+        # ~ df_sliced.name = df.name
+    # ~ else:
+        # ~ raise RuntimeError('Other selections not yet implemented!')
+    
+    # ~ # check the df name, if collimation data, groupby apertures
+    # ~ #
+    # ~ if re.findall('col', df_sliced.name):
+        # ~ print ("found collimator frame - groupby 'CollDim' \n", "-----------------------------")
         
-        if aperture == 'all':
-            # add the aperture option here?
-            print ('selected all apertures!')
+        # ~ if aperture == 'all':
+            # ~ # add the aperture option here?
+            # ~ print ('selected all apertures!')
             
-            grouped = df_sliced.groupby(['CollDim', 'optics', 'BeamShape'])   #['CollDim','optics','BeamShape','BeamSize']
+            # ~ grouped = df_sliced.groupby(['CollDim', 'optics', 'BeamShape'])   #['CollDim','optics','BeamShape','BeamSize']
 
-        else:
-            DF = pd.DataFrame()
-            for i in aperture:
-                print ('aperture selected:', i)
-                if i in aperList:
-                    tmp = df_sliced[df_sliced.CollDim == i]
-                    DF = DF.append(tmp)
-    #                 print (tmp.head())
-                else:
-                    raise ValueError('Selected aperture', i, 'not in the list. Available are:', aperList)
+        # ~ else:
+            # ~ DF = pd.DataFrame()
+            # ~ for i in aperture:
+                # ~ print ('aperture selected:', i)
+                # ~ if i in aperList:
+                    # ~ tmp = df_sliced[df_sliced.CollDim == i]
+                    # ~ DF = DF.append(tmp)
+    # ~ #                 print (tmp.head())
+                # ~ else:
+                    # ~ raise ValueError('Selected aperture', i, 'not in the list. Available are:', aperList)
                 
-            grouped = DF.groupby(['CollDim', 'optics', 'BeamShape']) # ,'optics','BeamShape','BeamSize'
+            # ~ grouped = DF.groupby(['CollDim', 'optics', 'BeamShape']) # ,'optics','BeamShape','BeamSize'
 
 
     # settings for the plot
@@ -127,7 +132,7 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
     plt.xlabel( "z [m]" )
 
     plt.legend()
-    ax.legend( loc = 'lower center', bbox_to_anchor = (0.5, -0.2), ncol = legCol )
+    ax.legend( loc = 'lower center', bbox_to_anchor = (0.5, -0.25), ncol = legCol )
     
     if (Type == 'hit' and save == 1):
         plt.savefig(plotpath + 'SR_hits_aper.pdf', bbox_inches = 'tight')
@@ -310,7 +315,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     plt.xlabel("z [m]")
 
     plt.legend()
-    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = legCol)
+    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.2), ncol = legCol)
     
     if (Type == 'hit' and save == 1):
         plt.savefig(plotpath + 'SR_hits_beamshape.pdf', bbox_inches = 'tight')
@@ -375,3 +380,21 @@ def plotSrcHits(df, plotpath, elements, zlim = [], nBin = 100, ticks = 5, save =
     if save == 1: 
         print ("Saving figure as ", plotpath, "SR_hitsFrmElmt.pdf")
         plt.savefig(plotpath + "SR_hitsFrmElmt.pdf", bbox_inches = 'tight')
+
+
+
+def plot_colEff(df, plotpath, ):
+    """
+    Method to count the hits +-2m from IP and plot this as fct. of the collimator settings.
+        -- df:          dataframe holding collimation data
+        -- plotpath:    specify location for saving plots
+    """
+    
+    # first check for right data
+    #
+    aperList = df.CollDim.unique()
+    if aperList == []: raise RuntimeError("No apertures found!")
+    else:
+        print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
+    
+

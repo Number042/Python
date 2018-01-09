@@ -360,8 +360,9 @@ class DataSelection:
     Tool-kit to do some selection on overall input data.
     """
     
-    def __init__(self, df):
+    def __init__(self, df, verbose):
         self.df = df
+        self.verbose = verbose
 
     def opticsSelection(self, optics = 'all', verbose = 0):
         
@@ -484,6 +485,57 @@ class DataSelection:
         df.name = dfName
         return df
         
+    # Add function for aperture selection, pass this to plot_data if needed
+    # extend to more detailed data filtering?
+    #
+    def aper_select(self, aperture, verbose):
+        """
+        Function to do some data filtering.
+            -- aperture:    allows to choose only certain dimensions; provided by calling function
+            -- verbose:     set level of verbosity, also provided by calling function
+        """
+        
+        df = self.df
+        
+        # create a list of available apertures from the frame
+        #
+        aperList = df.CollDim.unique()
+        if verbose: print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
+        
+        # based on chose in 'selection', slice out SR data from overall frame df
+        # pass name from df to sliced df
+        #
+        df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0)]
+        df_sliced.name = df.name
+    
+        # check the df name, if collimation data, groupby apertures
+        #
+        if re.findall('col', df_sliced.name):
+            print ("found collimator frame - groupby 'CollDim' \n ----------------------------- \n")
+            if verbose: print ("available dimensions:", aperList)
+
+        if aperture == 'all':
+            # add the aperture option here?
+            print ('selected all apertures!')
+            grouped = df_sliced.groupby(['CollDim', 'optics', 'BeamShape'])
+            
+        else:
+            DF = pd.DataFrame()
+            
+            for i in aperture:
+                print ('aperture selected:', i)
+                if i in aperList:
+                    tmp = df_sliced[df_sliced.CollDim == i]
+                    DF = DF.append(tmp)
+                else:
+                    raise ValueError('Selected aperture', i, 'not in the list. Available are:', aperList)
+                
+            grouped = DF.groupby(['CollDim', 'optics', 'BeamShape']) 
+
+        return grouped
+
+
+
 class Tracking:
     
     """
@@ -501,13 +553,13 @@ class Tracking:
         """
         
         frame = self.frame
-        verbose = self.verbose
+        # ~ verbose = self.verbose
         
-        if verbose: 
+        if verbose == 1: 
             print ("Selected frame contains: \n", " ------------------------ \n", frame.head())
     
         elif verbose > 1: 
-            print (sys._getframe().f_lineno)
+            print ("collectInfo(), line: ", sys._getframe().f_lineno)
             print ("Selected frame complete: \n", " ------------------------ \n", frame)
         
         event_last = 999999999
@@ -655,39 +707,4 @@ def get_apertures():
         #~ aperlist.append(int(aper[0]))
     
     return aperlist
-
-    
-# Add function for aperture selection, pass this to plot_data if needed
-# extend to more detailed data filtering?
-#
-def aper_select(df, aperture = 'all'):
-    """
-    Function to do some data filtering.
-        -- aperture: allows to choose only certain dimensions; defaults to 'all'
-    """
-    aperList = get_apertures()
-    
-    if re.findall('col', df.name):
-        print ("found collimator frame - groupby 'CollDim' \n", "-----------------------------")
-        print (aperList)
-
-    if aperture == 'all':
-        # add the aperture option here?
-        print ('selected all apertures!')
-        grouped = df.groupby('CollDim')
-        
-    else:
-        grouped = pd.DataFrame()
-        for i in aperture:
-            print ('aperture selected:', i)
-            if i in aperList:
-                tmp = df[df.CollDim==i]
-                grouped = grouped.append(tmp)
-#                 print (tmp.head())
-            else:
-                print (" ** Error: selected aperture", i, "not in the list.")
-                
-#     print (grouped)
-    return grouped
-
     
