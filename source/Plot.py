@@ -214,7 +214,8 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
             else:
                 raise ValueError("Selected beam size", j, "not in the list of available beam sizes:", beamSizes)
         
-        grouped = DF.groupby(['optics','BeamSize'])
+        if collimation: grouped = DF.groupby(['CollDim','optics','BeamSize'])
+        else: grouped = DF.groupby(['optics','BeamSize'])
     
     # case 3    
     #
@@ -229,14 +230,17 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
                 if i in beamTypes and j in beamSizes:
                     tmp = df_sliced[(df_sliced.BeamShape == i) & (df_sliced.BeamSize == j)]
                     framelist.append(tmp)
+                    
                     if verbose > 1: print (tmp)
+                
                 elif i not in beamTypes:
                     raise ValueError("Selected beam type", i, "not in the list of available beams:", beamTypes)
                 elif j not in beamSizes:
                     raise ValueError("Selected beam size", j, "not in the list of available beam sizes:", beamSizes)
         
         DF = DF.append(framelist)
-        grouped = DF.groupby(['optics','BeamShape','BeamSize'])
+        if collimation: grouped = DF.groupby(['CollDim','optics','BeamShape','BeamSize'])
+        else: grouped = DF.groupby(['optics','BeamShape','BeamSize'])
     
     # case 4
     #
@@ -245,6 +249,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
         DF = pd.DataFrame()
         for i in beam:
             print ("Type", i, "selected with all sizes.")
+            
             if i in beamTypes:
                 tmp = df_sliced[df_sliced.BeamShape == i] 
                 DF = DF.append(tmp)
@@ -252,8 +257,8 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
             else:
                 raise ValueError("Selected beam type", i, "not in the list of available beams:", beamTypes)
         
-        if verbose: print (DF)
-        grouped = DF.groupby(['optics','BeamShape','BeamSize'])
+        if collimation: grouped = DF.groupby(['CollDim','optics','BeamShape']) #,'BeamSize'])
+        else: grouped = DF.groupby(['optics','BeamShape']) #,'BeamSize'])
     
     else:
         raise RuntimeError("Invalid selection of choice(s)!")
