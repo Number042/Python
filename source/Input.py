@@ -493,20 +493,25 @@ class DataSelection:
         Function to do some data filtering.
             -- aperture:    allows to choose only certain dimensions; provided by calling function
             -- verbose:     set level of verbosity, also provided by calling function
+        
+        returns: dataframe grouped wrt to aperture selection
         """
         
         df = self.df
+        dfName = df.name
+        
+        if verbose: print ( " -*-*-*-*-*-*-*-*-*-*-*-*- \n", dfName, "holds: \n", df.keys() )
         
         # create a list of available apertures from the frame
         #
         aperList = df.CollDim.unique()
-        if verbose: print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
+        if verbose: print ( " -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList )
         
-        # based on chose in 'selection', slice out SR data from overall frame df
+        # slice out SR data from overall frame df
         # pass name from df to sliced df
         #
         df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0)]
-        df_sliced.name = df.name
+        df_sliced.name = dfName
     
         # check the df name, if collimation data, groupby apertures
         #
@@ -526,6 +531,7 @@ class DataSelection:
                 print ('aperture selected:', i)
                 if i in aperList:
                     tmp = df_sliced[df_sliced.CollDim == i]
+                    # ~ hits = df_sliced[(df_sliced.) & ()]
                     DF = DF.append(tmp)
                 else:
                     raise ValueError('Selected aperture', i, 'not in the list. Available are:', aperList)
@@ -608,14 +614,13 @@ class TfsReader:
     def __init__(self, tfs):
         self.tfs = tfs
         
-        
     def read_twiss(self, verbose = 0):
+        
         """
         Function to read general twiss files.
         """
-        tfs = self.tfs
 
-        df = pd.read_table(tfs, sep = "\s+", skiprows = 45, index_col = False) 
+        df = pd.read_table(self.tfs, sep = "\s+", skiprows = 45, index_col = False) 
 
         # read columns and drop the first one (*) to actually match the right header
         #
@@ -641,10 +646,27 @@ class TfsReader:
         """
         Function to read general survey files.
         """
+        surveyDF = pd.read_table(self.tfs, sep = r'\s+', skiprows = 6, index_col = False)
+        
+        # read columns and drop the first one (*) to actually match the right header
+        #
+        cols = surveyDF.columns
+        surveyHeader = cols[1:]
+        
+        # drop NaN column(s) and reset header
+        #
+        surveyDF = surveyDF.dropna( axis = 1, how = 'any' )
+        surveyDF.columns = surveyHeader
+        
+        surveyDF = surveyDF.drop(surveyDF.index[0])
+        surveyDF = surveyDF.convert_objects(convert_numeric = True)
+        
+        if verbose:
+            print("----------------------------------")
+            print(" DF contains: \n", surveyDF.keys(), "\n data tpes are: \n", surveyDF.dtypes)
+            print("----------------------------------")
 
-        surveyHeader = ['S', 'X', 'Y', 'Z', 'THETA', 'PHI', 'PSI']
-    
-     
+        return surveyDF
     
 def checkRing(df, verbose = 0):
     """
