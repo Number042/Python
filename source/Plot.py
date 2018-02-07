@@ -108,6 +108,10 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
 
         tracking = Tracking(frame, verbose)
         Z_pos, Z_org, Z_hit = tracking.collectInfo(verbose = verbose)
+        
+        count = sum(1 for x in Z_hit if (x > -2) & (x < 2) )
+        
+        print ("*** TEST --> counting hits:", count)
 
                     
         # plot resulting data
@@ -332,7 +336,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
 
 def plotSrcHits(df, plotpath, elements, zlim = [], nBin = 100, ticks = 5, save = 0, verbose = 0):
     """
-    Method to select certain elements as sources and plot hits caused by these elements.
+    Method to select certain elements as sources and plot hits caused BY THESE elements.
     Requires full element names, no groups implemented yet.
         -- df:      dataframe to do the selection on
         -- name:    list of names, has to be passed as list, even for single element
@@ -397,4 +401,62 @@ def plot_colEff(df, plotpath, ):
     else:
         print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
     
+def plot_spatialGamDistr(inputFile, plotpath, nBin = 100, save = 0):
+    """
+    Method to analyze data created by SteppingAction in TestEm16 for collecting detailed information 
+    on photons that enter certain volume(s).
+        -- input:       file to read the data from. Dedicated frame created
+        -- plotpath:    specify location for storage of plots
+    """
+    # Create local dataframe to store the Geant4 output
+    #
+    header = ['Energy', 'x', 'y', 'z', 'px/p', 'py/p', 'pz/p']
+    scoreFrame = pd.read_table(inputFile, sep = '\t', header = None, names = header)
+    
+    # count number of entries
+    #
+    totalGam = scoreFrame.Energy.count()
+    print (" ========================================= \n", " total number of entries: ", totalGam, " photons.\n", " ========================================= ")
+    
+    # plot the energy distribution
+    #
+    plt.figure( figsize = (12,10) )
+    plt.hist(scoreFrame.Energy.tolist(), nBin)
+    plt.yscale('log')
+    plt.grid()
+    plt.xlabel('Energy [keV]')
+    plt.ylabel('photons/bin')
+    plt.title('Energy Distribution')
+    
+    # save the plots if desired
+    #
+    if save: plt.savefig( plotpath + "energyDistr.pdf" )
+    
+    # plot the spatial information
+    #
+    plt.figure( figsize = (12, 10) )
+    plt.grid()
+    plt.hist(scoreFrame.x.tolist(), nBin)
+    plt.xlabel('x [m]')
+    plt.ylabel('photons/bin')
+    plt.title('Horizontal Position at Entrance')
+    if save: plt.savefig( plotpath + "gamHor.pdf" )
+        
+    plt.figure( figsize = (12, 10) )
+    plt.grid()
+    plt.hist(scoreFrame.y.tolist(), nBin)
+    plt.xlabel('y [m]')
+    plt.ylabel('photons/bin')
+    plt.title('Vertical Position at Entrance')
+    if save: plt.savefig( plotpath + "gamVer.pdf" )
 
+    plt.figure( figsize = (12, 10) )
+    plt.grid()
+    plt.hist(scoreFrame.z.tolist(), nBin)
+    plt.xlabel('z [m]')
+    plt.ylabel('photons/bin')
+    plt.title('Longitudinal Position at Entrance')
+    if save: plt.savefig( plotpath + "gamLon.pdf" )
+    
+    
+    
