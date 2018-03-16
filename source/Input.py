@@ -18,7 +18,7 @@ class DataReader:
     def __init__(self, path):
         self.path = path
     
-    def readParams(file, output = 0, filetype = 'csv'):
+    def readParams(file, output = 0, verbose = 0, filetype = 'csv'):
         """
         Function to read the parameters for FCC-ee and write data to csv. Also allows to do other stuff like 
         changing parameters once an update is released.
@@ -29,11 +29,18 @@ class DataReader:
         returns: dataframe containing the 
         """
         # set some variables
+        #
         path = '/home/mlueckhof/PhD/Notes/IRDesign/data/'
-        # read spreadsheet with parameters
-        DF = pd.read_excel(file)
-        DF.name = 'FCCeeParam'
         
+        # read spreadsheet with parameters
+        #
+        pd.set_option('display.float_format', '{:.2g}'.format)
+        DF = pd.read_excel(file)
+        DF.name = 'MachineParam'
+        
+        if verbose: print("---------------------------------- \n", "DF contains: \n", DF.keys(), 
+                          "\n Data-Types are: \n", DF.dtypes, "\n ----------------------------------")
+                          
         if output:
             if filetype == 'csv':
                 DF.to_csv(path+'FCCeeParamList.csv')
