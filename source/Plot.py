@@ -20,6 +20,7 @@ mpl.rcParams['axes.titlesize'] = 20
 mpl.rcParams['figure.figsize'] = 15., 10.    # figure size in inches
 
 mpl.rcParams['legend.fontsize'] = 16
+mpl.rcParams['agg.path.chunksize'] = 10000
 # --------------------------- ----------------------- -------------------------------------
 
 # Functions following from here should be put into another class, PlottingData 
@@ -376,7 +377,7 @@ def plotSrcHits(df, plotpath, elements, zlim = [], nBin = 100, ticks = 5, save =
     plt.grid()
     
     plt.legend()
-    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = 4)
+    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = 6)
     
     plt.ylabel('photons/bin')
     plt.xlabel('z [m]')
@@ -401,6 +402,8 @@ def plot_colEff(df, plotpath, ):
     else:
         print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
     
+# mlu -- 02-08-2018 -- maybe think about putting all this into a new clas 'Scoring'
+#
 def plot_spatialGamDistr(inputFile, plotpath, nBin = 100, save = 0):
     """
     Method to analyze data created by SteppingAction in TestEm16 for collecting detailed information 
@@ -458,5 +461,20 @@ def plot_spatialGamDistr(inputFile, plotpath, nBin = 100, save = 0):
     plt.title('Longitudinal Position at Entrance')
     if save: plt.savefig( plotpath + "gamLon.pdf" )
     
+    # mlu -- 03-08-2018 -- make plots rasterized to reduce file size (increasing statisitcs)
+    #
+    plt.figure( figsize = (12, 10) )
+    plt.grid()
+    plt.plot(scoreFrame.z.tolist(), scoreFrame.x.tolist(), 'b.', rasterized = True)
+    plt.xlabel('z [m]')
+    plt.ylabel('x [m]')
+    plt.title('x-z Position at Entrance')
+    if save: plt.savefig( plotpath + "gamPosXZ.pdf" )
     
-    
+    plt.figure( figsize = (12, 10) )
+    plt.grid()
+    plt.plot(scoreFrame.x.tolist(), scoreFrame.y.tolist(), 'b.', rasterized = True)
+    plt.xlabel('x [m]')
+    plt.ylabel('y [m]')
+    plt.title('x-y Position at Entrance')
+    if save: plt.savefig( plotpath + "gamPosXY.pdf" )
