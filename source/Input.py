@@ -34,17 +34,18 @@ class DataReader:
         
         # read spreadsheet with parameters
         #
-        pd.set_option('display.float_format', '{:.2g}'.format)
-        DF = pd.read_excel(file)
+        pd.set_option( 'display.float_format', '{:.2g}'.format )
+        DF = pd.read_excel( file, dtype = {'LER':np.float64, 'HER':np.float64 } )
         DF.name = 'MachineParam'
-        
+        # DF.apply( pd.to_numeric, errors = 'ignore' )
+
         if verbose: print("---------------------------------- \n", "DF contains: \n", DF.keys(), 
                           "\n Data-Types are: \n", DF.dtypes, "\n ----------------------------------")
                           
         if output:
             if filetype == 'csv':
-                DF.to_csv(path+'FCCeeParamList.csv')
-                print ("Created output:", path+'FCCeeParamList.csv')
+                DF.to_csv( path + 'FCCeeParamList.csv' )
+                print ( "Created output:", path + 'FCCeeParamList.csv' )
             else: 
                 print (" *** Error: No other filetypes supported yet")
         
