@@ -386,7 +386,29 @@ def plotSrcHits(df, plotpath, elements, zlim = [], nBin = 100, ticks = 5, save =
         print ("Saving figure as ", plotpath, "SR_hitsFrmElmt.pdf")
         plt.savefig(plotpath + "SR_hitsFrmElmt.pdf", bbox_inches = 'tight')
 
+def plot_Energy(df, plotpath, nBin = 100):
+    """
+    Method to plot the energy distribution from optics_seco_ntuple.out
+        -- df:          dataframe that holds the secondaries data
+        -- plotpath:    specify location to dump pdf plots
+        -- nBin:        specify number of bins
+    """
 
+    # check for existence of the data
+    #
+    pc = df.ptot.tolist()
+    if pc == []: raise RuntimeError("Momentum is empty!")
+    else: print (" Momentum data existing.")
+
+    # plot a histogram of photon energy, note default in WriteNtupleData is MeV/c
+    #
+    plt.figure( figsize = (12, 10) )
+    plt.hist(pc, nBin )
+    plt.yscale( 'log' )
+    plt.grid()
+    plt.xlabel( 'Energy [MeV]' )
+    plt.ylabel( 'photons/bin' )
+    plt.title( 'Energy distribution' )
 
 def plot_colEff(df, plotpath, ):
     """
