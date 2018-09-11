@@ -435,7 +435,7 @@ def plot_spatialGamDistr(inputFile, plotpath, nBin = 100, save = 0):
     """
     # Create local dataframe to store the Geant4 output
     #
-    header = ['Energy', 'x', 'y', 'z', 'px/p', 'py/p', 'pz/p']
+    header = ['Name', 'Energy', 'x', 'y', 'z', 'px/p', 'py/p', 'pz/p']
     scoreFrame = pd.read_table(inputFile, sep = '\t', header = None, names = header)
     
     # count number of entries
