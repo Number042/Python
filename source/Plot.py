@@ -386,6 +386,31 @@ def plotSrcHits(df, plotpath, elements, zlim = [], nBin = 100, ticks = 5, save =
         print ("Saving figure as ", plotpath, "SR_hitsFrmElmt.pdf")
         plt.savefig(plotpath + "SR_hitsFrmElmt.pdf", bbox_inches = 'tight')
 
+def plotPrimTrack( df, plotpath, axis = 'all' ):
+    """
+    Method to plot the ppath of primary particles after Geant tracking
+        -- df:          dataframe holding primary data
+        -- axis:        choose between both or only one transverse coordinate
+        -- plotpath:    specify location to dump pdf plots
+    """
+    x_eu = df.x_eu.tolist()
+    y_eu = df.y_eu.tolist()
+    z_eu = df.z_eu.tolist()
+
+    plt.figure( figsize = (12,10) )
+    plt.title('primary particle track')
+    plt.grid()
+    if axis == 'all':
+        plt.plot(z_eu, x_eu, 'r.', label = 'horizontal')
+        plt.plot(z_eu, y_eu, 'b.', label = 'vertical')
+    elif axis == 'horizontal':
+        plt.plot(z_eu, x_eu, 'r.', label = 'horizontal')
+    elif axis == 'vertical':
+        plt.plot(z_eu, y_eu, 'b.', label = 'vertical')
+    plt.xlabel('z [m]')
+    plt.ylabel('trnsv. pos. [m]')
+    plt.legend()
+
 def plot_Energy(df, plotpath, nBin = 100):
     """
     Method to plot the energy distribution from optics_seco_ntuple.out

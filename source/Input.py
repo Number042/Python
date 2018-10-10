@@ -675,7 +675,46 @@ class TfsReader:
             print("----------------------------------")
 
         return surveyDF
+
+# read general output files (debug, SAD stuff, MDISim output) to DF for analysis
+class OutputToDF:
+
+    def __init__( self, txt ):
+        self.txt = txt
     
+    def read_txt( self, header = 0, verbose = 0, skipLine = 0, dropDupl = 0 ):
+        """
+        Function to read in general text files to a data frame
+            --- header:     specify an array of names for the header
+            --- verbose:    set output level
+            --- skipLine:   specify number of lines to drop
+            --- dropDupl:   specify column on which to drop duplicates
+        """
+        
+        df = pd.read_table( self.txt, sep = r'\s+', skiprows = skipLine, index_col = False )
+        if header:
+            df.columns = header
+        else:
+            print( " *** Warning: no header specified, inferring from file ... ")
+
+        if dropDupl != 0:
+            df = df.drop_duplicates( subset = [dropDupl], keep = 'first')
+        
+        return df
+    
+    def plotData( xDat, yDat, xLabel, yLabel, verbose = 0 ):
+        """
+        General plotting method to examine data stored in a file
+            --- xDat, yDat:     columns to plot, needs name as input
+            --- xLabel, yLabel: axis labels (could be like tuple?)
+            --- verbose:        output level
+        """
+        plt.figure( figsize = (12, 10) )
+        plt.plot( df.xDat.tolist(), df.yDat.tolist() )
+        plt.xlabel( xLabel ); plt.ylabel( yLabel )
+        plt.title('dummy title')
+
+        
 def checkRing(df, verbose = 0):
     """
     Method to quickly check, if a sequence is closed (ring) or not. If not closed, give fudge factor (2pi - offset)
@@ -690,15 +729,10 @@ def checkRing(df, verbose = 0):
         fudge = 2*np.pi - angleSum
         print (" ** Ring not closed - offset of: ", fudge)           
         
-
-   
-
-            
-
 def print_verbose(df):
-    # General verbose output - some information on the data
-    # print keys of the DF
-    #
+    """ 
+    General verbose output - some information on the data, i.e. keys of the DF
+    """
     print ("-------------------------------------")
     print ("DF holds: ", df.keys())
     print ("-------------------------------------")
