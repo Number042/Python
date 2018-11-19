@@ -22,7 +22,8 @@ class FieldStepper:
         self._eleMass = cnst.m_e
         self._gamma = Ebeam/self._restEnerg
         self._Brho = 10*Ebeam/(self._c0/1e8)
-        self._v = self._c0*np.sqrt( (self._gamma*self._gamma -1 )/(self._gamma*self._gamma) ) 
+        self._v = self._c0*np.sqrt( (self._gamma*self._gamma -1 )/(self._gamma*self._gamma) )
+        self._epfac = self._elmChrg/(self._eleMass*self._gamma*self._v)
 
         if verbose:
             print(' ---- beam parameters are ---- \n'
@@ -32,6 +33,7 @@ class FieldStepper:
                     '* Brho = ', self._Brho, '\n'
                     '* angle = ', self.angle, 'rad \n'
                     '* v = ', self._v/self._c0, 'c \n'
+                    '* epfac =', self._epfac, '\n'
                   ' ----------------------------- ')
         
     def setSolenoid( self, length, solStr ):
@@ -48,6 +50,7 @@ class FieldStepper:
         if self.verbose:
             print(' ---- solenoid specified with ---- \n'
                     '* KS = ', solStr, ' \n'
+                    '* B =', self.fieldSol, 'T \n'
                     '* length = ', length, ' m \n'
                     ' ------------------------------- ')
 
@@ -56,7 +59,7 @@ class FieldStepper:
     def getBfield( self, position ):
         """
         Function to retrieve the field at a certain position. 
-            -- position: current particle position
+            -- position: current longitudinal particle position (z comp)
         RETURNS: tuple of  form (Bx, By, Bz)
         """
         # if solenoid length not specified, stop here
@@ -65,9 +68,9 @@ class FieldStepper:
         
         # first half of the length is solenoid, second half is the asol
         #
-        if 0 <= position <= self.sol_len/2: 
+        if 0 <= position <= (self.sol_len/np.cos(self.angle))/2: 
             cur_field = self.fieldSol
-        elif self.sol_len/2 < position <= self.sol_len:
+        elif (self.sol_len/np.cos(self.angle))/2 < position <= (self.sol_len/np.cos(self.angle)):
             cur_field = self.fieldAsol
         else: 
             raise OutOfFieldRange('Current position', position, 'outside solenoid length')
@@ -76,55 +79,88 @@ class FieldStepper:
         #
         return cur_field
 
-    def step( self, time_max = 0, x0 = ( 0, 0, 0 ), stepsize = 1e-12 ):
+    def step( self, time_max = 0, x0 = ( 0, 0, 0 ), v0 = ( 1, 1, 1 ), dt = 1e-12 ):
         """
         Function that steps through the magnet and calculates the field dependent trajectory
             -- time_max:    maximum for time range, default 0 means time required to traverse the solenoid
             -- x0:          start position
-            -- stepsize:    specify the stepswidth
-        RETURNS: lists of horizontal, vertical, and longitudinal position. Further time (np array) and field (list of tuples)
+            -- dt:          increment in time
+        RETURNS: lists of position and speed tuples. Further time (np array) and field (list of tuples)
         """
-        v = ( self._v*np.sin(self.angle), self._v*np.sin(self.angle), self._v*np.cos(self.angle) )
-        
-        # if a time limit is not spedified, take the time a particle needs to traverse the solenoid
-        if time_max == 0: time = np.arange(0, self.sol_len/self._v, stepsize)
-        elif time_max < 0: raise ValueError('Negative time limit not allowed: time_max = ', time_max)
-        else: time = np.arange(0, time_max, stepsize)
-
         # lists to store the positions. Initialized with start position as given from fct. argument
         #
-        hor = [x0[0]]; vert = [x0[1]]; longt = [x0[2]]; field_map = [ (0,0,0) ]
-
-        if self.verbose: print('Starting point = ', '(',hor[0],vert[0],longt[0],')')
-        n = 1
-        for t in time:
-            field = self.getBfield( longt[n-1] )
-            if self.verbose > 1: print( 'field = ', field, 'at pos = ', longt[n-1], 'n = ', n )
-            x = hor[n-1]   + v[0]*np.cos( field[2]*self._elmChrg/(self._eleMass*self._gamma)*t )
-            y = vert[n-1]  - v[1]*np.sin( field[2]*self._elmChrg/(self._eleMass*self._gamma)*t )
-            z = longt[n-1] + v[2]*t
-            if self.verbose > 1: print( 'pos(n-1) = (',hor[n-1],',', vert[n-1],',', longt[n-1],') \n'
-                                        'pos(n) = (', x,',', y,',', z,')' )
-            hor.append(x); vert.append(y); longt.append(z); field_map.append(field)
-            n += 1
+        pos = [(x0[0], x0[1], x0[2])]; vel = [(v0[0], v0[1], v0[2])]; field_map = [ (0,0,0) ]
+        if self.verbose: print('Starting point = ', x0, 'speed =', v0)
         
-        return hor, vert, longt, list(time), field_map
+        # if a time limit is not spedified, take the time a particle needs to traverse the solenoid
+        #
+        if time_max == 0: time = np.arange(0, self.sol_len/self._v, dt)
+        elif time_max < 0: raise ValueError('Negative time limit not allowed: time_max = ', time_max)
+        else: time = np.arange(0, time_max, dt)
+        
+        if self.verbose > 1: print('chosen range =', time)
+        
+        # think about new implementation. It should use the initial position and velocity (based on entry angle)
+        # then calculate positions by invoking changing velocities due to Lorentz force. 
+        #
+        n =1
+        # for deltaS in np.arange(0,self.sol_len, ds):
+        for t in time:    
+            field = self.getBfield( pos[n-1][2] )
+            if self.verbose > 1: print('n:', n, 'field =', field, 'at pos =', pos[n-1][2])
+            field_map.append(field)
+            
+            # general idea: v_i = v_i-1 + dv*dt, then update
+            vx = vel[n-1][0] + (vel[n-1][1]*field[2] - vel[n-1][2]*field[1])*dt 
+            vy = vel[n-1][1] + (vel[n-1][2]*field[0] - vel[n-1][0]*field[2])*dt
+            vz = vel[n-1][2] + (vel[n-1][0]*field[1] - vel[n-1][1]*field[0])*dt
+            vel.append( (vx, vy, vz) )
+            
+            # general idea: x_i = x_i-1 + v_i*dt
+            x = pos[n-1][0] + self._epfac*vx*dt  
+            y = pos[n-1][1] + self._epfac*vy*dt 
+            z = pos[n-1][2] + self._epfac*vz*dt 
+            # update position
+            pos.append( (x, y, z) )
+            # print('current velocity =', vel[n], 'at ', pos[n], 'and field =', field)
 
-    def pltField( self, zDat, fieldDat ):
+            n += 1
+
+        return pos, vel, list(time), field_map
+
+    def pltField( self, posTup, fieldTup ):
         """
         Function to plot the field along longitudinal position.
-            -- zDat: range of longitudinal particle position
-            -- fieldDat: list of tuples [(Bx, By, Bz)]
+            -- posTup: list of tuples storing particle position [(x,y,z)]
+            -- fieldTup: list of tuples [(Bx, By, Bz)]
         RETURNS: none
         """
-        Bz = [field[2] for field in fieldDat]
+        z = [elm[2] for elm in posTup]
+        Bz = [field[2] for field in fieldTup]; By = [field[1] for field in fieldTup]; Bx = [field[0] for field in fieldTup]
         plt.figure()
-        plt.plot( zDat, Bz, 'b:', label = 'Bz' )
+        plt.plot( z, Bz, 'b:', label = 'Bz' ); plt.plot( z, Bx, 'r:', label = 'Bx'); plt.plot( z, By, 'g:', label = 'By')
         plt.xlabel('z [m]'); plt.ylabel('B [T]'); plt.legend()
         plt.title('field along z')
         return
+    
+    def pltSpeed( self, posTup, velTup ):
+        """
+        """
+        z = [elm[2] for elm in posTup]
+        velX = [v[0] for v in velTup]
+        velY = [v[1] for v in velTup]
+        velZ = [v[2] for v in velTup]
 
-    def pltProjections( self, xDat, yDat, zDat, fieldMap ):
+        plt.figure()
+        plt.plot( z, velX, 'r--', label = '$v_x$')
+        plt.plot( z, velY, 'g--', label = '$v_y$')
+        plt.plot( z, velZ, 'b--', label = '$v_z$')
+        plt.xlabel('z [m]'); plt.ylabel('v [m/s]'); plt.legend()
+        plt.title('speed along z')
+        return
+
+    # def pltProjections( self, xDat, yDat, zDat, fieldMap ):
+    def pltProjections( self, posTup, fieldTup ):
         """
         Function to plot a 3D projection of the trajectory
             -- xDat, yDat, zDat:    lists containing the data
@@ -132,12 +168,14 @@ class FieldStepper:
 
         # data passed as lists. Sort data depending on Bz to sol and asol and repack new lists for plotting
         #
-        sol = [(xDat[inc], yDat[inc], zDat[inc]) for inc in range(0, len(fieldMap)) if fieldMap[inc][2] > 0] 
+        # sol = [(xDat[inc], yDat[inc], zDat[inc]) for inc in range(0, len(fieldMap)) if fieldMap[inc][2] > 0] 
+        sol = [ (posTup[inc][0], posTup[inc][1], posTup[inc][2]) for inc in range(len(fieldTup)) if fieldTup[inc][2] > 0 ]
         xSol = [ tpl[0] for tpl in sol]
         ySol = [ tpl[1] for tpl in sol]
         zSol = [ tpl[2] for tpl in sol]
 
-        asol= [(xDat[inc], yDat[inc], zDat[inc]) for inc in range(0, len(fieldMap)) if fieldMap[inc][2] < 0]
+        # asol= [(xDat[inc], yDat[inc], zDat[inc]) for inc in range(0, len(fieldMap)) if fieldMap[inc][2] < 0]
+        asol = [ (posTup[inc][0], posTup[inc][1], posTup[inc][2]) for inc in range(len(fieldTup)) if fieldTup[inc][2] < 0]
         xASol = [ tpl[0] for tpl in asol]
         yASol = [ tpl[1] for tpl in asol]
         zASol = [ tpl[2] for tpl in asol]
