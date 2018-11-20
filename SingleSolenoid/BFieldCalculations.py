@@ -103,23 +103,25 @@ class FieldStepper:
         # think about new implementation. It should use the initial position and velocity (based on entry angle)
         # then calculate positions by invoking changing velocities due to Lorentz force. 
         #
-        n =1
+        n = 1
         # for deltaS in np.arange(0,self.sol_len, ds):
         for t in time:    
-            field = self.getBfield( pos[n-1][2] )
+            field = self.getBfield( pos[n-1][2]); B = np.array([field[0], field[1], field[2]]) 
             if self.verbose > 1: print('n:', n, 'field =', field, 'at pos =', pos[n-1][2])
-            field_map.append(field)
+            field_map.append( (field[0], field[1], field[2]) )
             
             # general idea: v_i = v_i-1 + dv*dt, then update
-            vx = vel[n-1][0] + (vel[n-1][1]*field[2] - vel[n-1][2]*field[1])*dt 
-            vy = vel[n-1][1] + (vel[n-1][2]*field[0] - vel[n-1][0]*field[2])*dt
-            vz = vel[n-1][2] + (vel[n-1][0]*field[1] - vel[n-1][1]*field[0])*dt
-            vel.append( (vx, vy, vz) )
+            v = np.array(vel[n-1]) + np.cross( vel[n-1], B)*dt
+#            vx = vel[n-1][0] + (vel[n-1][1]*field[2] - vel[n-1][2]*field[1])*dt 
+#            vy = vel[n-1][1] + (vel[n-1][2]*field[0] - vel[n-1][0]*field[2])*dt
+#            vz = vel[n-1][2] + (vel[n-1][0]*field[1] - vel[n-1][1]*field[0])*dt
+            print(vel[n-1])
+            vel.append( (v[0], v[1], v[2]) ) #(vx, vy, vz)
             
             # general idea: x_i = x_i-1 + v_i*dt
-            x = pos[n-1][0] + self._epfac*vx*dt  
-            y = pos[n-1][1] + self._epfac*vy*dt 
-            z = pos[n-1][2] + self._epfac*vz*dt 
+            x = pos[n-1][0] + self._epfac*v[0]*dt  
+            y = pos[n-1][1] + self._epfac*v[1]*dt 
+            z = pos[n-1][2] + self._epfac*v[2]*dt 
             # update position
             pos.append( (x, y, z) )
             # print('current velocity =', vel[n], 'at ', pos[n], 'and field =', field)
