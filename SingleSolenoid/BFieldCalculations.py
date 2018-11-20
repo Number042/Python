@@ -93,8 +93,9 @@ class FieldStepper:
         if self.verbose: print('Starting point = ', x0, 'speed =', v0)
         
         # if a time limit is not spedified, take the time a particle needs to traverse the solenoid
+        # path length inside the solenoid gets longer (in case of a non-zero crossing angle)
         #
-        if time_max == 0: time = np.arange(0, self.sol_len/self._v, dt)
+        if time_max == 0: time = np.arange(0, (self.sol_len/np.cos(self.angle))/self._v, dt)
         elif time_max < 0: raise ValueError('Negative time limit not allowed: time_max = ', time_max)
         else: time = np.arange(0, time_max, dt)
         
@@ -124,7 +125,6 @@ class FieldStepper:
             z = pos[n-1][2] + self._epfac*v[2]*dt 
             # update position
             pos.append( (x, y, z) )
-            # print('current velocity =', vel[n], 'at ', pos[n], 'and field =', field)
 
             n += 1
 
