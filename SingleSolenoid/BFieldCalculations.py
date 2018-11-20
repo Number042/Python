@@ -107,7 +107,6 @@ class FieldStepper:
         n =1
         # for deltaS in np.arange(0,self.sol_len, ds):
         for t in time:    
-
             field = self.getBfield( pos[n-1][2] )
             if self.verbose > 1: print('n:', n, 'field =', field, 'at pos =', pos[n-1][2])
             field_map.append(field)
