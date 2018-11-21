@@ -10,8 +10,8 @@ import difflib as dl
 import re
 import timeit
 
-from Input import Tracking 
-from Input import DataSelection
+from Tracking import Tracking 
+from OpticsSelectTools import DataSelection
 
 # --------------------------- RC PARAMS STYLE SECTION -------------------------------------
 mpl.rcParams['lines.linewidth'] = 2
