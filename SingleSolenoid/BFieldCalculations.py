@@ -79,7 +79,7 @@ class FieldStepper:
         #
         return cur_field
 
-    def step( self, time_max = 0, x0 = ( 0, 0, 0 ), v0 = ( 1, 1, 1 ), dt = 1e-12 ):
+    def step( self, time_max = 0, x0 = ( 0, 0, 0 ), v0 = (1, 1, 1), dt = 1e-12 ):
         """
         Function that steps through the magnet and calculates the field dependent trajectory
             -- time_max:    maximum for time range, default 0 means time required to traverse the solenoid
@@ -89,7 +89,8 @@ class FieldStepper:
         """
         # lists to store the positions. Initialized with start position as given from fct. argument
         #
-        pos = [(x0[0], x0[1], x0[2])]; vel = [(v0[0], v0[1], v0[2])]; field_map = [ (0,0,0) ]
+        v0 = np.array( [v0[0], v0[1], v0[2]] ); x0 = np.array( [x0[0], x0[1], x0[2]] )
+        pos = [x0]; vel = [v0]; field_map = [ (0,0,0) ]
         if self.verbose: print('Starting point = ', x0, 'speed =', v0)
         
         # if a time limit is not spedified, take the time a particle needs to traverse the solenoid
@@ -112,19 +113,20 @@ class FieldStepper:
             field_map.append( (field[0], field[1], field[2]) )
             
             # general idea: v_i = v_i-1 + dv*dt, then update
-            v = np.array(vel[n-1]) + np.cross( vel[n-1], B)*dt
+            
 #            vx = vel[n-1][0] + (vel[n-1][1]*field[2] - vel[n-1][2]*field[1])*dt 
 #            vy = vel[n-1][1] + (vel[n-1][2]*field[0] - vel[n-1][0]*field[2])*dt
 #            vz = vel[n-1][2] + (vel[n-1][0]*field[1] - vel[n-1][1]*field[0])*dt
-            print(vel[n-1])
-            vel.append( (v[0], v[1], v[2]) ) #(vx, vy, vz)
+            print('n =', n, vel[n-1])
+            vel.append(vel[n-1] + np.cross( vel[n-1], B)*dt) #(vx, vy, vz)
             
             # general idea: x_i = x_i-1 + v_i*dt
-            x = pos[n-1][0] + self._epfac*v[0]*dt  
-            y = pos[n-1][1] + self._epfac*v[1]*dt 
-            z = pos[n-1][2] + self._epfac*v[2]*dt 
+            pos.append(pos[n-1] + self._epfac*vel[n-1])
+#            x = pos[n-1][0] + self._epfac*v[0]*dt  
+#            y = pos[n-1][1] + self._epfac*v[1]*dt 
+#            z = pos[n-1][2] + self._epfac*v[2]*dt 
             # update position
-            pos.append( (x, y, z) )
+#            pos.append( (x, y, z) )
 
             n += 1
 
