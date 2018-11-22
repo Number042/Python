@@ -1,3 +1,4 @@
+import sys
 class Tracking:
     
     """
@@ -14,15 +15,12 @@ class Tracking:
             -- frame:   refers to the data frame object resulting from a groupby operation
         """
         
-        frame = self.frame
-        # ~ verbose = self.verbose
-        
         if verbose == 1: 
-            print ("Selected frame contains: \n", " ------------------------ \n", frame.head())
+            print ("Selected frame contains: \n", " ------------------------ \n", self.frame.head())
     
         elif verbose > 1: 
             print ("collectInfo(), line: ", sys._getframe().f_lineno)
-            print ("Selected frame complete: \n", " ------------------------ \n", frame)
+            print ("Selected frame complete: \n", " ------------------------ \n", self.frame)
         
         event_last = 999999999
         track_last = 999999999
@@ -33,15 +31,15 @@ class Tracking:
         E_org = []; E_hit = []
         srcName = []
 
-        for row in frame.index:
+        for row in self.frame.index:
             
-            event = frame.get_value(row,'Event')
-            track = frame.get_value(row,'Track')
-            z_eu  = frame.get_value(row,'z_eu')
-            mat   = frame.get_value(row,'Material')
-            energ = frame.get_value(row,'ptot')
-            process = frame.get_value(row, 'ProcName')
-            creator = frame.get_value(row, 'Creator')
+            event = self.frame.get_value(row,'Event')
+            track = self.frame.get_value(row,'Track')
+            z_eu  = self.frame.get_value(row,'z_eu')
+            mat   = self.frame.get_value(row,'Material')
+            energ = self.frame.get_value(row,'ptot')
+            process = self.frame.get_value(row, 'ProcName')
+            creator = self.frame.get_value(row, 'Creator')
             
             if(process == 'initStep' and creator == 'SynRad'):
                 Z_org.append(z_eu)
@@ -57,8 +55,7 @@ class Tracking:
                 E_hit.append(energ)
                 
                 
-        #~ if verbose > 1: print ("Collected data in \n", "Z_pos: \n ------------------------- \n", Z_pos, "\n Z_org: \n ------------------------- \n", Z_org, 
-                               #~ "\n Z_hit: \n ------------------------- \n", Z_hit) 
+        if verbose > 1: print("Collected data in \n", "Z_pos: \n ------------------------- \n", Z_pos, "\n Z_org: \n ------------------------- \n", Z_org, "\n Z_hit: \n ------------------------- \n", Z_hit) 
         
         # returns several lists
         #
