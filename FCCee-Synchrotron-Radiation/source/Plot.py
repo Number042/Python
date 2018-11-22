@@ -4,15 +4,14 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 import collections as clt
-import sys
 import os
 import difflib as dl  
 import re
 import timeit
 
-from Tracking import Tracking 
+from PlotSelectTools import Tracking 
 from OpticsSelectTools import DataSelection
-
+ 
 # --------------------------- RC PARAMS STYLE SECTION -------------------------------------
 mpl.rcParams['lines.linewidth'] = 2
 mpl.rcParams['axes.labelsize'] = 15
@@ -50,45 +49,6 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
     #
     selection = DataSelection(df, verbose)
     grouped = selection.aper_select(aperture, verbose)
-    
-    # ~ # create a list of available apertures from the frame
-    # ~ #
-    # ~ aperList = df.CollDim.unique()
-    # ~ if verbose: print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
-    
-    # ~ # based on chose in 'selection', slice out SR data from overall frame df
-    # ~ # pass name from df to sliced df
-    # ~ #
-    # ~ if selection == 'SR':
-        # ~ df_sliced = df[(df.Creator == 'SynRad') & (df.charge == 0)]
-        # ~ df_sliced.name = df.name
-    # ~ else:
-        # ~ raise RuntimeError('Other selections not yet implemented!')
-    
-    # ~ # check the df name, if collimation data, groupby apertures
-    # ~ #
-    # ~ if re.findall('col', df_sliced.name):
-        # ~ print ("found collimator frame - groupby 'CollDim' \n", "-----------------------------")
-        
-        # ~ if aperture == 'all':
-            # ~ # add the aperture option here?
-            # ~ print ('selected all apertures!')
-            
-            # ~ grouped = df_sliced.groupby(['CollDim', 'optics', 'BeamShape'])   #['CollDim','optics','BeamShape','BeamSize']
-
-        # ~ else:
-            # ~ DF = pd.DataFrame()
-            # ~ for i in aperture:
-                # ~ print ('aperture selected:', i)
-                # ~ if i in aperList:
-                    # ~ tmp = df_sliced[df_sliced.CollDim == i]
-                    # ~ DF = DF.append(tmp)
-    # ~ #                 print (tmp.head())
-                # ~ else:
-                    # ~ raise ValueError('Selected aperture', i, 'not in the list. Available are:', aperList)
-                
-            # ~ grouped = DF.groupby(['CollDim', 'optics', 'BeamShape']) # ,'optics','BeamShape','BeamSize'
-
 
     # settings for the plot
     #
@@ -149,8 +109,7 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
         plt.savefig(plotpath + 'SR_origin_aper.pdf', bbox_inches = 'tight')
         print ("saved plot as", plotpath, "SR_origin_aper.pdf")
     
-    
-    
+    return
 
 def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'all', size = 'all', elements = [], Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
     """
@@ -202,7 +161,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     
     # case 1
     #
-    if beam == 'all' and size == 'all':
+    if beam == 'all' and size == 'all' or size == []:
               
         print ('selected all beam types and sizes!')
         
@@ -222,7 +181,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
                 DF = DF.append(tmp)
                 if verbose: print (tmp.head())
             else:
-                raise ValueError("Selected beam size", j, "not in the list of available beam sizes:", beamSizes)
+                raise KeyError("Selected beam size", j, "not in the list of available beam sizes:", beamSizes)
         
         if collimation: grouped = DF.groupby(['CollDim','optics','BeamSize'])
         else: grouped = DF.groupby(['optics','BeamSize'])
@@ -244,9 +203,9 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
                     if verbose > 1: print (tmp)
                 
                 elif i not in beamTypes:
-                    raise ValueError("Selected beam type", i, "not in the list of available beams:", beamTypes)
+                    raise KeyError("Selected beam type", i, "not in the list of available beams:", beamTypes)
                 elif j not in beamSizes:
-                    raise ValueError("Selected beam size", j, "not in the list of available beam sizes:", beamSizes)
+                    raise KeyError("Selected beam size", j, "not in the list of available beam sizes:", beamSizes)
         
         DF = DF.append(framelist)
         if collimation: grouped = DF.groupby(['CollDim','optics','BeamShape','BeamSize'])
@@ -265,7 +224,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
                 DF = DF.append(tmp)
                 #if verbose: print (tmp.head())
             else:
-                raise ValueError("Selected beam type", i, "not in the list of available beams:", beamTypes)
+                raise KeyError("Selected beam type", i, "not in the list of available beams:", beamTypes)
         
         if collimation: grouped = DF.groupby(['CollDim','optics','BeamShape']) #,'BeamSize'])
         else: grouped = DF.groupby(['optics','BeamShape']) #,'BeamSize'])
@@ -285,19 +244,19 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     #
     if zlim: plt.xlim(zlim[0], zlim[1])
 
-    for name, frame in grouped:
+    for name, subframe in grouped:
         
-        #~ if verbose:
-            #~ print ( "current group:", name )
-        #~ elif verbose > 1:
-            #~ print ( "parent frame:", grouped )
+        if verbose:
+            print ( "current group:", name )
+        elif verbose > 1:
+            print ( "parent frame:", grouped )
             
         # invoke new function from Input.py -- initiate tracking object from class
         # use collectInfo to select z data
         #
-        tracking = Tracking(frame, verbose)
+        tracking = Tracking(subframe, verbose)
         Z_pos, Z_org, Z_hit = tracking.collectInfo(verbose = verbose)
-         
+        
         # plot resulting data
         #
         if Type == 'hit':
@@ -331,9 +290,8 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     elif(Type == 'origin' and save == 1):
         plt.savefig(plotpath + 'SR_origin_beamshape.pdf', bbox_inches = 'tight')
         print ("saved plot as", plotpath, "SR_origin_beamshape.pdf")
-
-
-
+    
+    return
 
 def plotSrcHits(df, plotpath, elements, zlim = [], nBin = 100, ticks = 5, save = 0, verbose = 0):
     """
@@ -342,7 +300,7 @@ def plotSrcHits(df, plotpath, elements, zlim = [], nBin = 100, ticks = 5, save =
         -- df:      dataframe to do the selection on
         -- name:    list of names, has to be passed as list, even for single element
         -- nBin:    set number of bins/binning level
-        -- ticks:   set the number of tickss on the xaxis (acts on binning)
+        -- ticks:   set the number of ticks on the xaxis (acts on binning)
         -- save:    choose to whether or not save the plot
         -- verbose: switch on/off or set level of verbosity
     """
@@ -386,6 +344,8 @@ def plotSrcHits(df, plotpath, elements, zlim = [], nBin = 100, ticks = 5, save =
         print ("Saving figure as ", plotpath, "SR_hitsFrmElmt.pdf")
         plt.savefig(plotpath + "SR_hitsFrmElmt.pdf", bbox_inches = 'tight')
 
+    return
+
 def plotPrimTrack( df, plotpath, axis = 'all' ):
     """
     Method to plot the ppath of primary particles after Geant tracking
@@ -411,6 +371,8 @@ def plotPrimTrack( df, plotpath, axis = 'all' ):
     plt.ylabel('trnsv. pos. [m]')
     plt.legend()
 
+    return
+
 def plot_Energy(df, plotpath, nBin = 100):
     """
     Method to plot the energy distribution from optics_seco_ntuple.out
@@ -435,6 +397,8 @@ def plot_Energy(df, plotpath, nBin = 100):
     plt.ylabel( 'photons/bin' )
     plt.title( 'Energy distribution' )
 
+    return
+
 def plot_colEff(df, plotpath, ):
     """
     Method to count the hits +-2m from IP and plot this as fct. of the collimator settings.
@@ -448,6 +412,8 @@ def plot_colEff(df, plotpath, ):
     if aperList == []: raise RuntimeError("No apertures found!")
     else:
         print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
+
+    return
     
 # mlu -- 02-08-2018 -- maybe think about putting all this into a new clas 'Scoring'
 #
