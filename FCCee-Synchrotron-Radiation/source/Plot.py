@@ -68,7 +68,7 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
         elif verbose > 1: print ( "parent frame:", grouped )
 
         tracking = Tracking(frame, verbose)
-        Z_pos, Z_org, Z_hit = tracking.collectInfo(verbose = verbose)
+        Z_pos, Z_org, Z_hit, E_org, E_hit = tracking.collectInfo( frame, verbose )
         
         count = sum(1 for x in Z_hit if (x > -2) & (x < 2) )
         
@@ -159,103 +159,29 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     #   
     if verbose > 1: print ("Sliced data frame: \n", "----------------------------- \n", df_sliced)
     
-    # case 1
-    #
-    if beam == 'all' and size == 'all' or size == []:
-              
-        print ('selected all beam types and sizes!')
-        
-        if collimation: grouped = df_sliced.groupby(['CollDim','optics','BeamShape','BeamSize'])
-        else: grouped = df_sliced.groupby(['optics','BeamShape','BeamSize']) 
-        
-    # case 2
-    #
-    elif beam == 'all' and size != 'all':
-        DF = pd.DataFrame()
-        
-        for j in size:
-            print ("All beam types of size", j, "selected")
-                
-            if j in beamSizes:
-                tmp = df_sliced[df_sliced.BeamSize == j] 
-                DF = DF.append(tmp)
-                if verbose: print (tmp.head())
-            else:
-                raise KeyError("Selected beam size", j, "not in the list of available beam sizes:", beamSizes)
-        
-        if collimation: grouped = DF.groupby(['CollDim','optics','BeamSize'])
-        else: grouped = DF.groupby(['optics','BeamSize'])
-    
-    # case 3    
-    #
-    elif beam != 'all' and size != 'all':
-        
-        DF = pd.DataFrame()
-        framelist = []
-        for i in beam:
-            for j in size:
-                print ("Type", i, "selected, with size", j, "sigma")
-                    
-                if i in beamTypes and j in beamSizes:
-                    tmp = df_sliced[(df_sliced.BeamShape == i) & (df_sliced.BeamSize == j)]
-                    framelist.append(tmp)
-                    
-                    if verbose > 1: print (tmp)
-                
-                elif i not in beamTypes:
-                    raise KeyError("Selected beam type", i, "not in the list of available beams:", beamTypes)
-                elif j not in beamSizes:
-                    raise KeyError("Selected beam size", j, "not in the list of available beam sizes:", beamSizes)
-        
-        DF = DF.append(framelist)
-        if collimation: grouped = DF.groupby(['CollDim','optics','BeamShape','BeamSize'])
-        else: grouped = DF.groupby(['optics','BeamShape','BeamSize'])
-    
-    # case 4
-    #
-    elif beam != 'all' and size == 'all':
-        
-        DF = pd.DataFrame()
-        for i in beam:
-            print ("Type", i, "selected with all sizes.")
-            
-            if i in beamTypes:
-                tmp = df_sliced[df_sliced.BeamShape == i] 
-                DF = DF.append(tmp)
-                #if verbose: print (tmp.head())
-            else:
-                raise KeyError("Selected beam type", i, "not in the list of available beams:", beamTypes)
-        
-        if collimation: grouped = DF.groupby(['CollDim','optics','BeamShape']) #,'BeamSize'])
-        else: grouped = DF.groupby(['optics','BeamShape']) #,'BeamSize'])
-    
-    else:
-        raise RuntimeError("Invalid selection of choice(s)!")
-    
+    # try to put this in a function in PlotSelectTools ? 
+    selectFrame = Tracking( collimation, verbose )
+    selection = selectFrame.sliceFrame( df_sliced, beamTypes, beamSizes, beam, size, verbose )
+
     # settings for the plot
     #
     plt.figure(figsize = (15,10))
     ax = plt.subplot(111)
-    
     plt.rc('grid', linestyle = "--", color = 'grey')
     plt.grid()
-    
-    # allows to set the xlim
-    #
-    if zlim: plt.xlim(zlim[0], zlim[1])
+    if zlim: plt.xlim(zlim[0], zlim[1])         # allows to set the xlim
 
-    for name, subframe in grouped:
-        
+    for name, subframe in selection:
+    
         if verbose:
             print ( "current group:", name )
         elif verbose > 1:
-            print ( "parent frame:", grouped )
+            print ( "parent frame:", selection )
             
         # invoke new function from Input.py -- initiate tracking object from class
         # use collectInfo to select z data
         #
-        tracking = Tracking(subframe, verbose)
-        Z_pos, Z_org, Z_hit = tracking.collectInfo(verbose = verbose)
+        Z_pos, Z_org, Z_hit, E_org, E_hit = selectFrame.collectInfo( subframe, verbose )
         
         # plot resulting data
         #
