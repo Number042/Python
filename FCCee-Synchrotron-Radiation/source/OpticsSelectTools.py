@@ -77,39 +77,12 @@ class DataSelection:
             print (df.head())
             print (df.Name)
         
-        # do a selection here, depending on the optics 
-        # -- mlu 11-16-2017 -- has to be made more intelligent 
-        # to deal with complex 'Name' expressions or left out!
+        # mlu -- 11-22-2018 -- new implementation of split names:
+        # --> split 'Name' and reuse for shorter element name
+        # --> split 'OrigVol' and replace with its plain name
         #
-        names = df.Name.tolist()
-        maxString = max(names, key = len)
-        string = maxString.split('_')
-        numbElements = len(string)
-        
-        # after detecting element string, output specifics and columns to be used for new frame
-        #
-        if verbose: print ("number of elements: ", numbElements, " from ", string)
-        if numbElements == 4:
-            columns = ['element', 'type', 'eleNumber', 'vacuum']
-        else:
-            columns = ['element', 'type', 'vacuum']
-        if verbose: print ("columns selected: ", columns)
-
-        df_split = pd.DataFrame(df.Name.str.split('_').tolist(), columns = columns)
-        
-        if verbose == 1: 
-            print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Splitted 'Name' into: \n", columns) #['element','type','eleNumber','vacuum'])
-        elif verbose > 1:
-            print ("-*-*-*-*-*-*-*-*-*-*-*-*-*- \n Split-Frame contains: \n", df_split.dtypes)
-        
-        if verbose > 1: print (df_split.head())
-        
-        # concat the new frame to original, join on 'inner' to insert additional columns
-        #
-        frames = [df, df_split]
-        df = pd.concat(frames, axis = 1, join = 'inner')
-        
-        if verbose: print("*-*-*-*-*-*-*-*-*-*-*-*-* \n dataframe holds following keys and dtypes: \n", df.dtypes)
+        df['Name'], df['type'], df['vacuum'] = df['Name'].str.split('_', 3).str 
+        df['OrigVol'] = df['OrigVol'].str.split('_').str[0]
         
         df.name = dfName
         return df

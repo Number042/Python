@@ -151,7 +151,7 @@ def plot_diffBeamShape(df, plotpath, beamTypes, beamSizes, zlim = [], beam = 'al
     # additional option to select certain element(s), hsa to be able to accept a list
     #
     if elements:
-        df_sliced = df_sliced[df_sliced.element.isin(elements)] # slices the df based on selected elements 
+        df_sliced = df_sliced[df_sliced.Name.isin(elements)] # slices the df based on selected elements 
     else:
         print (" *** Warning: No elements selected, defaults to all.")
     
