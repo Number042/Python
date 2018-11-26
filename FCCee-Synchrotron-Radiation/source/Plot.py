@@ -167,16 +167,16 @@ def plot_defaultData(dfGrp, plotpath, zlim = [], beam = 'all', size = 'all', Typ
     plt.xlabel("z [m]")
 
     plt.legend()
-    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.2), ncol = legCol)
+    ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.1), ncol = legCol)
     
     if (Type == 'hit' and save == 1):
-        plt.savefig(plotpath + "SR_hits_beamshape.pdf", bbox_inches = 'tight')
+        plt.savefig(plotpath + "SR_hits_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
         print ('saved plot as', plotpath, 'SR_hits_beamshape.pdf')
     elif (Type == 'position' and save == 1):
-        plt.savefig(plotpath + "SR_position_beamshape.pdf", bbox_inches = 'tight')
+        plt.savefig(plotpath + "SR_position_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
         print ('saved plot as', plotpath, 'SR_position_beamshape.pdf')
     elif(Type == 'origin' and save == 1):
-        plt.savefig(plotpath + "SR_origin_beamshape.pdf", bbox_inches = 'tight')
+        plt.savefig(plotpath + "SR_origin_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
         print ('saved plot as', plotpath, 'SR_origin_beamshape.pdf')
     
     return
@@ -197,7 +197,6 @@ def plot_Energy(dfGrp, plotpath, beam = 'all', size = 'all', Type = 'spectrum', 
     ax = plt.subplot(111)
     plt.rc('grid', linestyle = "--", color = 'grey')
     plt.grid()
-    plt.yscale( 'log' )
     
     for name, subframe in dfGrp:
     
@@ -210,22 +209,36 @@ def plot_Energy(dfGrp, plotpath, beam = 'all', size = 'all', Type = 'spectrum', 
         # use collectInfo to select z data
         #
         Z_pos, Z_org, Z_hit, E_org, E_hit = dataSel.collectInfo( subframe )
+        E_mean = np.mean(E_org); E_std = np.std(E_org)
         
         # plot resulting data
         #
         if Type == 'spectrum':
             plt.title("SR photons hitting beampipe")
             plt.hist(E_org, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)
+            plt.yscale( 'log' )
+        elif Type == 'distribution':
+            print('Number of entries (E_org) =', len(E_org), 'in', name, '\n'
+                'Mean energy =', E_mean, 'keV \n'
+                'std deviation =', E_std, '\n'
+                ' ---------------------------------- ' )
+            plt.title('photon energy distribution')
+            plt.hist(E_org, bins = nBin, histtype = 'step', normed = True, fill = False, linewidth = 1.5, label = str(name), stacked = False)
         else:
             raise RuntimeError("Invalid selection of Type!")
-    
+
     plt.locator_params(axis = 'x', nbins = ticks)
-    plt.xlabel( 'Energy [GeV]' )
+    plt.xlabel( 'Energy [keV]' )
     plt.ylabel( 'photons/bin' )
     plt.title( 'Energy distribution' )
 
     plt.legend()
-    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.2), ncol = legCol)
+    ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.1), ncol = legCol)
+
+    if (Type == 'spectrum' and save == 1):
+        plt.savefig(plotpath + "SR_energy_spectrum.pdf", bbox_inches = 'tight', dpi = 150 )
+        print ('saved plot as', plotpath, 'SR_energy_spectrum.pdf')
+    else: pass
 
     return
 
