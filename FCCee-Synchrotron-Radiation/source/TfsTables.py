@@ -1,3 +1,5 @@
+import pandas as pd
+
 # read twiss files, should be as flexible as possible
 class TfsReader:
     
