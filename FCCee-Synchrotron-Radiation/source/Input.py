@@ -16,42 +16,7 @@ class DataReader:
     """
     
     def __init__(self, path):
-        self.path = path
-    
-    def readParams(self, file, output = 0, verbose = 0, filetype = 'csv'):
-        """
-        Function to read the parameters for FCC-ee and write data to csv. Also allows to do other stuff like 
-        changing parameters once an update is released.
-            -- file:     input file (spreadsheet)
-            -- output:   select if the DF is printed to a text file
-            -- filetype: choose a file type for the output; defaults to csv ==> LaTeX csvsimple input!
-        
-        returns: dataframe containing the 
-        """
-        # set some variables
-        #
-        path = '/home/mlueckhof/PhD/Notes/IRDesign/data/'
-        
-        # read spreadsheet with parameters
-        #
-        pd.set_option( 'display.float_format', '{:.2g}'.format )
-        DF = pd.read_excel( file, dtype = {'LER':np.float64, 'HER':np.float64 } )
-        DF.name = 'MachineParam'
-        # DF.apply( pd.to_numeric, errors = 'ignore' )
-
-        if verbose: print("---------------------------------- \n", "DF contains: \n", DF.keys(), 
-                          "\n Data-Types are: \n", DF.dtypes, "\n ----------------------------------")
-                          
-        if output:
-            if filetype == 'csv':
-                DF.to_csv( path + 'FCCeeParamList.csv' )
-                print ( "Created output:", path + 'FCCeeParamList.csv' )
-            else: 
-                print (" *** Error: No other filetypes supported yet")
-        
-        return DF
-        
-        
+        self.path = path        
         
     def getBeam_and_Aper_Info(self, file):
         
@@ -360,7 +325,40 @@ class DataReader:
         else:
             GlobDatFrame.name = name
             return GlobDatFrame
-        
+
+def readParams(file, output = 0, verbose = 0, filetype = 'csv'):
+    """
+    Function to read the parameters for FCC-ee and write data to csv. Also allows to do other stuff like 
+    changing parameters once an update is released.
+        -- file:     input file (spreadsheet)
+        -- output:   select if the DF is printed to a text file
+        -- filetype: choose a file type for the output; defaults to csv ==> LaTeX csvsimple input!
+    
+    returns: dataframe containing the 
+    """
+    # set some variables
+    #
+    path = '/home/mlueckhof/PhD/Notes/IRDesign/data/'
+    
+    # read spreadsheet with parameters
+    #
+    pd.set_option( 'display.float_format', '{:.2g}'.format )
+    DF = pd.read_excel( file, dtype = {'LER':np.float64, 'HER':np.float64 } )
+    DF.name = 'MachineParam'
+    # DF.apply( pd.to_numeric, errors = 'ignore' )
+
+    if verbose: print("---------------------------------- \n", "DF contains: \n", DF.keys(), 
+                        "\n Data-Types are: \n", DF.dtypes, "\n ----------------------------------")
+                        
+    if output:
+        if filetype == 'csv':
+            DF.to_csv( path + 'FCCeeParamList.csv' )
+            print ( "Created output:", path + 'FCCeeParamList.csv' )
+        else: 
+            print (" *** Error: No other filetypes supported yet")
+    
+    return DF
+
 def checkRing(df, verbose = 0):
     """
     Method to quickly check, if a sequence is closed (ring) or not. If not closed, give fudge factor (2pi - offset)
