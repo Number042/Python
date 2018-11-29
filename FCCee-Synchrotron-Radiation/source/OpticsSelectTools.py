@@ -27,7 +27,9 @@ class DataSelection:
         RETURN: another frame, holding only data from selected optics but still class object?
         """
         self._optics = optics
-        if optics == []: raise ValueError('Optics list is empty.')
+        if optics == [] or optics == 'all': 
+            self._optics = self.df.optics.unique()
+            print('Optics list is empty, inferring from DF:', self._optics)
         
         # set up empty list, looping specified optics and appending to self.df_opt
         #
@@ -77,8 +79,15 @@ class DataSelection:
         # --> split 'Name' and reuse for shorter element name
         # --> split 'OrigVol' and replace with its plain name
         #
-        self.df_opt['Name'], self.df_opt['type'], self.df_opt['vacuum'] = self.df_opt['Name'].str.split('_', 3).str 
-        self.df_opt['OrigVol'] = self.df_opt['OrigVol'].str.split('_').str[0]
+        maxlen = self.df_opt.Name.str.split('_').map(len).max()
+        if self.verbose: print( 'maximum number of parts in Name:', maxlen )
+        if maxlen < 4:
+            self.df_opt['Name'], self.df_opt['type'], self.df_opt['vacuum'] = self.df_opt['Name'].str.split('_', maxlen).str 
+        elif maxlen >= 4:            
+            self.df_opt['Name'], self.df_opt['type'], self.df_opt['number'], self.df_opt['vacuum'] = self.df_opt['Name'].str.split('_', maxlen).str 
+            
+        if 'OrigVol' not in self.df_opt.keys(): raise KeyError('No column named OrigVol')
+        else: self.df_opt['OrigVol'] = self.df_opt['OrigVol'].str.split('_').str[0]
         
         return self.df_opt
     
