@@ -95,21 +95,25 @@ class DataSelection:
     # STEP 2 -- check for collimation data and make first selection
     # check for collimation and use switch for groupby further below
     #
-    def elmSelection(self, elements = 'all'):
+    def elmSelection( self, elements = [], origins = [] ):
         """
         Function to select certain elements. Can be useful for plotting to demonstrate effects of or on
         single Elements
             -- elements:    list of names, defaults to all which leaves the frame untrouched
-        
+            -- origins:     list of names for selection on OrigVol, different from 'elements'
+
         RETURNS: sliced DF, according to element selection
         """
 
         # additional option to select certain element(s), has to be able to accept a list
-        #
-        if elements:
+        # 
+        if elements != [] and origins != []:
+            raise KeyError(' *** elements and origins cannot be used in parallel!')
+        elif not elements == []:
             self.df_opt = self.df_opt[ self.df_opt.Name.isin(elements) ] 
-        else:
-            print (" *** No elements selected, defaults to all.")
+        elif not origins == []:
+            self.df_opt = self.df_opt[ self.df_opt.OrigVol.isin(origins) ]
+            
         
         # check result of selection above
         #   
