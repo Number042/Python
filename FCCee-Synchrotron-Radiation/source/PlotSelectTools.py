@@ -26,6 +26,8 @@ class Tracking:
         track_last = 999999999
  
         # initiate all necessary arrays -- SLOW --> IMPROVE !!
+        # get_value is deprecated and likely to be removed in future releases. This can lead to broken code!
+        # at[] or .iat[] both seem slower than get_value() ==> keep get_value() for now. 
         #
         Z_pos = []; Z_org = []; Z_hit = []; 
         E_org = []; E_hit = []
