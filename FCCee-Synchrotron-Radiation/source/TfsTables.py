@@ -12,7 +12,7 @@ class TfsReader:
         Function to read general twiss files.
         """
 
-        df = pd.read_table(self.tfs, sep = "\s+", skiprows = 45, index_col = False) 
+        df = pd.read_table(self.tfs, sep = "\s+", comment = '@', index_col = False) 
 
         # read columns and drop the first one (*) to actually match the right header
         #
