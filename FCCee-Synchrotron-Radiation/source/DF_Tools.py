@@ -4,7 +4,7 @@ class OutputToDF:
 
     def __init__( self, txt ):
         self.txt = txt
-    
+
     def read_txt( self, header = 0, verbose = 0, skipLine = 0, dropDupl = 0 ):
         """
         Function to read in general text files to a data frame
@@ -13,16 +13,16 @@ class OutputToDF:
             --- skipLine:   specify number of lines to drop
             --- dropDupl:   specify column on which to drop duplicates
         """
-        
-        self.df = pd.read_table( self.txt, sep = r'\s+', skiprows = skipLine, index_col = False )
-        if header:
-            self.df.columns = header
-        else:
-            print( " *** Warning: no header specified, inferring from file ... ")
 
-        if dropDupl != 0:
-            df = df.drop_duplicates( subset = [dropDupl], keep = 'first')
-        df = self.df
+        df = pd.read_table( self.txt, sep = r'\s+', skiprows = skipLine, index_col = False )
+        
+        if dropDupl != 0: 
+            print( " Dropping duplicates of ", dropDupl)
+            df = df.drop_duplicates( subset = [dropDupl], keep = 'first' )
+
+        if header: df.columns = header
+        else: print( " *** Warning: no header specified, inferring from file ... ")
+
         return df
     
     def plotData(self, xDat, yDat, xLabel, yLabel, verbose = 0 ):
