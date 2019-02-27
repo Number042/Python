@@ -1,6 +1,7 @@
 import pandas as pd
-import PlotSetup 
+import VisualSpecs
 import matplotlib.pyplot as plt
+from Tools import rel_s
 
 # read twiss files, should be as flexible as possible
 class TfsReader:
@@ -8,18 +9,6 @@ class TfsReader:
     def __init__(self, tfs):
         self.tfs = tfs
 
-    def rel_s( self, df, row ):
-        """
-        Shift the IP in the center of S.
-        """
-        if row['S'] < df.S.max()/2:
-            rel_s = -row['S']
-        elif row['S'] > df.S.max()/2:
-            rel_s = df.S.max() - row['S']
-        
-        return rel_s
-
-        
     def read_twiss(self, relS = 0, verbose = 0):
         
         """
@@ -50,7 +39,7 @@ class TfsReader:
 
         if relS: 
             print(" Add column 'rel_S' -- S position shifted with IP in the center.")
-            df["rel_S"] = df.apply( lambda row: self.rel_s( df, row ), axis = 1 )
+            df["rel_S"] = df.apply( lambda row: rel_s( df, row ), axis = 1 )
         
         return df
     
@@ -91,7 +80,7 @@ class TfsReader:
         
         if relS: 
             print(" Add column 'rel_S' -- S position shifted with IP in the center.")
-            df["rel_S"] = df.apply( lambda row: self.rel_s( df, row ), axis = 1 )
+            df["rel_S"] = df.apply( lambda row: rel_s( df, row ), axis = 1 )
             
         return df
     
@@ -109,8 +98,7 @@ class PlotOptics:
             -- verbose:     set verbosity level
         """
 
-        colors = PlotSetup.myColors
-        styles = PlotSetup.myStyle
+        colors = VisualSpecs.myColors
         if twissPara == []: print("Nothing to plot. Specify list of parameters.")
         
         graph = plt.figure( figsize = (40,10) )
