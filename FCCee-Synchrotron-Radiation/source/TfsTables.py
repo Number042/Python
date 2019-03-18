@@ -24,9 +24,11 @@ class TfsReader:
         cols = df.columns
         twissHeader = cols[1:]
 
-        # drop NaN column and reset header
+        # drop last NaN column and reset header
         #
-        df = df.dropna(axis = 1, how = 'any')
+        if df.RE66.isnull().values.any(): df = df.drop('RE66', axis = 1)
+        else: raise ValueError('Last column not NaN as expected')
+        
         df.columns = twissHeader
 
         df = df.drop(df.index[0])
