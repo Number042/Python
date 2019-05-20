@@ -92,7 +92,7 @@ class PlotOptics:
     def __init__(self, twiss):
         self.df = twiss
 
-    def plotTwissParams( self, twissPara = [], relS = 0, verbose = 0):
+    def plotTwissParams( self, twissPara = [], relS = 0, figSize = [40,10], verbose = 0):
         """
         Function to directly plot a set of twiss parameters
             -- twiss:       baseline twiss (DF)
@@ -103,7 +103,7 @@ class PlotOptics:
         colors = VisualSpecs.myColors
         if twissPara == []: print("Nothing to plot. Specify list of parameters.")
         
-        graph = plt.figure( figsize = (40,10) )
+        graph = plt.figure( figsize = (figSize[0], figSize[1]) )
         if twissPara != [] and not relS:
             if verbose: print("plotting ", twissPara, "...")
             i = 0

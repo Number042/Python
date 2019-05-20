@@ -2,14 +2,18 @@ import matplotlib.pyplot as plt
 
 # fuction to calculate S with IP in the center
 #
-def rel_s( df, row ):
+def rel_s( df, row, Lmax = 0):
     """
     Shift the IP in the center of S. (KEK convention SAD, LER?)
     """
-    if row['S'] > df.S.max()/2:
-        rel_s = row['S'] - df.S.max()  
+    if Lmax == 0:
+        if row['S'] > df.S.max()/2:
+            rel_s = row['S'] - df.S.max()  
+        else:
+            rel_s = row['S']
     else:
-        rel_s = row['S']
+        if row['S'] > Lmax/2: rel_s = row['S'] - Lmax
+        else: rel_s = row['S']
     
     return rel_s
 
