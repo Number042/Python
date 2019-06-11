@@ -142,7 +142,9 @@ class DataReader:
                 
                 print (" accessing directory:", root, "...")
                 if dirs != []:
-                    print (" subdirectories exist for following optics: \n", dirs, "\n -----------------------------")
+                    print ( " subdirectories exist for following optics: \n", 
+                            dirs, 
+                            "\n -----------------------------")
                     k = 0
                     for d in dirs:
                         opticsList.append(str(dirs[k]))
@@ -171,11 +173,11 @@ class DataReader:
                                 
                             if read == 'primaries' and  'prim' in f:
                                 if not re.findall('_coll', f): 
-                                    optic = re.split('_b1_prim',f) 
+                                    optic = re.split('_b1',f)  #optic = re.split('_b1_prim',f) 
                                     opticsList.append(str(optic[0])) 
                             elif read == 'secondaries' and 'seco' in f:
                                 if not re.findall('_coll_', f):
-                                    optic = f.split('_b1_seco')
+                                    optic = f.split('_b1') #optic = f.split('_b1_seco')
                                     opticsList.append(str(optic[0]))
                                     
                         elif datType == 'collimation':
