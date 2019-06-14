@@ -34,14 +34,18 @@ class TfsReader:
         df = df.drop(df.index[0])
         df = df.convert_objects(convert_numeric = True)
 
+        # determine the maximum in S
+        #
+        Lmax = df.S.max()
+
         if verbose:
             print("----------------------------------")
             print(" DF contains: \n", df.keys(), "\n data tpes are: \n", df.dtypes)
             print("----------------------------------")
 
         if relS: 
-            print(" Add column 'rel_S' -- S position shifted with IP in the center.")
-            df["rel_S"] = df.apply( lambda row: rel_s( df, row ), axis = 1 )
+            print(" Add column 'rel_S' -- S position shifted with IP in the center. Using Lmax = ", Lmax)
+            df["rel_S"] = df.apply( lambda row: rel_s( df, row, Lmax = Lmax ), axis = 1 )
         
         return df
     
