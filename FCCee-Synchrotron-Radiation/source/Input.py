@@ -192,7 +192,9 @@ class DataReader:
                                     opticsList.append(str(optic[0]))
                                     
                     if opticsList == []: 
-                        print("*** WARNING *** opticsList empty --> optics specification for \n", f, "\n failed!")
+                        print("*** WARNING *** opticsList empty --> optics specification for \n",
+                              f, 
+                              "\n failed!")
                     
                     elif opticsList != [] and verbose > 1: 
                         print ("optics read from files:")

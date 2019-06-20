@@ -15,7 +15,8 @@ class DataSelection:
         self._collimation = 0
 
         # cleanup section: drop columns from received DF that are not required
-        self.df.drop( ['mass','seco_pos_eutags'], axis = 1, inplace = True)
+        self.df.drop( ['mass','seco_pos_eutags', 'xp_eu', 'yp_eu', 'zp_eu', 'Bx_eu', 'By_eu', 'Bz_eu', 'trklen', 'steplen'], axis = 1, inplace = True)
+
 
     # STEP 1 -- select a machine and eventually specific optics
     #
@@ -139,14 +140,19 @@ class DataSelection:
         # maybe not required to pass them out of the class?
         return self.beamTypes, self.beamSizes
 
-    def sliceFrame( self, beam = 'all', size = 'all' ):
+    def sliceFrame( self, beam = 'all', size = 'all', aperture = [] ):
         """
         Function to do sophisticated slicing on the DF produced by opticsSelection. Has to be used as LAST STEP.
             -- beam:    list of beam types, can be 'pencil', 'gauss', 'ring' or 'flat'; default 'all', accepts list
             -- size:    list of beam sizes; default 'all', accepts list
+            -- aperture:    pass a list of apertures for selection. Accepts only 4-digit input like APHAPV as 2035. 
         
         RETURNS: a groupby object, grouped by optics, beam-type and -size.
         """
+        # create selection based on aperture list
+        #
+        if aperture != []: self.df_opt = self.df_opt[self.df_opt.CollDim.isin(aperture)]; print( "selected apertures", aperture )
+        
         # case 1
         #
         if beam == 'all' and size == 'all' or size == []:
