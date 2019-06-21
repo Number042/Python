@@ -68,13 +68,13 @@ def plot_diffApers(df, plotpath, selection = 'SR', Type = 'hit', aperture = 'all
         #
         if Type == 'hit':
             plt.title("SR photons hitting beampipe")
-            plt.hist(Z_hit, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False) 
+            plt.hist(Z_hit, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False) 
         elif Type == 'position':
             plt.title("Position of SR photons")
-            plt.hist(Z_pos, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False) 
+            plt.hist(Z_pos, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False) 
         elif Type == 'origin':
             plt.title("Origin of SR photons")
-            plt.hist(Z_org, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False) 
+            plt.hist(Z_org, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False) 
         else:
             raise RuntimeError("Invalid selection of Type!")
     
@@ -144,13 +144,13 @@ def plot_defaultData(dfGrp, plotpath, zlim = [], beam = 'all', size = 'all', Typ
         #
         if Type == 'hit':
             plt.title("SR photons hitting beampipe")
-            plt.hist(Z_hit, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)
+            plt.hist(Z_hit, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False)
         elif Type == 'position':
             plt.title("Position of SR photons")
-            plt.hist(Z_pos, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)
+            plt.hist(Z_pos, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False)
         elif Type == 'origin':
             plt.title("Origin of SR photons")
-            plt.hist(Z_org, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False) 
+            plt.hist(Z_org, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False) 
         else:
             raise RuntimeError("Invalid selection of Type!")
     
@@ -207,7 +207,7 @@ def plot_Energy(dfGrp, plotpath, beam = 'all', size = 'all', Type = 'spectrum', 
         #
         if Type == 'spectrum':
             plt.title("SR photons hitting beampipe")
-            plt.hist(E_org, bins = nBin, histtype = 'step', fill = False, linewidth = 1.5, label = str(name), stacked = False)
+            plt.hist(E_org, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False)
             plt.yscale( 'log' )
         elif Type == 'distribution':
             print('Number of entries (E_org) =', len(E_org), 'in', name, '\n'
@@ -270,7 +270,7 @@ def plotSrcHits(df, plotpath, elements, zlim = [],  nBin = 100, ticks = 5, save 
         hits = selection[selection.Material == 'Cu']
         zpos = hits.z_eu.tolist()
     
-        plt.hist(zpos, bins = nBin, histtype = 'step', fill = False, label = str(elem))
+        plt.hist(zpos, bins = nBin, histtype = 'step', linewidth = 2, fill = False, label = str(elem))
         
         if verbose > 1: print (hits.Track)
     
@@ -278,7 +278,7 @@ def plotSrcHits(df, plotpath, elements, zlim = [],  nBin = 100, ticks = 5, save 
     plt.grid()
     
     plt.legend()
-    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.15), ncol = 6)
+    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.2), ncol = 6)
     
     plt.ylabel('photons/bin')
     plt.xlabel('z [m]')

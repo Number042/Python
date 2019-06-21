@@ -170,12 +170,12 @@ class DataSelection:
             for j in size:
                 print ("All beam types of size", j, "selected")
                     
-                if j in self.beamSizes:
+                if j in self.df_opt.BeamSize:
                     tmp = self.df_opt[self.df_opt.BeamSize == j] 
                     DF = DF.append(tmp)
                     if self.verbose: print (tmp.head())
                 else:
-                    raise KeyError("Selected beam size", j, "not in the list of available beam sizes:", self.beamSizes)
+                    raise KeyError("Selected beam size", j, "not in the list of available beam sizes:", self.df_opt.BeamSize.unique())
             
             if self._collimation: grouped = DF.groupby(['CollDim','optics','BeamSize'])
             else: grouped = DF.groupby(['optics','BeamSize'])
@@ -190,16 +190,16 @@ class DataSelection:
                 for j in size:
                     print ("Type", i, "selected, with size", j, "sigma")
                         
-                    if i in self.beamTypes and j in self.beamSizes:
+                    if i in self.df_opt.BeamShape and j in self.df_opt.beamSizes:
                         tmp = self.df_opt[(self.df_opt.BeamShape == i) & (self.df_opt.BeamSize == j)]
                         framelist.append(tmp)
                         
                         if self.verbose > 1: print (tmp)
                     
-                    elif i not in self.beamTypes:
-                        raise KeyError("Selected beam type", i, "not in the list of available beams:", self.beamTypes)
-                    elif j not in self.beamSizes:
-                        raise KeyError("Selected beam size", j, "not in the list of available beam sizes:", self.beamSizes)
+                    elif i not in self.df_opt.BeamShape:
+                        raise KeyError("Selected beam type", i, "not in the list of available beams:", self.df_opt.BeamShape.unique())
+                    elif j not in self.df_opt.BeamSize:
+                        raise KeyError("Selected beam size", j, "not in the list of available beam sizes:", self.df_opt.BeamSize.unique())
             
             DF = DF.append(framelist)
             if self._collimation: grouped = DF.groupby(['CollDim','optics','BeamShape','BeamSize'])
@@ -213,12 +213,12 @@ class DataSelection:
             for i in beam:
                 print ("Type", i, "selected with all sizes.")
                 
-                if i in self.beamTypes:
+                if i in self.df_opt.BeamShape.unique():
                     tmp = self.df_opt[self.df_opt.BeamShape == i] 
                     DF = DF.append(tmp)
                     #if self.verbose: print (tmp.head())
                 else:
-                    raise KeyError("Selected beam type", i, "not in the list of available beams:", self.beamTypes)
+                    raise KeyError("Selected beam type", i, "not in the list of available beams:", self.df_opt.BeamShape.unique())
             
             if self._collimation: grouped = DF.groupby(['CollDim','optics','BeamShape']) #,'BeamSize'])
             else: grouped = DF.groupby(['optics','BeamShape']) #,'BeamSize'])
