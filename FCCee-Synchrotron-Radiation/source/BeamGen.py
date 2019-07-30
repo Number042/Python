@@ -1,20 +1,27 @@
 import numpy as np
 import random as rnd
 from matplotlib import pyplot as plt
+from CS_to_EU import FromNorm, RotY
+from TfsTables import TfsReader
+from Tools import sbplSetUp
 class Beam:
     
-    def __init__(self, beamFile, name, Npart, verbose):
+    def __init__(self, beamFile, tfs, name, Npart, halfCross, pc, verbose = 0):
         
         self.beamFile = beamFile
+        self.tfs = tfs
         self.name = name
         self.Npart = Npart = int(Npart)
         self.verbose = verbose
+        self.HalfCross = halfCross
+        self.pc = pc
         
         self.BeamVecX = []; self.BeamVecY = []
         self.BeamVecXprim = []; self.BeamVecYprim = []
 
-        if verbose: print("Created:", name, "\n    * Using file ", beamFile, "\n    * Number of particles:", 
-                          Npart)
+        self.Eb = np.sqrt(pc**2 - (511e-6)**2)
+
+        if verbose: print("Created:", name, "\n    * Using file ", beamFile, "\n    * Number of particles:", Npart, '\n at energy Eb =', self.Eb)
         
     def read_beam_size(self, dim):
         """
@@ -118,5 +125,34 @@ class Beam:
             if save:
                 plt.savefig(plotPath + 'RingShape_' + str(self.Npart) + '.pdf')
             
-#         return BeamVecX, BeamVecXprim
+        return self.BeamVecX, self.BeamVecXprim, self.BeamVecY, self.BeamVecYprim
+
+    def gen_BeamMom(self, elm):
+        """
+        Function to generate the three-momentum of beam particles.
+            -- elm: element at which the beam is generated (used for trafo normalized --> physical)
+        """
+        twiss = TfsReader(self.tfs).read_twiss( self.verbose )
+        FrmNrm = FromNorm( twiss.loc[twiss['NAME'] == elm]['BETX'].item(), 
+                           twiss.loc[twiss['NAME'] == elm]['BETY'].item(), 
+                           twiss.loc[twiss['NAME'] == elm]['ALFX'].item(), 
+                           twiss.loc[twiss['NAME'] == elm]['ALFY'].item() )
+        
+        # x = self.BeamVecX; px = self.BeamVecXprim
+        # y = self.BeamVecY; py = self.BeamVecYprim
+        vecsNCS = []
+        
+        i = 0
+        while i < self.Npart:
+            vecsNCS.append(np.array([self.BeamVecX[i], self.BeamVecXprim[i], self.BeamVecY[i], self.BeamVecYprim[i], 0, 0]))
+            i += 1
+        
+        vecsCS = [ FrmNrm @ vec for vec in vecsNCS ]
+        dirsCS = [[vec[0], vec[2], np.sqrt(1 - vec[0]**2 - vec[2]**2)] for vec in vecsCS ]
+        dirsEU = [ RotY(self.HalfCross, dirCS) for dirCS in dirsCS ]
+
+        # calculate the four momentum based on pc
+        #FourMom = [ [self.pc, self.Eb*vec[0], self.Eb*vec[1], self.Eb*vec[2]] for vec in dirsEU]
+
+        return dirsEU
             

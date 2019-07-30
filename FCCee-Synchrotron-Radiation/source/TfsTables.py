@@ -17,7 +17,7 @@ class TfsReader:
             -- verbose: choose verbosity level
         """
         
-        df = pd.read_table(self.tfs, sep = r'\s+', comment = '@', index_col = False) 
+        df = pd.read_table(self.tfs, sep = r'\s+', comment = '@', index_col = False, converters = {'NAME':str, 'KEYWORD':str}) 
 
         # read columns and drop the first one (*) to actually match the right header
         #
