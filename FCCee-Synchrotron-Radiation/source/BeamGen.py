@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 from CS_to_EU import FromNorm, RotY
 from TfsTables import TfsReader
 from Tools import sbplSetUp
+
 class Beam:
     
     def __init__(self, beamFile, tfs, name, Npart, halfCross, pc, verbose = 0):
@@ -126,6 +127,19 @@ class Beam:
                 plt.savefig(plotPath + 'RingShape_' + str(self.Npart) + '.pdf')
             
         return self.BeamVecX, self.BeamVecXprim, self.BeamVecY, self.BeamVecYprim
+
+    def gen_BeamEnergy(self, Edes, acceptance):
+        """
+        Function to generate the beam energy according to a Gaussian distribution.
+            -- Edes:        design energy
+            -- acceptance:  energy acceptance of a machine
+        
+        RETURNS: array of beam energies of length stats
+        """
+
+        energy = [ rnd.gauss(Edes, acceptance) for i in range(self.Npart) ]
+
+        return energy
 
     def gen_BeamMom(self, elm):
         """
