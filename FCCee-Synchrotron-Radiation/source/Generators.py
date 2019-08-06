@@ -38,7 +38,7 @@ def genPlanck( stats ):
                 values.append(w)
                 i += 1
         
-    return values
+    return np.asarray(values)
 
 def cmpt(x, m0, k):
         return (1 + x**2 + m0/(m0 + k*(1-x)) + (m0 + k*(1-x))/m0 - 2)*(m0/(m0 + k*(1-x)))**2
