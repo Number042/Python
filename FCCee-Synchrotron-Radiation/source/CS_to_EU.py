@@ -31,6 +31,7 @@ def RotY(theta, vec):
     rotVec = RotY @ vec
     return rotVec
 
+# can be replaced by numpy internal norm
 def vec2(vec):
     """
     Simple tool to square three-vector
@@ -51,6 +52,37 @@ def FromNorm(betx, bety, alfx, alfy):
                        [0, 0, 0, 0, 1, 0],
                        [0, 0, 0, 0, 0, 1] ] )
 
+def fourMom2( vec ):
+    return vec[0]**2 - vec[1]**2 - vec[2]**2 - vec[3]**2
+
+def RotFrmZ( theta, phi ):
+    return np.array([[1, 0, 0, 0],
+                     [0, np.cos(theta)*np.cos(phi), -np.sin(phi), np.cos(phi)*np.sin(theta)],
+                     [0, np.cos(theta)*np.sin(phi), np.cos(phi), np.sin(theta)*np.sin(phi)],
+                     [0, -np.sin(theta), 0, np.cos(theta)]] )
+
+def RotToZ( theta, phi ):
+    return np.array([ [1, 0, 0, 0],
+                      [0, np.cos(theta)*np.cos(phi), np.cos(theta)*np.sin(phi), -np.sin(theta)],
+                      [0, -np.sin(phi), np.cos(phi), 0],
+                      [0, np.cos(phi)*np.sin(theta), np.sin(theta)*np.sin(phi), np.cos(theta)] ] )
+
+def getRotVec3(vec, verbose = 0):
+    cost = vec[2]; theta = np.arccos(cost); sint = np.sin(theta)
+    if verbose: print('cost = ', cost, '--> theta =', theta)
+    
+    # only crosscheck
+    if verbose: print('sint =', sint, '--> theta =', np.arcsin(sint), ' --> theta =', np.sin(theta))
+
+    sinphi = vec[1]/sint; phi = np.arcsin(sinphi) 
+    cosphi = vec[0]/sint;
+
+    if verbose: print('sinphi =', sinphi, '--> phi =', np.arcsin(sinphi))
+
+    # only crosscheck
+    if verbose: print('cosphi =', cosphi, '--> phi =', np.arccos(cosphi)) 
+
+    return theta, phi
 
 
         
