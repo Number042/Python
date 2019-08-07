@@ -1,4 +1,4 @@
-import numpy as np
+from numpy import cos, sin, array, sqrt, arcsin, arccos
 # class Twiss_utils:
 
 #     """
@@ -25,9 +25,9 @@ import numpy as np
 # Define transformations required for rotations and vector calculations
 #
 def RotY(theta, vec):
-    RotY = np.array( [[np.cos(theta), 0, np.sin(theta)], 
+    RotY = array( [[cos(theta), 0, sin(theta)], 
                      [0, 1, 0], 
-                     [-np.sin(theta), 0, np.cos(theta)]] )
+                     [-sin(theta), 0, cos(theta)]] )
     rotVec = RotY @ vec
     return rotVec
 
@@ -45,10 +45,10 @@ def FromNorm(betx, bety, alfx, alfy):
       -- betx,y:  beta functions in both planes
       -- alfx,y:  slope in both planes (0 at virtual point)
     """
-    return np.array( [ [np.sqrt(betx), 0, 0, 0, 0, 0], 
-                       [-alfx/np.sqrt(betx), 1/np.sqrt(betx), 0, 0, 0, 0], 
-                       [0, 0, np.sqrt(bety), 0, 0, 0], 
-                       [0, 0, -alfy/np.sqrt(bety), 1/np.sqrt(bety), 0, 0], 
+    return array( [ [sqrt(betx), 0, 0, 0, 0, 0], 
+                       [-alfx/sqrt(betx), 1/sqrt(betx), 0, 0, 0, 0], 
+                       [0, 0, sqrt(bety), 0, 0, 0], 
+                       [0, 0, -alfy/sqrt(bety), 1/sqrt(bety), 0, 0], 
                        [0, 0, 0, 0, 1, 0],
                        [0, 0, 0, 0, 0, 1] ] )
 
@@ -56,31 +56,31 @@ def fourMom2( vec ):
     return vec[0]**2 - vec[1]**2 - vec[2]**2 - vec[3]**2
 
 def RotFrmZ( theta, phi ):
-    return np.array([[1, 0, 0, 0],
-                     [0, np.cos(theta)*np.cos(phi), -np.sin(phi), np.cos(phi)*np.sin(theta)],
-                     [0, np.cos(theta)*np.sin(phi), np.cos(phi), np.sin(theta)*np.sin(phi)],
-                     [0, -np.sin(theta), 0, np.cos(theta)]] )
+    return array([[1, 0, 0, 0],
+                     [0, cos(theta)*cos(phi), -sin(phi), cos(phi)*sin(theta)],
+                     [0, cos(theta)*sin(phi), cos(phi), sin(theta)*sin(phi)],
+                     [0, -sin(theta), 0, cos(theta)]] )
 
 def RotToZ( theta, phi ):
-    return np.array([ [1, 0, 0, 0],
-                      [0, np.cos(theta)*np.cos(phi), np.cos(theta)*np.sin(phi), -np.sin(theta)],
-                      [0, -np.sin(phi), np.cos(phi), 0],
-                      [0, np.cos(phi)*np.sin(theta), np.sin(theta)*np.sin(phi), np.cos(theta)] ] )
+    return array([ [1, 0, 0, 0],
+                      [0, cos(theta)*cos(phi), cos(theta)*sin(phi), -sin(theta)],
+                      [0, -sin(phi), cos(phi), 0],
+                      [0, cos(phi)*sin(theta), sin(theta)*sin(phi), cos(theta)] ] )
 
 def getRotVec3(vec, verbose = 0):
-    cost = vec[2]; theta = np.arccos(cost); sint = np.sin(theta)
+    cost = vec[2]; theta = arccos(cost); sint = sin(theta)
     if verbose: print('cost = ', cost, '--> theta =', theta)
     
     # only crosscheck
-    if verbose: print('sint =', sint, '--> theta =', np.arcsin(sint), ' --> theta =', np.sin(theta))
+    if verbose: print('sint =', sint, '--> theta =', arcsin(sint), ' --> theta =', sin(theta))
 
-    sinphi = vec[1]/sint; phi = np.arcsin(sinphi) 
+    sinphi = vec[1]/sint; phi = arcsin(sinphi) 
     cosphi = vec[0]/sint;
 
-    if verbose: print('sinphi =', sinphi, '--> phi =', np.arcsin(sinphi))
+    if verbose: print('sinphi =', sinphi, '--> phi =', arcsin(sinphi))
 
     # only crosscheck
-    if verbose: print('cosphi =', cosphi, '--> phi =', np.arccos(cosphi)) 
+    if verbose: print('cosphi =', cosphi, '--> phi =', arccos(cosphi)) 
 
     return theta, phi
 

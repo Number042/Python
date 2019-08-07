@@ -55,5 +55,9 @@ def genCompt( energ, m0, verbose = 0 ):
             stp += 1
 
     return cost
+
+def kratio(m0, k, cost):
+    return m0/(m0 + k*(1 - cost))
+
         
 
