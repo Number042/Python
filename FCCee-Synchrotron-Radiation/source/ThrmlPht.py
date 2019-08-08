@@ -20,7 +20,7 @@ class Scatter():
         self.labels = ['E', '$p_x$', '$p_y$', '$p_z$']
         self.verbCond = self.verbose and self.Npart < 1e5
 
-    def genBeam(self, elm):
+    def genBeam( self, elm ):
         b1 = Beam(self.beamfile, self.tfs, self.Npart, self.HalfCross, self.pc)
         b1.set_gauss( )
         p_e = b1.gen_BeamMom( elm )

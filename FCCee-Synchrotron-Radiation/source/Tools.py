@@ -70,3 +70,14 @@ def sbplSetUp(count, dim = [15,10]):
         axs.append(ax)
     
     return axs
+
+def readTwissParams(tfs, elm):
+    i = 0
+    with open( tfs ) as file:
+        for line in file:
+            if line.startswith(' \"%s\"' %elm):
+                print('Element,', elm, 'at line', i)
+                break
+            i += 1
+    return i
+

@@ -1,9 +1,9 @@
 from numpy import sqrt, genfromtxt, float32, array, pi, abs, cos, sin
-import random as rnd
+from random import gauss
 from matplotlib import pyplot as plt
 from CS_to_EU import FromNorm, RotY
 from TfsTables import TfsReader
-from Tools import sbplSetUp
+from Tools import sbplSetUp, readTwissParams
 
 class Beam:
     
@@ -58,12 +58,12 @@ class Beam:
         beamsizeY = self.read_beam_size('y') 
 
         # horizontal plane                
-        self.BeamVecX = array([ rnd.gauss( 0, beamsizeX ) for i in range(self.Npart) ] )
-        self.BeamVecXprim = array([ rnd.gauss( 0, beamsizeX ) for i in range(self.Npart) ] )
+        self.BeamVecX = array([ gauss( 0, beamsizeX ) for i in range(self.Npart) ] )
+        self.BeamVecXprim = array([ gauss( 0, beamsizeX ) for i in range(self.Npart) ] )
 
         # vertical plane
-        self.BeamVecY = array([ rnd.gauss( 0, beamsizeY ) for i in range(self.Npart) ] )
-        self.BeamVecYprim = array([ rnd.gauss( 0, beamsizeY ) for i in range(self.Npart) ] )
+        self.BeamVecY = array([ gauss( 0, beamsizeY ) for i in range(self.Npart) ] )
+        self.BeamVecYprim = array([ gauss( 0, beamsizeY ) for i in range(self.Npart) ] )
         
         if self.verbose > 1: print ("BeamVecX =", self.BeamVecX, '\n', "BeamVecY =", self.BeamVecY)
         
@@ -123,21 +123,22 @@ class Beam:
         RETURNS: array of beam energies of length Npart
         """
 
-        return array([ rnd.gauss(Edes, acceptance) for i in range(self.Npart) ] )
+        return array([ gauss(Edes, acceptance) for i in range(self.Npart) ] )
 
-    def gen_BeamMom(self, elm):
+    def gen_BeamMom( self, elm ):
         """
         Function to generate the three-momentum of beam particles.
             -- elm: element at which the beam is generated (used for trafo normalized --> physical)
 
         RETURNS: array of single dir_EU
         """
-        twiss = TfsReader(self.tfs).read_twiss( self.verbose )
-        FrmNrm = FromNorm( twiss.loc[twiss['NAME'] == elm]['BETX'].item(), 
-                           twiss.loc[twiss['NAME'] == elm]['BETY'].item(), 
-                           twiss.loc[twiss['NAME'] == elm]['ALFX'].item(), 
-                           twiss.loc[twiss['NAME'] == elm]['ALFY'].item() )
-        
+        # new way to implement: hard coded with line number for respective element.
+        #
+        lineNumber =  readTwissParams( self.tfs, elm )
+        twissParam = genfromtxt( self.tfs, delimiter = None, skip_header = lineNumber, max_rows = 1 )
+        betx, alfx, bety, alfy = twissParam[3], twissParam[4], twissParam[6], twissParam[7]
+        FrmNrm = FromNorm( betx, bety, alfx, alfy )
+
         vecsNCS = array( [array([self.BeamVecX[i], self.BeamVecXprim[i], self.BeamVecY[i], self.BeamVecYprim[i], 0, 0]) for i in range(self.Npart) ] )
         
         vecsCS = array([ FrmNrm @ vec for vec in vecsNCS ] )
