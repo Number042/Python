@@ -71,6 +71,8 @@ def sbplSetUp(count, dim = [15,10]):
     
     return axs
 
+# quicker way to access twiss parameters for a given element
+#
 def readTwissParams(tfs, elm):
     i = 0
     with open( tfs ) as file:

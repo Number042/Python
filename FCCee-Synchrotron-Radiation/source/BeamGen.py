@@ -138,6 +138,7 @@ class Beam:
         twissParam = genfromtxt( self.tfs, delimiter = None, skip_header = lineNumber, max_rows = 1 )
         betx, alfx, bety, alfy = twissParam[3], twissParam[4], twissParam[6], twissParam[7]
         FrmNrm = FromNorm( betx, bety, alfx, alfy )
+        print('FromNorm(', elm, ') = \n', FrmNrm)
 
         vecsNCS = array( [array([self.BeamVecX[i], self.BeamVecXprim[i], self.BeamVecY[i], self.BeamVecYprim[i], 0, 0]) for i in range(self.Npart) ] )
         
