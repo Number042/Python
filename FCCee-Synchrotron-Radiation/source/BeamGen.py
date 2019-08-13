@@ -11,7 +11,7 @@ class Beam:
         
         self.beamFile = beamFile
         self.tfs = tfs
-        self.Npart = Npart
+        self.Npart = int(Npart)
         self.verbose = verbose
         self.HalfCross = halfCross
         self.pc = pc
@@ -40,13 +40,11 @@ class Beam:
             if self.verbose: print("selected plane: ", dim, "sigma = ", beamsize[2] )
             return float32(beamsize[2])
         
-    def set_gauss(self, plot = 0, save = 0):
+    def set_gauss( self ):
         """
         Method to plot a random Gaussian distribution in x,x' and y,y'.
         Normalization with the emittance epsx
             -- plotPath: directory to store the plots
-            -- plot: switch plotting the distribution on or off
-            -- save: choose whether or not the plots are dumped as pdf
 
         RETURNS: arrays for x,x' and y,y'
         """
@@ -54,7 +52,7 @@ class Beam:
         
         # read beam sizes from Fields_from_tfs output. Given is already the std deviation with sqrt(eps)
         #
-        beamsizeX = self.read_beam_size('x'); 
+        beamsizeX = self.read_beam_size('x') 
         beamsizeY = self.read_beam_size('y') 
 
         # horizontal plane                
@@ -67,20 +65,11 @@ class Beam:
         
         if self.verbose > 1: print ("BeamVecX =", self.BeamVecX, '\n', "BeamVecY =", self.BeamVecY)
         
-        if plot:
-            plt.figure( figsize = (15, 10) )
-            plt.plot(self.BeamVecX, self.BeamVecXprim, '.', label = 'x')
-            plt.plot(self.BeamVecY, self.BeamVecYprim, '.', label = 'y')
-            plt.title("Gaussian Beam")
-            plt.xlabel("x,y"); plt.ylabel("x',y'"); plt.legend()
-            
-            # if save:
-            #     plt.savefig( plotPath + 'GaussianShape_' + str(self.Npart) + '.pdf', dpi = 100 ) 
             
         # better to return v_n_CS directly?
         return self.BeamVecX, self.BeamVecXprim, self.BeamVecY, self.BeamVecYprim
     
-    def set_ring(self, Nsig = [2,2], plot = 0, save = 0):
+    def set_ring(self, Nsig = [2,2] ):
         """    
         Method to create flat random distribution in x,x'.
         Normalization by +- nsig
@@ -89,7 +78,7 @@ class Beam:
         RETURNS: arrays for x,x' and y,y'
         """
         
-        beamsizeX = self.read_beam_size('x'); 
+        beamsizeX = self.read_beam_size('x')
         beamsizeY = self.read_beam_size('y')
         
         Phi = array([2*pi*i/self.Npart for i in range(self.Npart)])
@@ -101,17 +90,7 @@ class Beam:
         # vertical plane
         self.BeamVecY = array( [ abs(Nsig[1])*beamsizeY*cos(phi) for i,phi in zip(range(self.Npart),Phi) ] ) 
         self.BeamVecYprim = array( [ abs(Nsig[1])*beamsizeY*sin(phi) for i,phi in zip(range(self.Npart),Phi) ] ) 
-        
-        if plot:
-            plt.figure(figsize = (10, 10))
-            plt.plot(self.BeamVecX, self.BeamVecXprim, '.')
-            plt.plot(self.BeamVecY, self.BeamVecYprim, '.')
-            plt.title("Fixed Amplitude")
-            plt.xlabel('x,y'); plt.ylabel('x\',y\'')
-            
-            # if save:
-            #     plt.savefig(plotPath + 'RingShape_' + str(self.Npart) + '.pdf')
-            
+
         return self.BeamVecX, self.BeamVecXprim, self.BeamVecY, self.BeamVecYprim
 
     def gen_BeamEnergy(self, Edes, acceptance):
@@ -146,5 +125,5 @@ class Beam:
         dirsCS = array([[vec[0], vec[2], sqrt(1 - vec[0]**2 - vec[2]**2)] for vec in vecsCS ] )
         dirsEU = array([ RotY(self.HalfCross, dirCS) for dirCS in dirsCS ] )
 
-        return dirsEU
+        return dirsEU, vecsCS
             
