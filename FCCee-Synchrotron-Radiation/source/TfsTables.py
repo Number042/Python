@@ -96,7 +96,7 @@ class PlotOptics:
     def __init__(self, twiss):
         self.df = twiss
 
-    def plotTwissParams( self, twissPara = [], relS = 0, figSize = [40,10], verbose = 0):
+    def plotTwissParams( self, twissPara = [], relS = 0, figSize = [40,10], IP = 0, verbose = 0):
         """
         Function to directly plot a set of twiss parameters
             -- twiss:       baseline twiss (DF)
@@ -123,6 +123,7 @@ class PlotOptics:
                 plt.plot( self.df.rel_S, self.df[param], color = colors[i], marker = '.', ls = '', label = param)
                 i += 1
             plt.xlabel('S [m]')
+            if IP: plt.xlim(-5,5)
             plt.legend()
             
         return graph    
