@@ -1,5 +1,4 @@
 import pandas as pd
-import VisualSpecs
 import matplotlib.pyplot as plt
 from Tools import rel_s
 
@@ -49,11 +48,11 @@ class TfsReader:
         
         return df
     
-    def read_survey(self, verbose = 0):
+    def read_survey(self, relS = 0, verbose = 0):
         """
         Function to read general survey files.
         """
-        surveyDF = pd.read_table(self.tfs, sep = r'\s+', skiprows = 6, index_col = False)
+        surveyDF = pd.read_table(self.tfs, sep = r'\s+', comment = '@', index_col = False)
         
         # read columns and drop the first one (*) to actually match the right header
         #
@@ -67,11 +66,19 @@ class TfsReader:
         
         surveyDF = surveyDF.drop(surveyDF.index[0])
         surveyDF = surveyDF.convert_objects(convert_numeric = True)
+
+        # determine maximum in S 
+        #
+        Lmax = surveyDF.S.max()
         
         if verbose:
             print("----------------------------------")
             print(" DF contains: \n", surveyDF.keys(), "\n data tpes are: \n", surveyDF.dtypes)
             print("----------------------------------")
+
+        if relS: 
+            print(" Add column 'rel_S' -- S position shifted with IP in the center. Using Lmax = ", Lmax)
+            surveyDF["rel_S"] = surveyDF.apply( lambda row: rel_s( surveyDF, row, Lmax = Lmax ), axis = 1 )
 
         return surveyDF
 
@@ -92,6 +99,7 @@ class TfsReader:
     
 
 class PlotOptics:
+    
 
     def __init__(self, twiss):
         self.df = twiss
@@ -103,7 +111,7 @@ class PlotOptics:
             -- twissPara:   list of twiss parameters to plot (string)
             -- verbose:     set verbosity level
         """
-
+        import VisualSpecs
         colors = VisualSpecs.myColors
         if twissPara == []: print("Nothing to plot. Specify list of parameters.")
         
