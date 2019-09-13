@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 # read general output files (debug, SAD stuff, MDISim output) to DF for analysis
 class OutputToDF:
 

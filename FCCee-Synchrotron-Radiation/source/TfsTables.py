@@ -22,13 +22,14 @@ class TfsReader:
         #
         cols = df.columns
         twissHeader = cols[1:]
+        if verbose: print('set twiss header:', twissHeader, '\n from cols:', cols)
 
-        # drop last NaN column and reset header
+        # drop last NaN column and reset header 
+        # (1st single space in TWISS header causes the issue )
         #
-        if df.RE66.isnull().values.any(): df = df.drop('RE66', axis = 1)
-        else: raise ValueError('Last column not NaN as expected')
-        
+        df.drop(df.columns[len(df.columns)-1], axis=1, inplace=True)
         df.columns = twissHeader
+        
 
         df = df.drop(df.index[0])
         df = df.convert_objects(convert_numeric = True)
@@ -59,9 +60,10 @@ class TfsReader:
         cols = surveyDF.columns
         surveyHeader = cols[1:]
         
-        # drop NaN column(s) and reset header
+        # drop last column and reset header
+        # (1st single space in SURVEY header causes the issue)
         #
-        surveyDF = surveyDF.dropna( axis = 1, how = 'any' )
+        surveyDF.drop(surveyDF.columns[len(surveyDF.columns)-1], axis=1, inplace=True)
         surveyDF.columns = surveyHeader
         
         surveyDF = surveyDF.drop(surveyDF.index[0])

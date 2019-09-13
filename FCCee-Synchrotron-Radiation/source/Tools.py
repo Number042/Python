@@ -87,10 +87,9 @@ def readTwissParams(tfs, elm):
 #
 def inventAper(s, name, aper ):
     
-    if name.startswith('L000013'): inventAper = 0.015
-    
-    if s > 0 and s < 5.6: 
-        if name.startswith('DRIFT') and aper == 0: invAper = 0.015
+    if s >= 0 and s < 5.6: 
+        if name.startswith('L000013') or name.startswith('IP'): invAper = 0.015
+        elif name.startswith('DRIFT') and aper == 0: invAper = 0.015
         else: invAper = aper 
     elif s > 5.6 and s < 8.2:
         if name.startswith('DRIFT') and aper == 0: invAper = 0.02
@@ -99,8 +98,9 @@ def inventAper(s, name, aper ):
     elif s > -8.2 and s < -5.6:
         if name.startswith('DRIFT') and aper == 0: invAper = 0.015
         else: invAper = aper 
-    elif s > -5.6 and s < 0:
-        if name.startswith('DRIFT') and aper == 0: invAper = 0.015
+    elif s > -5.6 and s <= 0:
+        if name.startswith('L000013') or name.startswith('IP') or name.startswith('SOL'): invAper = 0.015
+        elif name.startswith('DRIFT') and aper == 0: invAper = 0.015
         else: invAper = aper 
     else: invAper = 0.03
     
