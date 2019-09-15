@@ -88,7 +88,7 @@ def getRotVec3(vec, verbose = 0):
 def ToEuclidian( df, verbose = 1 ):
     """
     Function to calculate survey coordinates (EU) from TWISS S, X, Y
-      -- df: data frame to add columns EU vector and rotation matrices
+      -- df: data frame
       -- verbose: debug output level
 
     RETURN: none, adds to DF
@@ -113,7 +113,7 @@ def ToEuclidian( df, verbose = 1 ):
             if verbose: print('straight element', name)
             R = array( [0, 0, L] )
             W = mats[i-1]
-
+            
         # bend
         #
         else:
@@ -121,17 +121,20 @@ def ToEuclidian( df, verbose = 1 ):
             rho = L/angle
             R = array( [rho*(cos(angle) - 1), 0, rho*sin(angle)] )
             S = RotY(-angle, W0)
-            if name == 'BWL.2': print(S, R, angle)
             W = mats[i-1]@S
-
+        
         # calculate EU coords for current element (shift and rotation)
         #
         V = mats[i-1]@R + vecs[i-1]
         if verbose: print(V)
-
-        # append to lists
+            
+        # append rotation matrix and position for next iteration
         #
-        vecs.append(V)
         mats.append(W)
-    df['V_EU'] = vecs
+        vecs.append(V)
+
+    df['x_EU'] = [vec[0] for vec in vecs]
+    df['y_EU'] = [vec[1] for vec in vecs]
+    df['z_EU'] = [vec[2] for vec in vecs]
     df['W'] = mats
+    
