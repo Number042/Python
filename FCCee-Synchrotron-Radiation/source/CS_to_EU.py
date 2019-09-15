@@ -1,4 +1,4 @@
-from numpy import cos, sin, array, sqrt, arcsin, arccos
+from numpy import cos, sin, array, sqrt, arcsin, arccos, identity
 # class Twiss_utils:
 
 #     """
@@ -75,7 +75,7 @@ def getRotVec3(vec, verbose = 0):
     if verbose: print('sint =', sint, '--> theta =', arcsin(sint), ' --> theta =', sin(theta))
 
     sinphi = vec[1]/sint; phi = arcsin(sinphi) 
-    cosphi = vec[0]/sint;
+    cosphi = vec[0]/sint
 
     if verbose: print('sinphi =', sinphi, '--> phi =', arcsin(sinphi))
 
@@ -85,4 +85,53 @@ def getRotVec3(vec, verbose = 0):
     return theta, phi
 
 
+def ToEuclidian( df, verbose = 1 ):
+    """
+    Function to calculate survey coordinates (EU) from TWISS S, X, Y
+      -- df: data frame to add columns EU vector and rotation matrices
+      -- verbose: debug output level
+
+    RETURN: none, adds to DF
+    """
+    
+    # init arrays to store rotation matrix and V
+    #
+    W0 = identity(3); mats = [W0]
+    V0 = array( [0, 0, 0] ); vecs = [V0]
+
+    for i in range( df.index.min(), df.index.max() ):
         
+        # collect element attributes
+        #
+        L = df.loc[i, 'L']
+        angle = df.loc[i, 'ANGLE']
+        name = df.loc[i, 'NAME']
+        
+        # straight element
+        #
+        if L == 0 or angle == 0:
+            if verbose: print('straight element', name)
+            R = array( [0, 0, L] )
+            W = mats[i-1]
+
+        # bend
+        #
+        else:
+            if verbose: print('dipole', name)
+            rho = L/angle
+            R = array( [rho*(cos(angle) - 1), 0, rho*sin(angle)] )
+            S = RotY(-angle, W0)
+            if name == 'BWL.2': print(S, R, angle)
+            W = mats[i-1]@S
+
+        # calculate EU coords for current element (shift and rotation)
+        #
+        V = mats[i-1]@R + vecs[i-1]
+        if verbose: print(V)
+
+        # append to lists
+        #
+        vecs.append(V)
+        mats.append(W)
+    df['V_EU'] = vecs
+    df['W'] = mats
