@@ -96,42 +96,46 @@ def ToEuclidian( df, verbose = 1 ):
     
     # init arrays to store rotation matrix and V
     #
-    W0 = identity(3); mats = [W0]
-    V0 = array( [0, 0, 0] ); vecs = [V0]
+    mats = []; W0 = identity(3)
+    vecs = []; V0 = array( [0, 0, 0] )
 
-    for i in range( df.index.min(), df.index.max() ):
+    for i in range( df.index.min(), df.index.max()+1 ):
         
         # collect element attributes
         #
         L = df.loc[i, 'L']
         angle = df.loc[i, 'ANGLE']
         name = df.loc[i, 'NAME']
-        
+
         # straight element
         #
-        if L == 0 or angle == 0:
-            if verbose: print('straight element', name)
+        if angle == 0:
+            if verbose: print(i, 'straight element', name)
             R = array( [0, 0, L] )
-            W = mats[i-1]
-
+            if i == df.index.min(): W = W0
+            else: print('current %i' %i); W = mats[i-2]
         # bend
         #
         else:
-            if verbose: print('dipole', name)
+            if verbose: print(i, 'dipole', name)
             rho = L/angle
             R = array( [rho*(cos(angle) - 1), 0, rho*sin(angle)] )
             S = RotY(-angle, W0)
-            if name == 'BWL.2': print(S, R, angle)
-            W = mats[i-1]@S
-
+            W = mats[i-2]@S
+        
         # calculate EU coords for current element (shift and rotation)
         #
-        V = mats[i-1]@R + vecs[i-1]
+        if i == df.index.min(): V = V0
+        else: V = mats[i-2]@R + vecs[i-2]
         if verbose: print(V)
-
-        # append to lists
+        
+        # append rotation matrix and position for next iteration
         #
-        vecs.append(V)
         mats.append(W)
-    df['V_EU'] = vecs
+        vecs.append(V)
+        
+    df['x_EU'] = [vec[0] for vec in vecs]
+    df['y_EU'] = [vec[1] for vec in vecs]
+    df['z_EU'] = [vec[2] for vec in vecs]
     df['W'] = mats
+    
