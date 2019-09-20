@@ -62,11 +62,18 @@ def calcAper(s):
 
 # easier way to setup a subplot arrangement
 #
-def sbplSetUp(count, dim = [15,10]):
+def sbplSetUp(count, dim = [15,10], asp = 'equal'):
+    """
+    Create an array of subplots.
+        -- count: number of generated plots
+        -- dim: specify dimension of the matplotlib window
+        -- asp: set aspect ratio, defaults to equal
+    """
     plt.figure( figsize = (dim[0], dim[1]) )
     axs = []
     for i in range(count):
         ax = plt.subplot(321+i) 
+        ax.set_aspect(asp)
         axs.append(ax)
     
     return axs
@@ -86,7 +93,12 @@ def readTwissParams(tfs, elm):
 # add apertures in drift spaces to simplify plotting
 #
 def inventAper(s, name, aper ):
-    
+    """
+    FCC specific function to invent apertures in DRIFT. Uses hard coded values for the moment (design report/mechanical design).
+        -- s: S position along the accelerator
+        -- name: element name
+        -- aper: 
+    """
     if s >= 0 and s < 5.6: 
         if name.startswith('L000013') or name.startswith('IP'): invAper = 0.015
         elif name.startswith('DRIFT') and aper == 0: invAper = 0.015

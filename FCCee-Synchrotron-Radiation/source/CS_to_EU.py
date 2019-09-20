@@ -91,7 +91,7 @@ def ToEuclidian( df, verbose = 1 ):
       -- df: data frame
       -- verbose: debug output level
 
-    RETURN: none, adds to DF
+    RETURN: none, adds x_EU, y_EU, z_EU and rotation matrix W to DF
     """
     
     # init arrays to store rotation matrix and V
