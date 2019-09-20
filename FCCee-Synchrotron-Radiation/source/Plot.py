@@ -2,7 +2,8 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt 
 import matplotlib.ticker as ticker
-import numpy as np
+from matplotlib.lines import Line2D as line
+from numpy import array, std, mean
 import collections as clt
 import os
 import difflib as dl  
@@ -11,16 +12,7 @@ import timeit
 
 from PlotSelectTools import Tracking 
 from OpticsSelectTools import DataSelection
- 
-# --------------------------- RC PARAMS STYLE SECTION -------------------------------------
-mpl.rcParams['lines.linewidth'] = 2
-mpl.rcParams['axes.labelsize'] = 15
-mpl.rcParams['axes.titlesize'] = 20
-mpl.rcParams['figure.figsize'] = 15., 10.    # figure size in inches
-
-mpl.rcParams['legend.fontsize'] = 16
-mpl.rcParams['agg.path.chunksize'] = 10000
-# --------------------------- ----------------------- -------------------------------------
+from VisualSpecs import myColors as colors
 
 # Functions following from here should be put into another class, PlottingData 
 #
@@ -201,7 +193,7 @@ def plot_Energy(dfGrp, plotpath, beam = 'all', size = 'all', Type = 'spectrum', 
         # use collectInfo to select z data
         #
         Z_pos, Z_org, Z_hit, E_org, E_hit = dataSel.collectInfo( subframe )
-        E_mean = np.mean(E_org); E_std = np.std(E_org)
+        E_mean = mean(E_org); E_std = std(E_org)
         
         # plot resulting data
         #
@@ -335,3 +327,68 @@ def plot_colEff(df, plotpath, ):
         print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
 
     return
+
+def Plot_Bend_Cones(df, verbose):
+    """
+    Function to plot the tangential lines representing SR fans coming from bending magnets in an accelerator
+        -- df: dataframe holding the information
+        -- verbose: verbosity level
+    RETURN:
+    """
+    fig = plt.figure( figsize = (10,10) ); ax = fig.add_subplot(1,1,1)
+    tang = [array([0,0,1])]
+    VEU = [array([0,0,0])]
+    verbose = 0
+
+    # check for existance of Euclidean coordinates
+    #
+    if {'x_EU', 'y_EU', 'z_EU'}.issubset(Twiss.columns) == 0: KeyError('x,y,z_EU not found: EU coordinates missing?')
+
+    for i in range(df.index.min(), df.index.max() + 1 ):
+
+        name = df.loc[i, 'NAME']
+        dirCS = array( [df.loc[i,'PX'], df.loc[i,'PY'], df.loc[i,'PS']] )
+        veu = array([df.loc[i,'x_EU'], df.loc[i,'y_EU'], df.loc[i,'z_EU']])
+        tan = df.loc[i,'W'] @ dirCS
+        
+        VEU.append( veu )
+        tang.append( tan ) 
+
+        if 'BEND' in df.loc[i, 'KEYWORD']: 
+            if verbose: print('found bend', name, 'at integer', i)
+            # 2nd step: plot single elements
+            #
+            x1 = df.at[i,'z_EU']; x2 = df.at[i-1,'z_EU']
+            y1 = df.at[i,'x_EU']; y2 = df.at[i-1,'x_EU']
+            plt.plot( [x1,x2], [y1,y2], ls = '-', lw = 3.5, color = colors[i])
+            
+            plt.text(x1, y1, df.loc[i,'NAME'] )
+            
+            # 3rd step: determine the tangent on the bend (Start and end)
+            #
+            start = VEU[i-1] + tang[i-1]
+            end = veu + tan
+            
+            len_s = 1; len_e = 1
+            if abs(end[2]) < abs(veu[2]):
+                len_s = abs(VEU[i-1][2]/(start[2] - VEU[i-1][2]))
+                len_e = abs(veu[2]/(end[2] - veu[2]))
+                
+            start = VEU[i-1] + len_s*tang[i-1]
+            end = veu + len_e*tan
+            
+            # 4th step: add tangents as lines to the plot 
+            #
+            line_1 = line([veu[2], end[2]], [veu[0], end[0]], linewidth = 2.5, linestyle = "--", color="gray")
+    #         line_2 = line([VEU[i-1][2], start[2]], [VEU[i-1][0], start[0]], lw = 2.5, ls = '-', color = 'green')
+            ax.add_line(line_1)
+    #         ax.add_line(line_2)
+
+            if verbose:
+                print(i,df.loc[i-1, 'NAME'],'line from (', VEU[i-1][0], VEU[i-1][2], ') to (', start[0], start[2], ') \n',
+                i,df.loc[i, 'NAME'],'line from (', veu[0], veu[2], ') to (', end[0], end[2], 
+                ') \n --------------------------- ')
+        plt.title('synchrotron radiation fans')
+        plt.tight_layout()      
+
+    return fig
