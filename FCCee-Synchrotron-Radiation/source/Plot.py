@@ -328,23 +328,45 @@ def plot_colEff(df, plotpath, ):
 
     return
 
-def Plot_Bend_Cones(df, verbose):
+from itertools import cycle
+from VisualSpecs import align_yaxis
+def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'both', verbose = 0):
     """
     Function to plot the tangential lines representing SR fans coming from bending magnets in an accelerator
         -- df: dataframe holding the information
+        -- ScaleXY: scale factor transverse dimensions for aperture plot
+        -- aper: switch aperture plot on/off
+        -- zrange: select a certain range in z to plot for (especially for large machines) aka zmin, zmax
+        -- xrange: select certain range in x for plotting 
+        -- lines: specify which part of the SR fan to plot (entry, exit, both)
         -- verbose: verbosity level
-    RETURN:
+    RETURN: figure object
     """
-    fig = plt.figure( figsize = (10,10) ); ax = fig.add_subplot(1,1,1)
+
+    # init the plot
+    #
+    fig = plt.figure( figsize = (20,10) ); ax = fig.add_subplot(111)
+    if aper: twin = ax.twinx()
+
+    # check for existance of Euclidean coordinates, slice frame if zmin, zmax given
+    #
+    if {'x_EU', 'y_EU', 'z_EU'}.issubset( df.columns ) == 0: raise KeyError('x,y,z_EU not found: EU coordinates missing?')
+    if zrange != []: 
+        print('selection zmin =', zrange[0], 'zmax =', zrange[1], 'm')
+        df = df[ (df.z_EU > zrange[0]) & (df.z_EU < zrange[1]) & (df.x_EU > xrange[0]) & (df.x_EU < xrange[1]) ]
+        df = df.reset_index()
+        ax.set_xlim( zrange[0]-20, zrange[1]+20 )
+
+    # plot the reference path
+    #
+    ax.plot( df.z_EU, df.x_EU, color = colors[11], ls = '--', lw = 3.)
+
+    # store first vectors for intial iteration
+    #
     tang = [array([0,0,1])]
     VEU = [array([0,0,0])]
-    verbose = 0
 
-    # check for existance of Euclidean coordinates
-    #
-    if {'x_EU', 'y_EU', 'z_EU'}.issubset(Twiss.columns) == 0: KeyError('x,y,z_EU not found: EU coordinates missing?')
-
-    for i in range(df.index.min(), df.index.max() + 1 ):
+    for i in range(df.index.min() + 1, df.index.max() + 1 ):
 
         name = df.loc[i, 'NAME']
         dirCS = array( [df.loc[i,'PX'], df.loc[i,'PY'], df.loc[i,'PS']] )
@@ -356,20 +378,25 @@ def Plot_Bend_Cones(df, verbose):
 
         if 'BEND' in df.loc[i, 'KEYWORD']: 
             if verbose: print('found bend', name, 'at integer', i)
+
             # 2nd step: plot single elements
             #
             x1 = df.at[i,'z_EU']; x2 = df.at[i-1,'z_EU']
             y1 = df.at[i,'x_EU']; y2 = df.at[i-1,'x_EU']
-            plt.plot( [x1,x2], [y1,y2], ls = '-', lw = 3.5, color = colors[i])
+            ax.plot( [x1,x2], [y1,y2], ls = '-', lw = 5.5) #, color = cycle(colors) )
             
-            plt.text(x1, y1, df.loc[i,'NAME'] )
+            ax.text((x1+x2)/2, (y1 + y2)/2, df.loc[i,'NAME'] )
             
-            # 3rd step: determine the tangent on the bend (Start and end)
+            # 3rd step: determine the tangent on the bend (entry/exit)
             #
             start = VEU[i-1] + tang[i-1]
             end = veu + tan
             
-            len_s = 1; len_e = 1
+            len_s = 1; len_e = 1        #     twin.plot( -df.S, df.APER, color = colors[1], lw = 2.5 )
+            twin.plot( -df.S, -df.APER, color = colors[1], lw = 2.5 )
+            twin.set_ylabel('aperture [m]')                                               
+            align_yaxis(ax, 0, twin, 0)
+
             if abs(end[2]) < abs(veu[2]):
                 len_s = abs(VEU[i-1][2]/(start[2] - VEU[i-1][2]))
                 len_e = abs(veu[2]/(end[2] - veu[2]))
@@ -379,16 +406,32 @@ def Plot_Bend_Cones(df, verbose):
             
             # 4th step: add tangents as lines to the plot 
             #
-            line_1 = line([veu[2], end[2]], [veu[0], end[0]], linewidth = 2.5, linestyle = "--", color="gray")
-    #         line_2 = line([VEU[i-1][2], start[2]], [VEU[i-1][0], start[0]], lw = 2.5, ls = '-', color = 'green')
-            ax.add_line(line_1)
-    #         ax.add_line(line_2)
+            Exit = line([veu[2], end[2]], [veu[0], end[0]], linewidth = 2.5, ls = '-', color = 'green') 
+            Start = line([VEU[i-1][2], start[2]], [VEU[i-1][0], start[0]], lw = 2.5, ls = '-', color = 'red')
+            
+            if lines == 'entry': ax.add_line(Start)
+            elif lines == 'exit': ax.add_line(Exit)
+            elif lines == 'both': ax.add_line(Start); ax.add_line(Exit)
+            else: raise KeyError('Select which lines to plot.')
 
             if verbose:
                 print(i,df.loc[i-1, 'NAME'],'line from (', VEU[i-1][0], VEU[i-1][2], ') to (', start[0], start[2], ') \n',
                 i,df.loc[i, 'NAME'],'line from (', veu[0], veu[2], ') to (', end[0], end[2], 
                 ') \n --------------------------- ')
-        plt.title('synchrotron radiation fans')
-        plt.tight_layout()      
 
+
+    ax.set_xlabel('Z [m]'); ax.set_ylabel('X [m]')
+    if xrange != []: ax.set_ylim( xrange[0], xrange[1] )
+
+    if aper:
+        twin.plot( df[df.rel_S > -100].rel_S, df[df.rel_S > -100].APER*ScaleXY, color = colors[11], lw = 2.5 )
+        twin.plot( df[df.rel_S > -100].rel_S, -df[df.rel_S > -100].APER*ScaleXY, color = colors[11], lw = 2.5 )
+        twin.set_ylabel('aperture [m]')                                               
+        
+        if xrange != []: twin.set_ylim( xrange[0], xrange[1] )
+        align_yaxis(ax, 0, twin, 0)
+
+    plt.title('synchrotron radiation fans')
+    plt.tight_layout()  
+        
     return fig
