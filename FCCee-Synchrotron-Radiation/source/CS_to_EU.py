@@ -112,8 +112,10 @@ def ToEuclidian( df, verbose = 1 ):
         if L == 0 or angle == 0:
             if verbose: print('straight element', name)
             R = array( [0, 0, L] )
-            W = mats[i-1]
-            
+            if i == df.index.min(): W = W0
+            else: 
+                if verbose: print('current %i' %i)
+                W = mats[i-2]
         # bend
         #
         else:
