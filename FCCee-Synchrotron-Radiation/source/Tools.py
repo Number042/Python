@@ -114,6 +114,7 @@ def inventAper(s, name, aper ):
         if name.startswith('L000013') or name.startswith('IP') or name.startswith('SOL'): invAper = 0.015
         elif name.startswith('DRIFT') and aper == 0: invAper = 0.015
         else: invAper = aper 
+    elif name.startswith('COLL'): invAper = aper
     else: invAper = 0.03
     
     return invAper

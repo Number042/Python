@@ -355,11 +355,11 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
         print('selection zmin =', zrange[0], 'zmax =', zrange[1], 'm')
         df = df[ (df.z_EU > zrange[0]) & (df.z_EU < zrange[1]) & (df.x_EU > xrange[0]) & (df.x_EU < xrange[1]) ]
         df = df.reset_index()
-        ax.set_xlim( zrange[0]-20, zrange[1]+20 )
+        ax.set_xlim( zrange[0] - 10, zrange[1] + 10 )
 
     # plot the reference path
     #
-    ax.plot( df.z_EU, df.x_EU, color = colors[11], ls = '--', lw = 3.)
+    ax.plot( df.z_EU, df.x_EU*ScaleXY, color = colors[11], ls = '--', lw = 3.)
 
     # store first vectors for intial iteration
     #
@@ -368,7 +368,6 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
 
     for i in range(df.index.min() + 1, df.index.max() + 1 ):
 
-        name = df.loc[i, 'NAME']
         dirCS = array( [df.loc[i,'PX'], df.loc[i,'PY'], df.loc[i,'PS']] )
         veu = array([df.loc[i,'x_EU'], df.loc[i,'y_EU'], df.loc[i,'z_EU']])
         tan = df.loc[i,'W'] @ dirCS
@@ -377,26 +376,27 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
         tang.append( tan ) 
 
         if 'BEND' in df.loc[i, 'KEYWORD']: 
-            if verbose: print('found bend', name, 'at integer', i)
+            if verbose: print('found bend', df.loc[i, 'NAME'], 'at integer', i)
 
             # 2nd step: plot single elements
             #
-            x1 = df.at[i,'z_EU']; x2 = df.at[i-1,'z_EU']
-            y1 = df.at[i,'x_EU']; y2 = df.at[i-1,'x_EU']
-            ax.plot( [x1,x2], [y1,y2], ls = '-', lw = 5.5) #, color = cycle(colors) )
-            
-            ax.text((x1+x2)/2, (y1 + y2)/2, df.loc[i,'NAME'] )
+            x1 = df.at[i, 'z_EU']; x2 = df.at[i-1, 'z_EU']
+            y1 = df.at[i, 'x_EU']*ScaleXY; y2 = df.at[i-1, 'x_EU']*ScaleXY
+
+            ax.plot( [x1,x2], [y1,y2], ls = '-', lw = 5.5) 
+
+            if aper:
+                ap1 = df.at[i, 'APER']*ScaleXY; ap2 = df.at[i-1, 'APER']*ScaleXY
+                ax.plot( [x1,x2], [y1+ap1,y2+ap2], [x1, x2], [y1-ap1,y2-ap2], ls = '-', lw = 2.5, color = colors[11])
+
+            ax.text((x1+x2)/2, (y1 + y2)/2, df.loc[i,'NAME'], fontsize = 18 )
             
             # 3rd step: determine the tangent on the bend (entry/exit)
             #
             start = VEU[i-1] + tang[i-1]
             end = veu + tan
             
-            len_s = 1; len_e = 1        #     twin.plot( -df.S, df.APER, color = colors[1], lw = 2.5 )
-            twin.plot( -df.S, -df.APER, color = colors[1], lw = 2.5 )
-            twin.set_ylabel('aperture [m]')                                               
-            align_yaxis(ax, 0, twin, 0)
-
+            len_s = 1; len_e = 1
             if abs(end[2]) < abs(veu[2]):
                 len_s = abs(VEU[i-1][2]/(start[2] - VEU[i-1][2]))
                 len_e = abs(veu[2]/(end[2] - veu[2]))
@@ -406,8 +406,8 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
             
             # 4th step: add tangents as lines to the plot 
             #
-            Exit = line([veu[2], end[2]], [veu[0], end[0]], linewidth = 2.5, ls = '-', color = 'green') 
-            Start = line([VEU[i-1][2], start[2]], [VEU[i-1][0], start[0]], lw = 2.5, ls = '-', color = 'red')
+            Exit = line([veu[2], end[2]], [veu[0]*ScaleXY, end[0]*ScaleXY], lw = 2.5, ls = '-', color = 'green') 
+            Start = line([VEU[i-1][2], start[2]], [VEU[i-1][0]*ScaleXY, start[0]*ScaleXY], lw = 2.5, ls = '-', color = 'red')
             
             if lines == 'entry': ax.add_line(Start)
             elif lines == 'exit': ax.add_line(Exit)
@@ -416,8 +416,7 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
 
             if verbose:
                 print(i,df.loc[i-1, 'NAME'],'line from (', VEU[i-1][0], VEU[i-1][2], ') to (', start[0], start[2], ') \n',
-                i,df.loc[i, 'NAME'],'line from (', veu[0], veu[2], ') to (', end[0], end[2], 
-                ') \n --------------------------- ')
+                i,df.loc[i, 'NAME'],'line from (', veu[0], veu[2], ') to (', end[0], end[2], ') \n --------------------------- ')
 
 
     ax.set_xlabel('Z [m]'); ax.set_ylabel('X [m]')
@@ -431,7 +430,7 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
         if xrange != []: twin.set_ylim( xrange[0], xrange[1] )
         align_yaxis(ax, 0, twin, 0)
 
-    plt.title('synchrotron radiation fans')
+    plt.title('synchrotron radiation fans (dipoles)')
     plt.tight_layout()  
         
     return fig
