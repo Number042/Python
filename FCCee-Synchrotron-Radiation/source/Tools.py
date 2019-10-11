@@ -115,7 +115,7 @@ def inventAper(s, name, aper ):
         elif name.startswith('DRIFT') and aper == 0: invAper = 0.015
         else: invAper = aper 
     elif name.startswith('COLL'): invAper = aper
-    else: invAper = 0.03
+    else: invAper = 0.035
     
     return invAper
 
