@@ -1,11 +1,7 @@
-import pandas as pd
-import matplotlib.pyplot as plt 
-import numpy as np
-import collections as clt
-import sys
-import os
-import difflib as dl  
-import re
+import pandas as pd 
+from numpy import nan, float64, pi
+from os import walk, listdir, path 
+from re import findall, split
 
 class DataReader:
     
@@ -26,19 +22,19 @@ class DataReader:
         beamSize = '\d{2}|\d{1}'
         aperSize = r'\D(\d{4})\D'
         
-        beaminfo = re.findall(pattern, file)
-        aper = re.findall(aperSize, file)
+        beaminfo = findall(pattern, file)
+        aper = findall(aperSize, file)
         
         if beaminfo:
             print ("    * beam found: ", beaminfo[0])
             tmp_df = pd.read_table(file, sep = r'\s+')
 
-            bemsh = re.findall(types, beaminfo[0])
+            bemsh = findall(types, beaminfo[0])
             if bemsh:
                 self.beamList.append(bemsh[0])
                 tmp_df['BeamShape'] = bemsh[0]
 
-            bemsi = re.findall(beamSize, beaminfo[0])
+            bemsi = findall(beamSize, beaminfo[0])
             if bemsi:
                 self.beamSizes.append(int(bemsi[0]))
                 tmp_df['BeamSize'] = int(bemsi[0])
@@ -80,7 +76,7 @@ class DataReader:
         dataFiles = []
         for i in directory:
             
-            for root, dirs, files in os.walk(i, topdown = True):
+            for root, dirs, files in walk(i, topdown = True):
                 
                 # exclude all hidden files and directories
                 #
@@ -95,13 +91,13 @@ class DataReader:
             #
             for element in dataFiles:
                 
-                beaminfo = re.findall(pattern, element)
+                beaminfo = findall(pattern, element)
                 if beaminfo:
                     print ("    * beam found: ", beaminfo[0])
-                    bemsh = re.findall(types, beaminfo[0])
+                    bemsh = findall(types, beaminfo[0])
                     if bemsh:
                         beamList.append(bemsh[0])
-                    bemsi = re.findall(size, beaminfo[0])
+                    bemsi = findall(size, beaminfo[0])
                     if bemsi:
                         beamSizes.append(int(bemsi[0]))
                 else:
@@ -110,9 +106,10 @@ class DataReader:
             return beamList, beamSizes
 
     
-    def readG4out(self, read = 'primaries', datType = 'default', verbose = 0):
+    def readG4out(self, optics = 'fcc_ee', read = 'primaries', datType = 'default', verbose = 0):
         """
         Method to read in the G4 output
+            -- optics:  string to preselect which machine to search for
             -- read:    option to choose whether primary or secondary data should be read; defaults to primaries
             -- datType: switch between default and collimation 
             
@@ -120,41 +117,41 @@ class DataReader:
         """
         # path(s) given during intialization of the object
         #
-        path = self.path
+        filepath = self.path
         
         primDataFiles = []; secoDataFiles = []
         check_strings = '_prim|_seco'
         
-        print ("files are in:", path) 
+        print ("files are in:", filepath) 
         print (" *********************************************** ")
         GlobDatFrame = pd.DataFrame()
         frameList = []
         opticsList = []
 
-        for i in path:
+        for pth in filepath:
             j = 0
-            for root, dirs, files in os.walk(i, topdown = True):
+            for root, dirs, files in walk(pth, topdown = True):
                 
-                # exclude all hidden files and directories
+                # exclude all hidden files and directories which have nothing to do with accelerators
                 #
-                dirs[:] = [d for d in dirs if not d[0] == '.']
-                files = [f for f in files if not f[0] == '.']
-                
+                dirs[:] = [d for d in dirs if not d[0] == '.' and optics in d and listdir(pth + d)]
+                files = [f for f in files if not f[0] == '.' and optics in f]
+
+                if verbose: print ( " subdirectories exist for following optics: \n", dirs, "\n -----------------------------")
+                    
                 print (" accessing directory:", root, "...")
                 if dirs != []:
-                    print ( " subdirectories exist for following optics: \n", 
-                            dirs, 
-                            "\n -----------------------------")
                     k = 0
                     for d in dirs:
+                        print('subdir', d, 'contains files ... ')
                         opticsList.append(str(dirs[k]))
                         k += 1
-                    if verbose >1: 
-                        print ("optics read from subdir:")
-                        for optic in opticsList: print(" -- ", optic)
+                        if verbose > 1: 
+                            print ("optics read from subdir:")
+                            for optic in opticsList: print(" -- ", optic)
                 else:
-                    print ("    ==> no subdirectories.")
-                    
+                    print ("    ==> no subdirectories.")        
+
                 # check if the opticsList is empty before filling by files --> useful for working on temporary!
                 # 
                 if files != []:
@@ -172,23 +169,23 @@ class DataReader:
                         if datType == 'default':
                                 
                             if read == 'primaries' and  'prim' in f:
-                                if not re.findall('_coll', f): 
-                                    optic = re.split('_b1',f)  #optic = re.split('_b1_prim',f) 
+                                if not findall('_coll', f): 
+                                    optic = split('_b1',f)  #optic = split('_b1_prim',f) 
                                     opticsList.append(str(optic[0])) 
                             elif read == 'secondaries' and 'seco' in f:
-                                if not re.findall('_coll_', f):
+                                if not findall('_coll_', f):
                                     optic = f.split('_b1') #optic = f.split('_b1_seco')
                                     opticsList.append(str(optic[0]))
                                     
                         elif datType == 'collimation':
                              
                             if read == 'primaries' and  'prim' in f:
-                                if re.findall('_coll_', f):
-                                    optic = re.split('_b\d{1}_\d{4}_', f) 
+                                if findall('_coll_', f):
+                                    optic = split('_b\d{1}_\d{4}_', f) 
                                     opticsList.append(str(optic[0])) 
                             elif read == 'secondaries' and 'seco' in f:
-                                if re.findall('_coll_', f):
-                                    optic = re.split('_b\d{1}_\d{4}_', f)
+                                if findall('_coll_', f):
+                                    optic = split('_b\d{1}_\d{4}_', f)
                                     opticsList.append(str(optic[0]))
                                     
                     if opticsList == []: 
@@ -213,7 +210,7 @@ class DataReader:
                     DatFrame = pd.DataFrame()
                     name = 'def_primaries'
                     
-                    primDataFiles = [os.path.join(root, file) for file in files if re.findall('_prim_', file) and not re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_prim_ntuple.out'
+                    primDataFiles = [path.join(root, file) for file in files if findall('_prim_', file) and not findall('_coll', file)] # -- mlu 11-21-2017 -- '_prim_ntuple.out'
                     if verbose: print ("list of files: \n", primDataFiles)
                     
                     self.aperList = []; self.beamList = []; self.beamSizes = []
@@ -237,7 +234,7 @@ class DataReader:
                     DatFrame2 = pd.DataFrame()
                     name = 'def_secondaries'
                     
-                    secoDataFiles = [os.path.join(root, file) for file in files if re.findall('_seco_', file) and not re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_seco_ntuple.out'
+                    secoDataFiles = [path.join(root, file) for file in files if findall('_seco_', file) and not findall('_coll', file)] # -- mlu 11-21-2017 -- '_seco_ntuple.out'
                     if verbose: print ("list of files: \n", secoDataFiles)
 
                     self.aperList = []; self.beamList = []; self.beamSizes = []
@@ -261,7 +258,7 @@ class DataReader:
                     DatFrame3 = pd.DataFrame()
                     name = 'col_primaries'
                     
-                    primDataFiles = [os.path.join(root, file) for file in files if re.findall('_prim_', file) and re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_prim_ntuple.out'
+                    primDataFiles = [path.join(root, file) for file in files if findall('_prim_', file) and findall('_coll', file)] # -- mlu 11-21-2017 -- '_prim_ntuple.out'
                     if verbose: print ("list of files: \n", primDataFiles)
                     
                     self.aperList = []; self.beamList = []; self.beamSizes = []
@@ -285,7 +282,7 @@ class DataReader:
                     DatFrame4 = pd.DataFrame()
                     name = 'col_secondaries'
                     
-                    secoDataFiles = [os.path.join(root, file) for file in files if re.findall('_seco_', file) and re.findall('_coll', file)] # -- mlu 11-21-2017 -- '_seco_ntuple.out'
+                    secoDataFiles = [path.join(root, file) for file in files if findall('_seco_', file) and findall('_coll', file)] # -- mlu 11-21-2017 -- '_seco_ntuple.out'
                     if verbose: print ("list of files: \n", secoDataFiles)
                     
                     self.aperList = []; self.beamList = []; self.beamSizes = []
@@ -323,7 +320,7 @@ class DataReader:
         # source information available throughout the track object
         #
         if 'OrigVol' in GlobDatFrame:
-            GlobDatFrame['OrigVol'] = GlobDatFrame.OrigVol.replace('None', np.nan).ffill()
+            GlobDatFrame['OrigVol'] = GlobDatFrame.OrigVol.replace('None', nan).ffill()
         
         if GlobDatFrame.empty: print ("*** WARNING **** overall dataframe empty!")
         else:
@@ -347,7 +344,7 @@ def readParams(file, output = 0, verbose = 0, filetype = 'csv'):
     # read spreadsheet with parameters
     #
     pd.set_option( 'display.float_format', '{:.2g}'.format )
-    DF = pd.read_excel( file, dtype = {'LER':np.float64, 'HER':np.float64 } )
+    DF = pd.read_excel( file, dtype = {'LER':float64, 'HER':float64 } )
     DF.name = 'MachineParam'
     # DF.apply( pd.to_numeric, errors = 'ignore' )
 
@@ -371,10 +368,10 @@ def checkRing(df, verbose = 0):
     angleSum = df.ANGLE.sum()
     if verbose: print ("check")
     print ("---------------------------------- \n Checking, if ring is closed: \n", "angleSum = ", angleSum)
-    twoPi = 2*np.pi
+    twoPi = 2*pi
     
     if angleSum != twoPi:
-        fudge = 2*np.pi - angleSum
+        fudge = 2*pi - angleSum
         print (" ** Ring not closed - offset of: ", fudge)           
         
 def print_verbose(df):
@@ -389,11 +386,11 @@ def get_apertures():
     
     # collect all apertures available in a list
     #
-    directory = os.path.expanduser('~/Codes/Projects/FCCee/Collimator/Data/')
+    directory = path.expanduser('~/Codes/Projects/FCCee/Collimator/Data/')
     aperlist = []
     dataFiles = []
 
-    for root, dirs, files in os.walk(directory, topdown = True):
+    for root, dirs, files in walk(directory, topdown = True):
 
         # exclude all hidden files and directories
         #
@@ -406,7 +403,7 @@ def get_apertures():
             if element.endswith('seco_ntuple.out'):
                 dataFiles.append(element)
                 
-                aper = re.findall(r'\D(\d{4})\D', element)
+                aper = findall(r'\D(\d{4})\D', element)
                 if verbose: print ("appending aperture:", int(aper[0]), " ..." )
                 aperList.append(int(aper[0]))
             else:
@@ -415,7 +412,7 @@ def get_apertures():
     # write out apertures
     #
     #~ for i in dataFiles:
-        #~ aper = re.findall(r'\D(\d{4})\D', i) 
+        #~ aper = findall(r'\D(\d{4})\D', i) 
         #~ aperlist.append(int(aper[0]))
     
     return aperlist
