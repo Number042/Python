@@ -102,19 +102,23 @@ class TfsReader:
 
 class PlotOptics:
     
-
-    def __init__(self, twiss):
+    def __init__(self, twiss, plotpath ):
         self.df = twiss
+        self.Smax = self.df.S.max()
+        self.plotpath = plotpath
 
     def plotTwissParams( self, twissPara = [], relS = 0, figSize = [40,10], IP = 0, verbose = 0):
         """
         Function to directly plot a set of twiss parameters
             -- twiss:       baseline twiss (DF)
             -- twissPara:   list of twiss parameters to plot (string)
+            -- relS:        choose to plot with IP in the center
+            -- figSize:     allows to adjust the size
+            -- IP:          sets xlim to +/- 5m
             -- verbose:     set verbosity level
         """
-        import VisualSpecs
-        colors = VisualSpecs.myColors
+        from VisualSpecs import myColors as colors
+        
         if twissPara == []: print("Nothing to plot. Specify list of parameters.")
         
         graph = plt.figure( figsize = (figSize[0], figSize[1]) )
@@ -136,4 +140,78 @@ class PlotOptics:
             if IP: plt.xlim(-5,5)
             plt.legend()
             
-        return graph    
+        return graph
+
+
+    def plotBeamSize( self, Srange, eps, delP, plane = 'x', scaleXY = 1e2, save = 0 ):
+        """
+        Method allows to plot horizontal or vertical beam sizes with 10 and 20 sigma envelope
+            -- plane:       select horizontal (default) or vertical plane
+            -- scaleXY:     scales from [m] to [cm] by default; can be changed
+            -- Srange:      choose the range upstream to IP
+            -- save:        optional to save a pdf copy
+            -- eps, delP, scaleXY:   specify emittance and energy spread
+
+        RETURN: the figure
+        """
+        from Tools import sigm
+        from VisualSpecs import myColors as colors 
+        from VisualSpecs import align_yaxis
+
+        condition = (self.df.S > self.Smax - Srange) & (self.df.S <= self.Smax)
+        slFr = self.df[condition]
+        print('slected last', Srange, 'm upstream. Scale factor =', scaleXY)
+        # init the plot and split x
+        #
+        fig = plt.figure( figsize = (20,10) ); ax = fig.add_subplot(111)
+        twin = ax.twinx()
+
+        # plot physical aperture
+        #
+        maxAper = self.df.APER.max()
+        print('maximum aperture found:', maxAper)
+
+        ax.plot( slFr.S, slFr.APER*scaleXY, lw = 3., color = colors[11] )
+        ax.plot( slFr.S, -slFr.APER*scaleXY, lw = 3., color = colors[11] )
+        ax.set_ylabel('aperture [cm]'); ax.set_ylim( -(maxAper+maxAper/10)*scaleXY, (maxAper+maxAper/10)*scaleXY )
+
+        
+        twin.set_ylabel('beam size $\\sigma$ [cm]')
+        
+        if plane == 'x':
+
+            twin.plot( slFr.S, sigm(slFr.BETX, slFr.DX, eps, delP, scaleXY), color = colors[2], label = '$\\sigma_x$' )  
+            twin.plot( slFr.S, -sigm(slFr.BETX, slFr.DX, eps, delP, scaleXY), color = colors[2] )
+
+            twin.plot( slFr.S, 10*sigm(slFr.BETX, slFr.DX, eps, delP, scaleXY), color = colors[3], ls = '--', label = '10$\\sigma_x$')  
+            twin.plot( slFr.S, -10*sigm(slFr.BETX, slFr.DX, eps, delP, scaleXY), color = colors[3], ls = '--' )  #  
+
+            twin.plot( slFr.S, 20*sigm(slFr.BETX, slFr.DX, eps, delP, scaleXY), color = colors[4], ls = ':', label = '20$\\sigma_x$' )  
+            twin.plot( slFr.S, -20*sigm(slFr.BETX, slFr.DX, eps, delP, scaleXY), color = colors[4], ls = ':' )  #  
+            align_yaxis(ax, 0, twin, 0); twin.set_ylim( -(maxAper+maxAper/10)*scaleXY, (maxAper+maxAper/10)*scaleXY ) 
+
+            plt.legend()    
+            plt.title('horizontal beam size and physical aperture')
+            if save: print('saving fig ...'); plt.savefig( self.plotpath + 'physAprt_hrzt_beamSize100m.pdf', bbox_inches = 'tight', dpi = 70)
+        
+        else:
+
+            twin.plot( slFr.S, sigm(slFr.BETY, slFr.DY, eps, delP, scaleXY), color = colors[2], label = '$\\sigma_y$' )  
+            twin.plot( slFr.S, -sigm(slFr.BETY, slFr.DY, eps, delP, scaleXY), color = colors[2] )
+
+            twin.plot( slFr.S, 10*sigm(slFr.BETY, slFr.DY, eps, delP, scaleXY), color = colors[3], ls = '--', label = '10$\\sigma_y$')  
+            twin.plot( slFr.S, -10*sigm(slFr.BETY, slFr.DY, eps, delP, scaleXY), color = colors[3], ls = '--' )  #  
+
+            twin.plot( slFr.S, 20*sigm(slFr.BETY, slFr.DY, eps, delP, scaleXY), color = colors[4], ls = ':', label = '20$\\sigma_y$' )  
+            twin.plot( slFr.S, -20*sigm(slFr.BETY, slFr.DY, eps, delP, scaleXY), color = colors[4], ls = ':' )  #  
+            align_yaxis(ax, 0, twin, 0); twin.set_ylim( -(maxAper+maxAper/10)*scaleXY, (maxAper+maxAper/10)*scaleXY )
+
+            plt.legend()
+            plt.title('vertical beam size and physical aperture')
+            if save: print('saving fig ...'); plt.savefig( self.plotpath + 'physAprt_vrt_beamSize100m.pdf', bbox_inches = 'tight', dpi = 70)
+
+        return fig
+        
+        
+         
+

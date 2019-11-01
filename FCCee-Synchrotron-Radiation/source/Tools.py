@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from numpy import sqrt
 
 # fuction to calculate S with IP in the center
 #
@@ -119,4 +120,8 @@ def inventAper(s, name, aper ):
     
     return invAper
 
+# calculate the beam size based on emittance, beta function, disperion and energy spread
+#
+def sigm(bet, disp, eps, delP, scaleXY):
+            return sqrt(bet*eps + (disp*delP)**2)*scaleXY
 
