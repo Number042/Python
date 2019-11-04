@@ -1,18 +1,8 @@
-import pandas as pd
-import matplotlib as mpl
-import matplotlib.pyplot as plt 
-import matplotlib.ticker as ticker
-from matplotlib.lines import Line2D as line
-from numpy import array, std, mean
-import collections as clt
-import os
-import difflib as dl  
-import re
-import timeit
+import matplotlib.pyplot as plt
+from numpy import mean, std
 
 from PlotSelectTools import Tracking 
 from OpticsSelectTools import DataSelection
-from VisualSpecs import myColors as colors
 
 # Functions following from here should be put into another class, PlottingData 
 #
@@ -194,7 +184,7 @@ def plot_Energy(dfGrp, plotpath, beam = 'all', size = 'all', Type = 'spectrum', 
         #
         Z_pos, Z_org, Z_hit, E_org, E_hit = dataSel.collectInfo( subframe )
         E_mean = mean(E_org); E_std = std(E_org)
-        
+    
         # plot resulting data
         #
         if Type == 'spectrum':
@@ -215,7 +205,7 @@ def plot_Energy(dfGrp, plotpath, beam = 'all', size = 'all', Type = 'spectrum', 
     plt.xlabel( 'Energy [keV]' )
     plt.ylabel( 'photons/bin' )
     plt.title( 'Energy distribution' )
-
+    plt.axvline( x = 100, lw = 2, ls = '--', color = 'red' )
     plt.legend()
     ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.1), ncol = legCol)
 

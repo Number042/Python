@@ -1,7 +1,6 @@
 import matplotlib as mpl
 
-myColors = ['royalblue', 'orangered', 'darkseagreen', 'peru', 'teal', 'orange','red', 'green', 'blue', 'lime',
-            'crimson', 'slategrey', 'navy', 'darkgoldenrod','black']
+myColors = ['royalblue', 'orangered', 'darkseagreen', 'peru', 'teal', 'orange','red', 'green', 'blue', 'lime','slategray']
 myStyle = ['-', ':', '--', '-.', '-', ':']
 
 # --------------------------- RC PARAMS STYLE SECTION -------------------------------------
