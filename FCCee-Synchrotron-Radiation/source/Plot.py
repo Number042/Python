@@ -227,10 +227,10 @@ def plotSrcHits(df, plotpath, elements, zlim = [],  nBin = 100, ticks = 5, save 
         -- save:    choose to whether or not save the plot
         -- verbose: switch on/off or set level of verbosity
 
-    RETURNS: nothing. Simple plottig tool
+    RETURNS: the plot
     """
     
-    plt.figure(figsize = (15,10))
+    graph = plt.figure( figsize = (15,10) )
     ax = plt.subplot(111)
     plt.title("Hits from Element(s)")
     plt.rc('grid', linestyle = '--', color = 'gray')
@@ -247,12 +247,16 @@ def plotSrcHits(df, plotpath, elements, zlim = [],  nBin = 100, ticks = 5, save 
     # do the actual selection, based on passed elements
     #
     for elem in elements:
+        
+        if verbose: print('Looking into current element', elem)
+        
         selection = df[df.OrigVol == elem]
-    
+        if verbose > 1: print( selection )
+
         hits = selection[selection.Material == 'Cu']
         zpos = hits.z_eu.tolist()
     
-        plt.hist(zpos, bins = nBin, histtype = 'step', linewidth = 2, fill = False, label = str(elem))
+        plt.hist(zpos, bins = nBin, histtype = 'step', linewidth = 2.5, fill = False, label = str(elem))
         
         if verbose > 1: print (hits.Track)
     
@@ -269,11 +273,11 @@ def plotSrcHits(df, plotpath, elements, zlim = [],  nBin = 100, ticks = 5, save 
         print ("Saving figure as ", plotpath, "SR_hitsFrmElmt.pdf")
         plt.savefig(plotpath + "SR_hitsFrmElmt.pdf", bbox_inches = 'tight')
 
-    return
+    return graph
 
 def plotPrimTrack( df, plotpath, axis = 'all' ):
     """
-    Method to plot the ppath of primary particles after Geant tracking
+    Method to plot the path of primary particles after Geant tracking
         -- df:          dataframe holding primary data
         -- axis:        choose between both or only one transverse coordinate
         -- plotpath:    specify location to dump pdf plots

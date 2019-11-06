@@ -15,7 +15,8 @@ class DataSelection:
         self._collimation = 0
 
         # cleanup section: drop columns from received DF that are not required
-        self.df.drop( ['mass','seco_pos_eutags', 'xp_eu', 'yp_eu', 'zp_eu', 'Bx_eu', 'By_eu', 'Bz_eu', 'trklen', 'steplen'], axis = 1, inplace = True)
+        #
+        self.df.drop( ['mass','seco_pos_eutags', 'xp_eu', 'yp_eu', 'zp_eu', 'Bx_eu', 'By_eu', 'Bz_eu', 'trklen', 'steplen'], axis = 1 )
 
 
     # STEP 1 -- select a machine and eventually specific optics
