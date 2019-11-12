@@ -1,5 +1,6 @@
-import pandas as pd
+from pandas import read_table
 import matplotlib.pyplot as plt
+from numpy import pi
 from Tools import rel_s
 
 # read twiss files, should be as flexible as possible
@@ -16,7 +17,7 @@ class TfsReader:
             -- verbose: choose verbosity level
         """
         
-        df = pd.read_table(self.tfs, sep = r'\s+', comment = '@', index_col = False, converters = {'NAME':str, 'KEYWORD':str}) 
+        df = read_table(self.tfs, sep = r'\s+', comment = '@', index_col = False, converters = {'NAME':str, 'KEYWORD':str}) 
 
         # read columns and drop the first one (*) to actually match the right header
         #
@@ -53,7 +54,7 @@ class TfsReader:
         """
         Function to read general survey files.
         """
-        surveyDF = pd.read_table(self.tfs, sep = r'\s+', comment = '@', index_col = False)
+        surveyDF = read_table(self.tfs, sep = r'\s+', comment = '@', index_col = False)
         
         # read columns and drop the first one (*) to actually match the right header
         #
@@ -91,13 +92,28 @@ class TfsReader:
             -- verbose: choose verbosity level
         """
 
-        df = pd.read_table( self.tfs, sep = r'\s+', index_col = False )
+        df = read_table( self.tfs, sep = r'\s+', index_col = False )
         
         if relS: 
             print(" Add column 'rel_S' -- S position shifted with IP in the center.")
             df["rel_S"] = df.apply( lambda row: rel_s( df, row ), axis = 1 )
             
         return df
+
+    def checkRing(self, verbose = 0):
+        """
+        Method to quickly check, if a sequence is closed (ring) or not. If not closed, give fudge factor (2pi - offset)
+            -- df:    pass data frame to the function, for example from read_twiss
+        """
+        angleSum = self.tfs.ANGLE.sum()
+        if self.verbose: print ("check")
+        print ("---------------------------------- \n Checking, if ring is closed: \n", "angleSum = ", angleSum)
+        twoPi = 2*pi
+        
+        if angleSum != twoPi:
+            fudge = 2*pi - angleSum
+            print (" ** Ring not closed - offset of: ", fudge)           
+
     
 
 class PlotOptics:

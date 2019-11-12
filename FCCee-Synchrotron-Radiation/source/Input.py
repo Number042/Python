@@ -255,11 +255,13 @@ class DataReader:
         GlobDatFrame = GlobDatFrame.append(frameList)
         
         # do some forward filling on the origin-volume column to have 
-        # source information available throughout the track object
+        # source information available throughout the track object. Replace "none" with the value for OrigVol
         #
         if 'OrigVol' in GlobDatFrame:
-            GlobDatFrame['OrigVol'] = GlobDatFrame.OrigVol.replace('None', nan).ffill()
-        
+            if self.verbose: print( 'forward filling OrigVol, replacing string \"none\" ...' )
+            GlobDatFrame['OrigVol'] = GlobDatFrame.OrigVol.replace( 'none' ).ffill()
+        else: raise Warning("*** No column OrigVol found in the data set!")
+
         if GlobDatFrame.empty: print ("*** WARNING **** overall dataframe empty!")
         else:
             GlobDatFrame.name = name
@@ -286,7 +288,7 @@ def readParams(file, output = 0, verbose = 0, filetype = 'csv'):
     DF.name = 'MachineParam'
     # DF.apply( pd.to_numeric, errors = 'ignore' )
 
-    if self.verbose: print("---------------------------------- \n", "DF contains: \n", DF.keys(), 
+    if verbose: print("---------------------------------- \n", "DF contains: \n", DF.keys(), 
                         "\n Data-Types are: \n", DF.dtypes, "\n ----------------------------------")
                         
     if output:
@@ -298,19 +300,6 @@ def readParams(file, output = 0, verbose = 0, filetype = 'csv'):
     
     return DF
 
-def checkRing(df, verbose = 0):
-    """
-    Method to quickly check, if a sequence is closed (ring) or not. If not closed, give fudge factor (2pi - offset)
-        -- df:    pass data frame to the function, for example from read_twiss
-    """
-    angleSum = df.ANGLE.sum()
-    if self.verbose: print ("check")
-    print ("---------------------------------- \n Checking, if ring is closed: \n", "angleSum = ", angleSum)
-    twoPi = 2*pi
-    
-    if angleSum != twoPi:
-        fudge = 2*pi - angleSum
-        print (" ** Ring not closed - offset of: ", fudge)           
         
 def print_verbose(df):
     """ 
@@ -319,38 +308,3 @@ def print_verbose(df):
     print ("-------------------------------------")
     print ("DF holds: ", df.keys())
     print ("-------------------------------------")
-
-def get_apertures():
-    
-    # collect all apertures available in a list
-    #
-    directory = path.expanduser('~/Codes/Projects/FCCee/Collimator/Data/')
-    aperlist = []
-    dataFiles = []
-
-    for root, dirs, files in walk(directory, topdown = True):
-
-        # exclude all hidden files and directories
-        #
-        files = [f for f in files if not f[0] == '.']
-        dirs[:] = [d for d in dirs if not d[0] == '.']
-        
-        # loop through elements and collect apertures, if existing
-        #
-        for element in files:
-            if element.endswith('seco_ntuple.out'):
-                dataFiles.append(element)
-                
-                aper = findall(r'\D(\d{4})\D', element)
-                if self.verbose: print ("appending aperture:", int(aper[0]), " ..." )
-                aperList.append(int(aper[0]))
-            else:
-                raise RuntimeError('No specifications found. List of apertures empty:', aperList)
-                
-    # write out apertures
-    #
-    #~ for i in dataFiles:
-        #~ aper = findall(r'\D(\d{4})\D', i) 
-        #~ aperlist.append(int(aper[0]))
-    
-    return aperlist

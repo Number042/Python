@@ -253,7 +253,7 @@ def plotSrcHits(df, plotpath, elements, zlim = [],  nBin = 100, ticks = 5, save 
         selection = df[df.OrigVol == elem]
         if verbose > 1: print( selection )
 
-        hits = selection[selection.Material == 'Cu']
+        hits = selection[ (selection.Material == 'Cu') & (selection.Creator == 'SynRad') ]
         zpos = hits.z_eu.tolist()
     
         plt.hist(zpos, bins = nBin, histtype = 'step', linewidth = 2.5, fill = False, label = str(elem))
