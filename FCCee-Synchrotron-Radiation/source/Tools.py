@@ -125,3 +125,12 @@ def inventAper(s, name, aper ):
 def sigm(bet, disp, eps, delP, scaleXY):
             return sqrt(bet*eps + (disp*delP)**2)*scaleXY
 
+# critical energy for bends
+#
+# def epsCrit(gamma, rho):
+#     return (3/2*hbar*speed_of_light*gamma**3/rho)/elementary_charge
+
+# radii = [151.631e3, 144.688e3]
+# epsC= [ epsCrit(Lrnt, rh)/1e3 for rh in radii] 
+
+
