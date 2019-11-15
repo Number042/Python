@@ -1,5 +1,6 @@
 import uproot
 import matplotlib.pyplot as plt
+from time import time
 from pandas import DataFrame
 
 class SynchrotronRadiation:
@@ -15,7 +16,7 @@ class SynchrotronRadiation:
         self.verbose = verbose
         self.plotpath = plotpath
 
-    def readData( self, beamType = 'pencil', COL = ['open','open'], optics = 'fcc_ee' ):
+    def readData( self, columns = ['Name','Egamma','z_eu','OrigVol','Process','Material','Creator'], beamType = 'pencil', COL = ['open','open'], optics = 'fcc_ee' ):
         """
         Provide ntuple as DataFrame
             -- beamType:    primary transverse distr - pencil, Gauss, etc
@@ -23,7 +24,8 @@ class SynchrotronRadiation:
             -- optics:      optional key to distinguish different machine versions
         """
         Thefile = uproot.open( self.ntuple )
-        self.df = Thefile['seco_ntuple;1'].arrays( outputtype = DataFrame )
+        self.df = Thefile['seco_ntuple;1'].pandas.df( columns )
+        # self.df = Thefile['seco_ntuple;1'].arrays( outputtype = DataFrame )
         
         self.beamType = str(beamType)
         self.df['BeamShape'] = self.beamType
@@ -40,14 +42,38 @@ class SynchrotronRadiation:
 
         if self.verbose > 1: self.df.head()
 
+    def printInfo( self ):
+
+        if self.df is not None:
+            # print("Data stored in the Ntuple: \n", self.df.columns )
+            print( " ----------------------- \n", self.df.head() )
+
+        else:
+            raise RuntimeError("*** no data frame created!")
+
     def mergeData( self ):
         # in case there are more than 1 frame, merge them ... stuff done in Tracking better move here? mlu -- 2019-14-11
         return 
 
+    # excersice: wrappers to have a performance overview
+    #
+    
+    # def timeIt( self ):
+    #     # inner function
+    #     def wrapper( *args, **kwargs ):
+    #         start = time()
+    #         result = self.func( *args, **kwargs )
+    #         end = time()
+    #         print( self.func.__name__+ " took " + str((end-start)*1e3) + " ms" )
+    #         return result 
+        
+    #     return wrapper
+    
+    
     ## also possible to leave this on its own and use it from Plot.py
-    def plot_defaultData(self, zlim = [], beam = 'all', size = 'all', Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
+    def defaultSRData(self, zlim = [], beam = 'all', size = 'all', Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
         """
-        Function to plot data from secondary events, taking into account different beam shapes and sizes. 
+        Method to plot data from secondary events, taking into account different beam shapes and sizes. 
             -- plotpath:    point to a directory for storing plots
             -- zlim:		array to put zmin and zmax; allows to plot only certain region; default empty 
             -- beam:        allows to select the beam shape. Available are pencil, gauss, flat and ring
@@ -64,9 +90,10 @@ class SynchrotronRadiation:
         from Plot import plot_defaultData
         return plot_defaultData( self.df, self.plotpath, zlim, beam, size, Type, nBin, ticks, verbose, legCol, save)
 
+    # @timeIt()
     def energySpectrum(self, Type = 'general', magnets = [], save = 0):
         """
-        Function to plot the energy of SR photons
+        Method to plot the energy of SR photons
             -- Type:    global spectrum or magnet specific
             -- magnets: choose which magnets to plot
             -- save:    whether or not save a copy of the plot 
@@ -76,7 +103,7 @@ class SynchrotronRadiation:
         from Plot import plot_Energy
         return plot_Energy( self.df, self.plotpath, save, magnets = magnets, Type = Type )
 
-    def srcHits(self, elements = [], zlim = [], nBin = 100, ticks = 10, save = 0 ):
+    def hitsByElement(self, elements = [], zlim = [], nBin = 100, ticks = 10, save = 0 ):
         """
         Method to select certain elements as sources and plot hits caused BY THESE elements.
         Requires full element names, no groups implemented yet.
