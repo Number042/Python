@@ -24,18 +24,17 @@ class SynchrotronRadiation:
             -- optics:      optional key to distinguish different machine versions
         """
         self.Thefile = uproot.open( self.ntuple )
+        ## now done 'on demand' when required by specific task
+        ##
         # self.df = Thefile['seco_ntuple;1'].pandas.df( columns )
         # self.df = Thefile['seco_ntuple;1'].arrays( outputtype = DataFrame )
         
-        # self.beamType = str(beamType)
-        # self.df['BeamShape'] = self.beamType
-        # print('setting beamType to', self.beamType )
+        self.beamType = str(beamType)
+        print('setting beamType to', self.beamType )
 
-        # COLH,COLV = COL
-        # if COL != ['open','open']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COLV )
-        # else: print('collimators fully open.')
-
-        # if self.verbose > 1: self.df.head()
+        COLH,COLV = COL
+        if COL != ['open','open']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COLV )
+        else: print('collimators fully open.')
 
     def __fillOrigVol( self, df ):
 
@@ -79,12 +78,16 @@ class SynchrotronRadiation:
         from Plot import plot_defaultData
         
         defDF = self.Thefile['seco_ntuple;1'].pandas.df( ['Material', 'z_eu', 'Process'] )
-        plot_defaultData( defDF, self.plotpath, zlim, beam, size, Type, nBin, ticks, verbose, legCol, save)        
+        defDF['BeamShape'] = self.beamType
+        if zlim:
+            defDF = defDF[ (defDF.z_eu > zlim[0]) & (defDF.z_eu < zlim[1]) ]
+        
+        plot_defaultData( defDF, self.plotpath, beam, size, Type, nBin, ticks, verbose, legCol, save)        
         
         del defDF
         print("plotting done, deleted DF.")
         
-    def energySpectrum(self, Type = 'general', magnets = [], save = 0):
+    def energySpectrum(self, Type = 'general', magnets = [], zlim = [], save = 0):
         """
         Method to plot the energy of SR photons
             -- Type:    global spectrum or magnet specific
@@ -95,10 +98,14 @@ class SynchrotronRadiation:
         """
         from Plot import plot_Energy
         
-        enrgDF = self.Thefile['seco_ntuple;1'].pandas.df( ['Egamma', 'Process', 'OrigVol'] )
+        enrgDF = self.Thefile['seco_ntuple;1'].pandas.df( ['Egamma', 'z_eu', 'Material', 'Creator', 'Process', 'OrigVol'] )
         self.__fillOrigVol( enrgDF )
-        
-        plot_Energy( enrgDF, self.plotpath, save, magnets = magnets, Type = Type )
+        enrgDF['BeamShape'] = self.beamType
+
+        if zlim:
+            enrgDF = enrgDF[ (enrgDF.z_eu > zlim[0]) & (enrgDF.z_eu < zlim[1]) ]
+
+        plot_Energy( enrgDF, self.plotpath, Type = Type, save = save, magnets = magnets )
 
         del enrgDF
         print("plotting done, deleted DF.")
@@ -119,27 +126,11 @@ class SynchrotronRadiation:
 
         elmDF = self.Thefile['seco_ntuple;1'].pandas.df( ['z_eu', 'Material', 'Creator', 'OrigVol'] )
         self.__fillOrigVol( elmDF )
-        
-        plotSrcHits( elmDF, self.plotpath, elements, zlim,  nBin, ticks, save, self.verbose )
+        elmDF['BeamShape'] = self.beamType
+
+        if zlim:
+            elmDF = elmDF[ (elmDF.z_eu > zlim[0]) & (elmDF.z_eu < zlim[1]) ]
+        plotSrcHits( elmDF, self.plotpath, elements, nBin, ticks, save, self.verbose )
 
         del elmDF
         print("plotting done, deleted DF.")
-        
-    def EnrgHit( self, zlim = [] ):
-        # energy of photons once they impact on the beam pipe vacuum -> Cu
-
-        if zlim:
-            print("selected range: zmin =", zlim[0], ' zmax =', zlim[1] )
-            tmpdf = self.df[ (self.df.z_eu > zlim[0]) & (self.df.z_eu < zlim[1]) ]
-            plt.hist( tmpdf[ (tmpdf.Creator==b'SynRad')& (tmpdf.Material==b'Cu') ].Egamma*1e6, bins = 100 )
-        
-        else:
-            print("plot general data ...")
-            plt.hist( self.df[ (self.df.Creator==b'SynRad')& (self.df.Material==b'Cu') ].Egamma*1e6, bins = 100 )
-        plt.yscale('log')
-
-        return 
-
-
-
-            

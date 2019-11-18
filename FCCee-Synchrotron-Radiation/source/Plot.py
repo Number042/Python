@@ -6,13 +6,12 @@ from OpticsSelectTools import DataSelection
 
 # Functions following from here should be put into another class, PlottingData 
 #
-def plot_defaultData( df, plotpath, zlim = [], beam = [], size = 'all', Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
+def plot_defaultData( df, plotpath, beam = [], size = 'all', Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
     """
     Function to plot data from secondary events, taking into account different beam shapes and sizes. 
     In case of Type = hit allows to plot hits within a certain element. For Type == origin, it plots the origin of all elements or in a single element, if combined with selection in element
         -- dfGrp:       grouped DF object from selction before
         -- plotpath:    point to a directory for storing plots
-        -- zlim:		array to put zmin and zmax; allows to plot only certain region; default empty 
         -- beam:        allows to select the beam shape. Available are pencil, gauss, flat and ring
         -- size:        choose beam sizes; gauss,flat and ring have to start with >0; defaults to 'all'
         -- Type:        choose which spectrum to plot - hits or origin
@@ -30,7 +29,6 @@ def plot_defaultData( df, plotpath, zlim = [], beam = [], size = 'all', Type = '
     ax = plt.subplot(111)
     plt.rc('grid', linestyle = "--", color = 'grey')
     plt.grid()
-    if zlim: plt.xlim(zlim[0], zlim[1])         # allows to set the xlim
 
     beamType = beam[0]
 
@@ -142,24 +140,41 @@ def plot_Energy(df, plotpath, beam = 'all', size = 'all', Type = 'general', magn
     plt.grid()
     plt.yscale('log')
     plt.xlabel('E$_\\gamma$ [keV]')
-    plt.title('photon energy distribution - ' + str(Type))
+    
     # --- last two upstream bends
     
     if Type == 'general':
-        plt.hist( df[df.Process==b'initStep'].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2)
-
+        plt.hist( df[df.Process == b'initStep'].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5 )
+        title = 'photon energy distribution - ' + str(Type)
+    
+    elif Type == 'hit':
+        
+        # if zlim:
+        #     print("selected range: zmin =", zlim[0], ' zmax =', zlim[1] )
+        #     tmpdf = df[ (df.z_eu > zlim[0]) & (df.z_eu < zlim[1]) ]
+        #     plt.hist( tmpdf[ (tmpdf.Creator == b'SynRad') & (tmpdf.Material == b'Cu') ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2 )
+        #     title = 'photon energy on' + str(Type) + 'selected range in z'
+        
+        # else:
+        print("plot general data ...")
+        plt.hist( df[ (df.Creator == b'SynRad') & (df.Material == b'Cu') ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5 )
+        title = 'photon energy (' + str(Type) + ')'
+    
     else:
         if magnets == []: raise RuntimeError('*** List of magnets empty ...')
         incr = 0
         for magn in magnets:
-            plt.hist( df[(df.OrigVol == magn) & (df.Process==b'initStep')].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2, label = str(magn), color = colors[incr])
+            plt.hist( df[(df.OrigVol == magn) & (df.Process==b'initStep')].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(magn), color = colors[incr])
             incr += 1
-        
-        plt.legend()
-        ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.1), ncol = legCol)
-    
+        title = 'photon energy distribution - ' + str(Type)
+
+
+    plt.title( str(title) )
+    plt.legend()
+    ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.1), ncol = legCol)
+
     # mark a 100 keV
-    plt.axvline(x = 100, lw = 2, ls = '--', color = 'red')
+    plt.axvline(x = 100, lw = 2.5, ls = '--', color = 'red')
 
     ## this might become handy again with more beam types examined! (mlu -- 2019-14-11)
     ##
@@ -197,7 +212,7 @@ def plot_Energy(df, plotpath, beam = 'all', size = 'all', Type = 'general', magn
         print ('saved plot as', plotpath, 'SR_energy_spectrum' + str(Type) + '.pdf')
     else: pass
 
-def plotSrcHits(df, plotpath, elements, zlim = [],  nBin = 100, ticks = 5, save = 0, verbose = 0):
+def plotSrcHits(df, plotpath, elements, nBin = 100, ticks = 5, save = 0, verbose = 0):
     """
     Method to select certain elements as sources and plot hits caused BY THESE elements.
     Requires full element names, no groups implemented yet.
@@ -216,10 +231,6 @@ def plotSrcHits(df, plotpath, elements, zlim = [],  nBin = 100, ticks = 5, save 
     plt.title("Hits from Element(s)")
     plt.rc('grid', linestyle = '--', color = 'gray')
     
-    # allows to set the z range as option
-    #
-    if zlim: plt.xlim(zlim[0], zlim[1])
-    
     # check, if elements is not empty
     #
     if elements == []:
@@ -234,7 +245,7 @@ def plotSrcHits(df, plotpath, elements, zlim = [],  nBin = 100, ticks = 5, save 
         selection = df[df.OrigVol == elem]
         if verbose > 1: print( selection )
 
-        plt.hist( selection[ (selection.Material == b'Cu') & (selection.Creator == b'SynRad') ].z_eu, bins = nBin, histtype = 'step', linewidth = 2.5, fill = False, label = str(elem) )
+        plt.hist( selection[ (selection.Material == b'Cu') & (selection.Creator == b'SynRad') ].z_eu, bins = nBin, histtype = 'step', lw = 2.5, fill = False, label = str(elem) )
         
         # if verbose > 1: print (hits.Track)
     
