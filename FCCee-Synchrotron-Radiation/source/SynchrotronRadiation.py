@@ -23,24 +23,28 @@ class SynchrotronRadiation:
             -- COL:         array for horizontal and vertical coll opening (COLH,COLV)
             -- optics:      optional key to distinguish different machine versions
         """
-        Thefile = uproot.open( self.ntuple )
-        self.df = Thefile['seco_ntuple;1'].pandas.df( columns )
+        self.Thefile = uproot.open( self.ntuple )
+        # self.df = Thefile['seco_ntuple;1'].pandas.df( columns )
         # self.df = Thefile['seco_ntuple;1'].arrays( outputtype = DataFrame )
         
-        self.beamType = str(beamType)
-        self.df['BeamShape'] = self.beamType
-        print('setting beamType to', self.beamType )
+        # self.beamType = str(beamType)
+        # self.df['BeamShape'] = self.beamType
+        # print('setting beamType to', self.beamType )
 
-        COLH,COLV = COL
-        if COL != ['open','open']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COLV )
-        else: print('collimators fully open.')
+        # COLH,COLV = COL
+        # if COL != ['open','open']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COLV )
+        # else: print('collimators fully open.')
 
-        if 'OrigVol' in self.df:
+        # if self.verbose > 1: self.df.head()
+
+    def __fillOrigVol( self, df ):
+
+        if 'OrigVol' not in df:
+            raise Warning("*** No column OrigVol found in the data set!")
+        else: 
             if self.verbose: print( 'forward filling OrigVol, replacing string \"none\" ...' )
-            self.df['OrigVol'] = self.df['OrigVol'].replace( b'none' ).ffill()
-        else: raise Warning("*** No column OrigVol found in the data set!")
-
-        if self.verbose > 1: self.df.head()
+            df['OrigVol'] = df['OrigVol'].replace( b'none' ).ffill()
+        return df
 
     def printInfo( self ):
 
@@ -54,21 +58,6 @@ class SynchrotronRadiation:
     def mergeData( self ):
         # in case there are more than 1 frame, merge them ... stuff done in Tracking better move here? mlu -- 2019-14-11
         return 
-
-    # excersice: wrappers to have a performance overview
-    #
-    
-    # def timeIt( self ):
-    #     # inner function
-    #     def wrapper( *args, **kwargs ):
-    #         start = time()
-    #         result = self.func( *args, **kwargs )
-    #         end = time()
-    #         print( self.func.__name__+ " took " + str((end-start)*1e3) + " ms" )
-    #         return result 
-        
-    #     return wrapper
-    
     
     ## also possible to leave this on its own and use it from Plot.py
     def defaultSRData(self, zlim = [], beam = 'all', size = 'all', Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
@@ -88,9 +77,13 @@ class SynchrotronRadiation:
         RETURNS: nothing. Simple plottig tool
         """
         from Plot import plot_defaultData
-        return plot_defaultData( self.df, self.plotpath, zlim, beam, size, Type, nBin, ticks, verbose, legCol, save)
-
-    # @timeIt()
+        
+        defDF = self.Thefile['seco_ntuple;1'].pandas.df( ['Material', 'z_eu', 'Process'] )
+        plot_defaultData( defDF, self.plotpath, zlim, beam, size, Type, nBin, ticks, verbose, legCol, save)        
+        
+        del defDF
+        print("plotting done, deleted DF.")
+        
     def energySpectrum(self, Type = 'general', magnets = [], save = 0):
         """
         Method to plot the energy of SR photons
@@ -101,7 +94,14 @@ class SynchrotronRadiation:
         RETURN: the figure
         """
         from Plot import plot_Energy
-        return plot_Energy( self.df, self.plotpath, save, magnets = magnets, Type = Type )
+        
+        enrgDF = self.Thefile['seco_ntuple;1'].pandas.df( ['Egamma', 'Process', 'OrigVol'] )
+        self.__fillOrigVol( enrgDF )
+        
+        plot_Energy( enrgDF, self.plotpath, save, magnets = magnets, Type = Type )
+
+        del enrgDF
+        print("plotting done, deleted DF.")
 
     def hitsByElement(self, elements = [], zlim = [], nBin = 100, ticks = 10, save = 0 ):
         """
@@ -116,8 +116,15 @@ class SynchrotronRadiation:
         RETURNS: the plot
         """
         from Plot import plotSrcHits
-        return plotSrcHits( self.df, self.plotpath, elements, zlim,  nBin, ticks, save, self.verbose )
 
+        elmDF = self.Thefile['seco_ntuple;1'].pandas.df( ['z_eu', 'Material', 'Creator', 'OrigVol'] )
+        self.__fillOrigVol( elmDF )
+        
+        plotSrcHits( elmDF, self.plotpath, elements, zlim,  nBin, ticks, save, self.verbose )
+
+        del elmDF
+        print("plotting done, deleted DF.")
+        
     def EnrgHit( self, zlim = [] ):
         # energy of photons once they impact on the beam pipe vacuum -> Cu
 
