@@ -6,7 +6,7 @@ from OpticsSelectTools import DataSelection
 
 # Functions following from here should be put into another class, PlottingData 
 #
-def plot_defaultData( df, plotpath, beam = [], size = 'all', Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
+def plot_defaultData( df, ax, plotpath, beam, size = 'all', Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
     """
     Function to plot data from secondary events, taking into account different beam shapes and sizes. 
     In case of Type = hit allows to plot hits within a certain element. For Type == origin, it plots the origin of all elements or in a single element, if combined with selection in element
@@ -23,196 +23,63 @@ def plot_defaultData( df, plotpath, beam = [], size = 'all', Type = 'hit', nBin 
     
     RETURNS: nothing. Simple plottig tool
     """
-    # settings for the plot
-    #
-    plt.figure(figsize = (15,10))
-    ax = plt.subplot(111)
-    plt.rc('grid', linestyle = "--", color = 'grey')
-    plt.grid()
-
-    beamType = beam[0]
 
     if Type == 'hit':
-        plt.title("SR photons hitting beampipe")
-        plt.hist( df[df.Material == b'Cu'].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beamType), stacked = False)
+        ax.set_title("SR photons hitting beampipe")
+        ax.hist( df[df.Material == b'Cu'].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
+        if save == 1:
+            plt.savefig( plotpath + "SR_hits_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
+            print ('saved plot as', plotpath, 'SR_hits_beamshape.pdf')
+
     elif Type == 'position':
-        plt.title("Position of SR photons")
-        plt.hist( df.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beamType), stacked = False)
+        ax.set_title("Position of SR photons")
+        ax.hist( df.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
+        if save == 1:
+            plt.savefig( plotpath + "SR_position_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
+            print ('saved plot as', plotpath, 'SR_position_beamshape.pdf')
+
     elif Type == 'origin':
-        plt.title("Origin of SR photons")
-        plt.hist( df[(df.Process == b'initStep') & (df.Creator==b'SynRad')].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = beamType, stacked = False) 
+        ax.set_title("Origin of SR photons")
+        ax.hist( df[(df.Process == b'initStep') & (df.Creator==b'SynRad')].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False) 
+        if save == 1:
+            plt.savefig( plotpath + "SR_origin_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
+            print ('saved plot as', plotpath, 'SR_origin_beamshape.pdf')
+
     else:
         raise RuntimeError("Invalid selection of Type!")
     
-    plt.locator_params(axis = 'x', nbins = ticks)
-    plt.ylabel("photons/bin")
-    plt.xlabel("z [m]")
-
-    plt.legend()
-    ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.1), ncol = legCol)
-    
-    if (Type == 'hit' and save == 1):
-        plt.savefig( plotpath + "SR_hits_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-        print ('saved plot as', plotpath, 'SR_hits_beamshape.pdf')
-    elif (Type == 'position' and save == 1):
-        plt.savefig( plotpath + "SR_position_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-        print ('saved plot as', plotpath, 'SR_position_beamshape.pdf')
-    elif(Type == 'origin' and save == 1):
-        plt.savefig( plotpath + "SR_origin_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-        print ('saved plot as', plotpath, 'SR_origin_beamshape.pdf')
-    
     return
 
-    ## old routine based on DF.groupby for different beam types, collimator settings, etc 
-    ## -- maybe useful above at some point (mlu -- 2019-14-11)
-    ##
-    #SIGNATURE plot_defaultData(dfGrp, plotpath, zlim = [], beam = 'all', size = 'all', Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
-    # # prepare data selection
-    # dataSel = Tracking( verbose )
-
-    # # settings for the plot
-    # #
-    # plt.figure(figsize = (15,10))
-    # ax = plt.subplot(111)
-    # plt.rc('grid', linestyle = "--", color = 'grey')
-    # plt.grid()
-    # if zlim: plt.xlim(zlim[0], zlim[1])         # allows to set the xlim
-
-    # for name, subframe in dfGrp:
-    
-    #     if verbose:
-    #         print ( "current group:", name )
-    #     elif verbose > 1:
-    #         print ( "parent frame:", dfGrp )
-            
-    #     # invoke new function from Input.py -- initiate tracking object from class
-    #     # use collectInfo to select z data
-    #     #
-    #     Z_pos, Z_org, Z_hit, E_org, E_hit = dataSel.collectInfo( subframe )
-        
-    #     # plot resulting data
-    #     #
-    #     if Type == 'hit':
-    #         plt.title("SR photons hitting beampipe")
-    #         plt.hist(Z_hit, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False)
-    #     elif Type == 'position':
-    #         plt.title("Position of SR photons")
-    #         plt.hist(Z_pos, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False)
-    #     elif Type == 'origin':
-    #         plt.title("Origin of SR photons")
-    #         plt.hist(Z_org, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False) 
-    #     else:
-    #         raise RuntimeError("Invalid selection of Type!")
-    
-    # plt.locator_params(axis = 'x', nbins = ticks)
-    # plt.ylabel("photons/bin")
-    # plt.xlabel("z [m]")
-
-    # plt.legend()
-    # ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.1), ncol = legCol)
-    
-    # if (Type == 'hit' and save == 1):
-    #     plt.savefig(plotpath + "SR_hits_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-    #     print ('saved plot as', plotpath, 'SR_hits_beamshape.pdf')
-    # elif (Type == 'position' and save == 1):
-    #     plt.savefig(plotpath + "SR_position_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-    #     print ('saved plot as', plotpath, 'SR_position_beamshape.pdf')
-    # elif(Type == 'origin' and save == 1):
-    #     plt.savefig(plotpath + "SR_origin_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-    #     print ('saved plot as', plotpath, 'SR_origin_beamshape.pdf')
-    
-    # return
-
-def plot_Energy(df, plotpath, beam = 'all', size = 'all', Type = 'general', magnets = [], nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
+def plot_Energy(df, ax, plotpath, beam, size = 'all', Type = 'general', magnets = [], nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
     """
     
     """
-
-    # set modes: plot default and  magnets (steered by names:  bends, quads ... )
 
     from VisualSpecs import myColors as colors
-
-    # settings for the plot
-    #
-    plt.figure(figsize = (15,10))
-    ax = plt.subplot(111)
-    plt.rc('grid', linestyle = "--", color = 'grey')
-    plt.grid()
-    plt.yscale('log')
-    plt.xlabel('E$_\\gamma$ [keV]')
-    
-    # --- last two upstream bends
     
     if Type == 'general':
-        plt.hist( df[df.Process == b'initStep'].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5 )
-        title = 'photon energy distribution - ' + str(Type)
+        ax.hist( df[df.Process == b'initStep'].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(beam) )
+        # title = 'photon energy distribution - ' + str(Type)
     
     elif Type == 'hit':
         
-        # if zlim:
-        #     print("selected range: zmin =", zlim[0], ' zmax =', zlim[1] )
-        #     tmpdf = df[ (df.z_eu > zlim[0]) & (df.z_eu < zlim[1]) ]
-        #     plt.hist( tmpdf[ (tmpdf.Creator == b'SynRad') & (tmpdf.Material == b'Cu') ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2 )
-        #     title = 'photon energy on' + str(Type) + 'selected range in z'
-        
-        # else:
-        print("plot general data ...")
-        plt.hist( df[ (df.Creator == b'SynRad') & (df.Material == b'Cu') ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5 )
-        title = 'photon energy (' + str(Type) + ')'
+        ax.hist( df[ (df.Creator == b'SynRad') & (df.Material == b'Cu') ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(beam) )
     
     else:
         if magnets == []: raise RuntimeError('*** List of magnets empty ...')
         incr = 0
         for magn in magnets:
-            plt.hist( df[(df.OrigVol == magn) & (df.Process==b'initStep')].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(magn), color = colors[incr])
+            ax.hist( df[(df.OrigVol == magn) & (df.Process==b'initStep')].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(magn), color = colors[incr])
             incr += 1
-        title = 'photon energy distribution - ' + str(Type)
-
-
-    plt.title( str(title) )
-    plt.legend()
-    ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.1), ncol = legCol)
-
-    # mark a 100 keV
-    plt.axvline(x = 100, lw = 2.5, ls = '--', color = 'red')
-
-    ## this might become handy again with more beam types examined! (mlu -- 2019-14-11)
-    ##
-    # for name, subframe in dfGrp:
-    
-    #     if verbose:
-    #         print ( "current group:", name )
-    #     elif verbose > 1:
-    #         print ( "parent frame:", dfGrp )
-            
-    #     # invoke new function from Input.py -- initiate tracking object from class
-    #     # use collectInfo to select z data
-    #     #
-    #     Z_pos, Z_org, Z_hit, E_org, E_hit = dataSel.collectInfo( subframe )
-    #     E_mean = mean(E_org); E_std = std(E_org)
-    
-    #     # plot resulting data
-    #     #
-    #     if Type == 'spectrum':
-    #         plt.title("SR photons hitting beampipe")
-    #         plt.hist(E_org, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(name), stacked = False)
-    #         plt.yscale( 'log' )
-    #     elif Type == 'distribution':
-    #         print('Number of entries (E_org) =', len(E_org), 'in', name, '\n'
-    #             'Mean energy =', E_mean, 'keV \n'
-    #             'std deviation =', E_std, '\n'
-    #             ' ---------------------------------- ' )
-    #         plt.title('photon energy distribution')
-    #         plt.hist(E_org, bins = nBin, histtype = 'step', normed = True, fill = False, linewidth = 1.5, label = str(name), stacked = False)
-    #     else:
-    #         raise RuntimeError("Invalid selection of Type!")
+        # title = 'photon energy distribution - ' + str(Type)
 
     if (save == 1):
         plt.savefig(plotpath + "SR_energy_spectrum" + str(Type) + ".pdf", bbox_inches = 'tight', dpi = 50 )
         print ('saved plot as', plotpath, 'SR_energy_spectrum' + str(Type) + '.pdf')
-    else: pass
+    
+    return
 
-def plotSrcHits(df, plotpath, elements, nBin = 100, ticks = 5, save = 0, verbose = 0):
+def plotSrcHits(df, ax, beam, elements, nBin = 100, ticks = 5, save = 0, verbose = 0):
     """
     Method to select certain elements as sources and plot hits caused BY THESE elements.
     Requires full element names, no groups implemented yet.
@@ -226,10 +93,10 @@ def plotSrcHits(df, plotpath, elements, nBin = 100, ticks = 5, save = 0, verbose
     RETURNS: the plot
     """
 
-    plt.figure( figsize = (15,10) )
-    ax = plt.subplot(111)
-    plt.title("Hits from Element(s)")
-    plt.rc('grid', linestyle = '--', color = 'gray')
+    # plt.figure( figsize = (15,10) )
+    # ax = plt.subplot(111)
+    # plt.title("Hits from Element(s)")
+    # plt.rc('grid', linestyle = '--', color = 'gray')
     
     # check, if elements is not empty
     #
@@ -245,24 +112,20 @@ def plotSrcHits(df, plotpath, elements, nBin = 100, ticks = 5, save = 0, verbose
         selection = df[df.OrigVol == elem]
         if verbose > 1: print( selection )
 
-        plt.hist( selection[ (selection.Material == b'Cu') & (selection.Creator == b'SynRad') ].z_eu, bins = nBin, histtype = 'step', lw = 2.5, fill = False, label = str(elem) )
+        ax.hist( selection[ (selection.Material == b'Cu') & (selection.Creator == b'SynRad') ].z_eu, bins = nBin, histtype = 'step', lw = 2.5, fill = False, label = str(elem) )
         
         # if verbose > 1: print (hits.Track)
     
-    plt.locator_params(axis = 'x', nbins = ticks)    
-    plt.grid()
+    # plt.locator_params(axis = 'x', nbins = ticks)    
+    # plt.grid()
     
-    plt.legend()
-    ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.2), ncol = 6)
+    # plt.legend()
+    # ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.2), ncol = 6)
     
-    plt.ylabel('photons/bin')
-    plt.xlabel('z [m]')
-    
-    if save == 1: 
-        print ("Saving figure as ", plotpath, "SR_hitsFrmElmt.pdf")
-        plt.savefig(plotpath + "SR_hitsFrmElmt.pdf", bbox_inches = 'tight', dpi = 50)
+    # plt.ylabel('photons/bin')
+    # plt.xlabel('z [m]')
 
-    # return graph
+    return 
 
 def plotPrimTrack( df, plotpath, axis = 'all' ):
     """
