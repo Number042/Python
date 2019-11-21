@@ -17,23 +17,27 @@ class TfsReader:
             -- verbose: choose verbosity level
         """
         
-        df = read_table(self.tfs, sep = r'\s+', comment = '@', index_col = False, converters = {'NAME':str, 'KEYWORD':str}) 
+        specDtypes = { 0:str,   1:str,     2:float,  3:float,  4:float,  5:float,  6:float,  7:float, 8:float,   9:float, 
+                      10:float, 11:float, 12:float, 13:float, 14:float, 15:float, 16:float, 17:float, 18:float, 19:float, 
+                      20:float, 21:float, 22:float, 23:float, 24:float, 25:float, 26:float, 27:float, 28:float, 29:float, 30:float, 
+                      31:str,   32:float, 33:float, 34:float, 35:float, 36:str,   37:float, 38:float, 39:float, 40:float, 41:float, 
+                      42:float, 43:float, 44:float, 45:float, 46:float, 47:float, 48:float, 49:float, 50:float, 51:float, 52:float,
+                      53:float, 54:float, 55:float, 56:float, 57:float, 58:float, 59:float, 60:float, 61:float, 62:float, 63:float, 
+                      64:float, 65:float, 66:float, 67:float, 68:float, 69:float, 70:float, 71:float, 72:float, 73:float, 74:float, 
+                      75:float, 76:float, 77:float, 78:float, 79:float } 
+
+        df = read_table( self.tfs, sep = r'\s+', comment = '@', skiprows=[47], dtype = specDtypes )
 
         # read columns and drop the first one (*) to actually match the right header
         #
-        cols = df.columns
-        twissHeader = cols[1:]
-        if verbose: print('set twiss header:', twissHeader, '\n from cols:', cols)
+        twissHeader = df.columns[1:]
+        if verbose: print( 'set twiss header:', twissHeader )
 
         # drop last NaN column and reset header 
         # (1st single space in TWISS header causes the issue )
         #
         df.drop(df.columns[len(df.columns)-1], axis=1, inplace=True)
         df.columns = twissHeader
-        
-
-        df = df.drop(df.index[0])
-        df = df.convert_objects(convert_numeric = True)
 
         # determine the maximum in S
         #
@@ -54,22 +58,19 @@ class TfsReader:
         """
         Function to read general survey files.
         """
-        surveyDF = read_table(self.tfs, sep = r'\s+', comment = '@', index_col = False)
+        
+        surveyDF = read_table( self.tfs, sep = r'\s+', comment = '@', skiprows = [7], index_col = False, dtype = float )
         
         # read columns and drop the first one (*) to actually match the right header
         #
-        cols = surveyDF.columns
-        surveyHeader = cols[1:]
+        surveyHeader = surveyDF.columns[1:]
         
         # drop last column and reset header
         # (1st single space in SURVEY header causes the issue)
         #
-        surveyDF.drop(surveyDF.columns[len(surveyDF.columns)-1], axis=1, inplace=True)
+        surveyDF.drop( surveyDF.columns[len(surveyDF.columns)-1], axis = 1, inplace = True )
         surveyDF.columns = surveyHeader
         
-        surveyDF = surveyDF.drop(surveyDF.index[0])
-        surveyDF = surveyDF.convert_objects(convert_numeric = True)
-
         # determine maximum in S 
         #
         Lmax = surveyDF.S.max()
@@ -187,8 +188,8 @@ class PlotOptics:
         maxAper = self.df.APER.max()
         print('maximum aperture found:', maxAper)
 
-        ax.plot( slFr.S, slFr.APER*scaleXY, lw = 3., color = colors[11] )
-        ax.plot( slFr.S, -slFr.APER*scaleXY, lw = 3., color = colors[11] )
+        ax.plot( slFr.S, slFr.APER*scaleXY, lw = 3., color = colors[10] )
+        ax.plot( slFr.S, -slFr.APER*scaleXY, lw = 3., color = colors[10] )
         ax.set_ylabel('aperture [cm]'); ax.set_ylim( -(maxAper+maxAper/10)*scaleXY, (maxAper+maxAper/10)*scaleXY )
 
         
