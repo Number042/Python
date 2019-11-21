@@ -160,8 +160,6 @@ def plot_colEff(df, plotpath, ):
 
     return
 
-from itertools import cycle
-from VisualSpecs import align_yaxis, myColors
 def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'both', verbose = 0):
     """
     Function to plot the tangential lines representing SR fans coming from bending magnets in an accelerator
@@ -174,6 +172,9 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
         -- verbose: verbosity level
     RETURN: figure object
     """
+    from itertools import cycle
+    from VisualSpecs import align_yaxis, myColors
+    import matplotlib.lines as lines
 
     # init the plot
     #
@@ -191,7 +192,7 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
 
     # plot the reference path
     #
-    ax.plot( df.z_EU, df.x_EU*ScaleXY, color = myColors[11], ls = '--', lw = 3.)
+    ax.plot( df.z_EU, df.x_EU*ScaleXY, color = myColors[10], ls = '--', lw = 3.)
 
     # store first vectors for intial iteration
     #
@@ -219,7 +220,7 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
 
             if aper:
                 ap1 = df.at[i, 'APER']*ScaleXY; ap2 = df.at[i-1, 'APER']*ScaleXY
-                ax.plot( [x1,x2], [y1+ap1,y2+ap2], [x1, x2], [y1-ap1,y2-ap2], ls = '-', lw = 2.5, color = myColors[11])
+                ax.plot( [x1,x2], [y1+ap1,y2+ap2], [x1, x2], [y1-ap1,y2-ap2], ls = '-', lw = 2.5, color = myColors[10])
 
             ax.text((x1+x2)/2, (y1 + y2)/2, df.loc[i,'NAME'], fontsize = 18 )
             
@@ -238,8 +239,8 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
             
             # 4th step: add tangents as lines to the plot 
             #
-            Exit = line([veu[2], end[2]], [veu[0]*ScaleXY, end[0]*ScaleXY], lw = 2.5, ls = '-', color = 'green') 
-            Start = line([VEU[i-1][2], start[2]], [VEU[i-1][0]*ScaleXY, start[0]*ScaleXY], lw = 2.5, ls = '-', color = 'red')
+            Exit = lines.Line2D([veu[2], end[2]], [veu[0]*ScaleXY, end[0]*ScaleXY], lw = 2.5, ls = '-', color = 'green') 
+            Start = lines.Line2D([VEU[i-1][2], start[2]], [VEU[i-1][0]*ScaleXY, start[0]*ScaleXY], lw = 2.5, ls = '-', color = 'red')
             
             if lines == 'entry': ax.add_line(Start)
             elif lines == 'exit': ax.add_line(Exit)
@@ -255,8 +256,8 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
     if xrange != []: ax.set_ylim( xrange[0], xrange[1] )
 
     if aper:
-        twin.plot( df[df.rel_S > -100].rel_S, df[df.rel_S > -100].APER*ScaleXY, color = myColors[11], lw = 2.5 )
-        twin.plot( df[df.rel_S > -100].rel_S, -df[df.rel_S > -100].APER*ScaleXY, color = myColors[11], lw = 2.5 )
+        twin.plot( df[df.rel_S > -100].rel_S, df[df.rel_S > -100].APER*ScaleXY, color = myColors[10], lw = 2.5 )
+        twin.plot( df[df.rel_S > -100].rel_S, -df[df.rel_S > -100].APER*ScaleXY, color = myColors[10], lw = 2.5 )
         twin.set_ylabel('aperture [m]')                                               
         
         if xrange != []: twin.set_ylim( xrange[0], xrange[1] )
