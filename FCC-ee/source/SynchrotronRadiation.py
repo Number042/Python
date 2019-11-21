@@ -90,8 +90,12 @@ class SynchrotronRadiation:
         # looping over the datafiles
         #
         for ntuple in self.ntuples:
-
-            defDF = self.__readData( ntuple, columns = ['Material', 'Creator', 'z_eu', 'Process'])
+            
+            if Type == 'hit': columns = ['Material', 'z_eu']
+            elif Type == 'position': columns = ['z_eu']
+            elif Type == 'origin': columns = ['Process','Creator','z_eu']
+            
+            defDF = self.__readData( ntuple, columns )
             self.__getBeamAperInfo( ntuple )
 
             if zlim:
@@ -137,10 +141,14 @@ class SynchrotronRadiation:
         #
         for ntuple in self.ntuples:
                 
-            enrgDF = self.__readData( ntuple, columns = ['Egamma', 'z_eu', 'Material', 'Creator', 'Process', 'OrigVol'] )
+            if Type == 'general': columns = ['z_eu','Egamma', 'Process'] 
+            elif Type == 'hit': columns = ['z_eu','Egamma', 'Material', 'Creator'] 
+            else: columns = ['z_eu','Egamma', 'OrigVol', 'Creator','Process']
+            
+            enrgDF = self.__readData( ntuple, columns )
             self.__getBeamAperInfo( ntuple )
             
-            self.__fillOrigVol( enrgDF )
+            if 'OrigVol' in columns: self.__fillOrigVol( enrgDF )
 
             if zlim:
                 enrgDF = enrgDF[ (enrgDF.z_eu > zlim[0]) & (enrgDF.z_eu < zlim[1]) ]

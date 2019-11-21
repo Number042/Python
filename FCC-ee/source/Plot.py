@@ -26,7 +26,7 @@ def plot_defaultData( df, ax, plotpath, beam, size = 'all', Type = 'hit', nBin =
 
     if Type == 'hit':
         ax.set_title("SR photons hitting beampipe")
-        ax.hist( df[df.Material == b'Cu'].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
+        ax.hist( df[df.Material == 2].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
         if save == 1:
             plt.savefig( plotpath + "SR_hits_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
             print ('saved plot as', plotpath, 'SR_hits_beamshape.pdf')
@@ -40,7 +40,7 @@ def plot_defaultData( df, ax, plotpath, beam, size = 'all', Type = 'hit', nBin =
 
     elif Type == 'origin':
         ax.set_title("Origin of SR photons")
-        ax.hist( df[(df.Process == b'initStep') & (df.Creator==b'SynRad')].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False) 
+        ax.hist( df[(df.Process == 0) & (df.Creator == 1 )].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False) 
         if save == 1:
             plt.savefig( plotpath + "SR_origin_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
             print ('saved plot as', plotpath, 'SR_origin_beamshape.pdf')
@@ -58,18 +58,18 @@ def plot_Energy(df, ax, plotpath, beam, size = 'all', Type = 'general', magnets 
     from VisualSpecs import myColors as colors
     
     if Type == 'general':
-        ax.hist( df[df.Process == b'initStep'].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(beam) )
+        ax.hist( df[df.Process == 0].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(beam) )
         # title = 'photon energy distribution - ' + str(Type)
     
     elif Type == 'hit':
         
-        ax.hist( df[ (df.Creator == b'SynRad') & (df.Material == b'Cu') ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(beam) )
+        ax.hist( df[ (df.Creator == 1) & (df.Material == 2) ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(beam) )
     
     else:
         if magnets == []: raise RuntimeError('*** List of magnets empty ...')
         incr = 0
         for magn in magnets:
-            ax.hist( df[(df.OrigVol == magn) & (df.Process==b'initStep')].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(magn), color = colors[incr])
+            ax.hist( df[(df.OrigVol == magn) & (df.Process == 0)].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(magn), color = colors[incr])
             incr += 1
         # title = 'photon energy distribution - ' + str(Type)
 
@@ -93,11 +93,6 @@ def plotSrcHits(df, ax, beam, elements, nBin = 100, ticks = 5, save = 0, verbose
     RETURNS: the plot
     """
 
-    # plt.figure( figsize = (15,10) )
-    # ax = plt.subplot(111)
-    # plt.title("Hits from Element(s)")
-    # plt.rc('grid', linestyle = '--', color = 'gray')
-    
     # check, if elements is not empty
     #
     if elements == []:
@@ -112,19 +107,10 @@ def plotSrcHits(df, ax, beam, elements, nBin = 100, ticks = 5, save = 0, verbose
         selection = df[df.OrigVol == elem]
         if verbose > 1: print( selection )
 
-        ax.hist( selection[ (selection.Material == b'Cu') & (selection.Creator == b'SynRad') ].z_eu, bins = nBin, histtype = 'step', lw = 2.5, fill = False, label = str(elem) )
+        ax.hist( selection[ (selection.Material == 2) & (selection.Creator == 1) ].z_eu, bins = nBin, histtype = 'step', lw = 2.5, fill = False, label = str(elem) )
         
         # if verbose > 1: print (hits.Track)
-    
-    # plt.locator_params(axis = 'x', nbins = ticks)    
-    # plt.grid()
-    
-    # plt.legend()
-    # ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.2), ncol = 6)
-    
-    # plt.ylabel('photons/bin')
-    # plt.xlabel('z [m]')
-
+        
     return 
 
 def plotPrimTrack( df, plotpath, axis = 'all' ):
