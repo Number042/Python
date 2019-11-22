@@ -99,7 +99,7 @@ def ToEuclidian( df, verbose = 1 ):
     W0 = identity(3); mats = [W0]
     V0 = array( [0, 0, 0] ); vecs = [V0]
 
-    for i in range( df.index.min(), df.index.max() ):
+    for i in range( df.index.min() + 1, df.index.max() + 1 ):
         
         # collect element attributes
         #
@@ -114,21 +114,23 @@ def ToEuclidian( df, verbose = 1 ):
             R = array( [0, 0, L] )
             if i == df.index.min(): W = W0
             else: 
-                if verbose: print('current %i' %i)
                 W = mats[i-2]
+                if verbose: print( 'current %i' %i, 'where W =', W )
+
         # bend
         #
         else:
-            if verbose: print('dipole', name)
+            if verbose: print( 'dipole', name, 'length', L, 'angle =', angle )
             rho = L/angle
             R = array( [rho*(cos(angle) - 1), 0, rho*sin(angle)] )
             S = RotY(-angle, W0)
             W = mats[i-1]@S
+            if verbose: print( 'W%i =' %i, W )
         
         # calculate EU coords for current element (shift and rotation)
         #
         V = mats[i-1]@R + vecs[i-1]
-        if verbose: print(V)
+        if verbose: print('transformed vector V =', V, '\n ---------------- ')
             
         # append rotation matrix and position for next iteration
         #

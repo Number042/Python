@@ -160,7 +160,7 @@ def plot_colEff(df, plotpath, ):
 
     return
 
-def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'both', verbose = 0):
+def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], tangents = 'both', verbose = 0):
     """
     Function to plot the tangential lines representing SR fans coming from bending magnets in an accelerator
         -- df: dataframe holding the information
@@ -242,9 +242,9 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], lines = 'bo
             Exit = lines.Line2D([veu[2], end[2]], [veu[0]*ScaleXY, end[0]*ScaleXY], lw = 2.5, ls = '-', color = 'green') 
             Start = lines.Line2D([VEU[i-1][2], start[2]], [VEU[i-1][0]*ScaleXY, start[0]*ScaleXY], lw = 2.5, ls = '-', color = 'red')
             
-            if lines == 'entry': ax.add_line(Start)
-            elif lines == 'exit': ax.add_line(Exit)
-            elif lines == 'both': ax.add_line(Start); ax.add_line(Exit)
+            if tangents == 'entry': ax.add_line(Start)
+            elif tangents == 'exit': ax.add_line(Exit)
+            elif tangents == 'both': ax.add_line(Start); ax.add_line(Exit)
             else: raise KeyError('Select which lines to plot.')
 
             if verbose:
