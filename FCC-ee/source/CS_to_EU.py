@@ -114,11 +114,7 @@ def ToEuclidian( df, verbose = 1 ):
             R = array( [0, 0, L] )
             if i == df.index.min(): W = W0
             else: 
-<<<<<<< HEAD
                 W = mats[i-1]
-=======
-                W = mats[i-2]
->>>>>>> 61f6c99c999e66a0bc0a5c52bcce02d4aa7ced70
                 if verbose: print( 'current %i' %i, 'where W =', W )
 
         # bend

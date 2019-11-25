@@ -185,6 +185,7 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], tangents = 
     #
     if {'x_EU', 'y_EU', 'z_EU'}.issubset( df.columns ) == 0: raise KeyError('x,y,z_EU not found: EU coordinates missing?')
     if zrange != []: 
+        if zrange[0] < 0 and zrange[1] > 0: raise Warning(" *** no overlapping zrange: better choose either <= 0 or >= 0" )
         print('selection zmin =', zrange[0], 'zmax =', zrange[1], 'm')
         df = df[ (df.z_EU > zrange[0]) & (df.z_EU < zrange[1]) & (df.x_EU > xrange[0]) & (df.x_EU < xrange[1]) ]
         df = df.reset_index()
