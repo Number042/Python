@@ -27,24 +27,15 @@ def plot_defaultData( df, ax, plotpath, beam, size = 'all', Type = 'hit', nBin =
     if Type == 'hit':
         ax.set_title("SR photons hitting beampipe")
         ax.hist( df[df.Material == 2].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
-        if save == 1:
-            plt.savefig( plotpath + "SR_hits_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-            print ('saved plot as', plotpath, 'SR_hits_beamshape.pdf')
 
     elif Type == 'position':
         ax.set_title("Position of SR photons")
         ax.hist( df.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
-        if save == 1:
-            plt.savefig( plotpath + "SR_position_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-            print ('saved plot as', plotpath, 'SR_position_beamshape.pdf')
 
     elif Type == 'origin':
         ax.set_title("Origin of SR photons")
         ax.hist( df[(df.Process == 0) & (df.Creator == 1 )].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False) 
-        if save == 1:
-            plt.savefig( plotpath + "SR_origin_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-            print ('saved plot as', plotpath, 'SR_origin_beamshape.pdf')
-
+    
     else:
         raise RuntimeError("Invalid selection of Type!")
     
@@ -72,10 +63,6 @@ def plot_Energy(df, ax, plotpath, beam, size = 'all', Type = 'general', magnets 
             ax.hist( df[(df.OrigVol == magn) & (df.Process == 0)].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(magn), color = colors[incr])
             incr += 1
         # title = 'photon energy distribution - ' + str(Type)
-
-    if (save == 1):
-        plt.savefig(plotpath + "SR_energy_spectrum" + str(Type) + ".pdf", bbox_inches = 'tight', dpi = 50 )
-        print ('saved plot as', plotpath, 'SR_energy_spectrum' + str(Type) + '.pdf')
     
     return
 

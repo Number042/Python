@@ -10,7 +10,7 @@ class SynchrotronRadiation:
         """
         Class to study G4 output tuple; dedicated to SR photons
             -- ntuple:  list of data files (path to the files)
-            -- verbose: output level
+            -- verbose: output level, if > 2, print list of elements in the tuples
         """
         
         self.ntuples = ntuples
@@ -116,6 +116,20 @@ class SynchrotronRadiation:
         ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.1), ncol = legCol)
 
         print("plotting done, deleted DF.")
+
+        if save == 1:
+            if Type == 'hit':
+                plt.savefig( self.plotpath + "SR_hits_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
+                print ('saved plot as', self.plotpath, 'SR_hits_beamshape.pdf')
+
+            elif Type == 'position':
+                plt.savefig( self.plotpath + "SR_position_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
+                print ('saved plot as', self.plotpath, 'SR_position_beamshape.pdf')
+
+            elif Type == 'origin':
+                plt.savefig( self.plotpath + "SR_origin_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
+                print ('saved plot as', self.plotpath, 'SR_origin_beamshape.pdf')
+
         
     def energySpectrum(self, Type = 'general', magnets = [], zlim = [], legCol = 2, save = 0):
         """
@@ -148,7 +162,9 @@ class SynchrotronRadiation:
             enrgDF = self.__readData( ntuple, columns )
             self.__getBeamAperInfo( ntuple )
             
-            if 'OrigVol' in columns: self.__fillOrigVol( enrgDF )
+            if 'OrigVol' in columns: 
+                self.__fillOrigVol( enrgDF )
+                if self.verbose > 2: print( enrgDF.OrigVol.unique() )
 
             if zlim:
                 enrgDF = enrgDF[ (enrgDF.z_eu > zlim[0]) & (enrgDF.z_eu < zlim[1]) ]
@@ -164,7 +180,11 @@ class SynchrotronRadiation:
 
         # mark a 100 keV
         plt.axvline(x = 100, lw = 2.5, ls = '--', color = 'red')
-
+        
+        if (save == 1):
+            plt.savefig( self.plotpath + "SR_energy_spectrum" + str(Type) + ".pdf", bbox_inches = 'tight', dpi = 50 )
+            print ('saved plot as', self.plotpath, 'SR_energy_spectrum' + str(Type) + '.pdf')
+    
     def hitsByElement(self, elements = [], zlim = [], binN = 100, ticksN = 10, save = 0 ):
         """
         Method to select certain elements as sources and plot hits caused BY THESE elements.
@@ -196,6 +216,7 @@ class SynchrotronRadiation:
             self.__getBeamAperInfo( ntuple )
             
             self.__fillOrigVol( elmDF )
+            if self.verbose > 2: print( elmDF.OrigVol.unique() )
 
             if zlim:
                 elmDF = elmDF[ (elmDF.z_eu > zlim[0]) & (elmDF.z_eu < zlim[1]) ]
