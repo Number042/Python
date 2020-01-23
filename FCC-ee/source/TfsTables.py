@@ -151,7 +151,7 @@ class PlotOptics:
         elif relS & ('rel_S' in self.df): 
             i = 0
             for param in twissPara:
-                plt.plot( self.df.rel_S, self.df[param], color = colors[i], marker = '.', ls = '', label = param)
+                plt.plot( self.df.rel_S, self.df[param], color = colors[i], marker = '', ls = '--', label = param)
                 i += 1
             plt.xlabel('S [m]')
             if IP: plt.xlim(-5,5)
