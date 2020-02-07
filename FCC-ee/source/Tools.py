@@ -63,12 +63,12 @@ def calcAper(s):
 
 # easier way to setup a subplot arrangement
 #
-def sbplSetUp(count, dim = [15,10], asp = 'equal'):
+def sbplSetUp(count, dim = [15,10], asp = 'auto'):
     """
     Create an array of subplots.
         -- count: number of generated plots
         -- dim: specify dimension of the matplotlib window
-        -- asp: set aspect ratio, defaults to equal
+        -- asp: set aspect ratio, defaults to auto, equal can be chosen
     """
     plt.figure( figsize = (dim[0], dim[1]) )
     axs = []
