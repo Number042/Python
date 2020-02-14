@@ -155,7 +155,7 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], tangents = 
         -- aper: switch aperture plot on/off
         -- zrange: select a certain range in z to plot for (especially for large machines) aka zmin, zmax
         -- xrange: select certain range in x for plotting 
-        -- lines: specify which part of the SR fan to plot (entry, exit, both)
+        -- tangents: specify which part of the SR fan to plot (entry, exit, both), defaults to none
         -- verbose: verbosity level
     RETURN: figure object
     """
@@ -233,7 +233,7 @@ def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], tangents = 
             if tangents == 'entry': ax.add_line(Start)
             elif tangents == 'exit': ax.add_line(Exit)
             elif tangents == 'both': ax.add_line(Start); ax.add_line(Exit)
-            else: raise KeyError('Select which lines to plot.')
+            else: pass 
 
             if verbose:
                 print(i,df.loc[i-1, 'NAME'],'line from (', VEU[i-1][0], VEU[i-1][2], ') to (', start[0], start[2], ') \n',
