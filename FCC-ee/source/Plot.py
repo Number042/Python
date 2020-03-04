@@ -23,10 +23,22 @@ def plot_defaultData( df, ax, plotpath, beam, size = 'all', Type = 'hit', nBin =
     
     RETURNS: nothing. Simple plottig tool
     """
+    # material codes: Cu" 2, "W" 3, "Gold" 4, "Be" 5
+    #
+    matCodes = [2,3,4,5]
+    if verbose > 1: 
+        print('checking materials present in the set: \n')
+        recCodes = df.Material.unique()
+        for code in recCodes:
+            if code == 2: print('found copper')
+            if code == 3: print('found tungsten')
+            if code == 4: print('found gold')
+            if code == 5: print('found beryllium')
 
-    if Type == 'hit':
+    if Type == 'hit':    
         ax.set_title("SR photons hitting beampipe")
-        ax.hist( df[df.Material == 2].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
+        # ax.hist( df[df.Material == 2].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
+        ax.hist( df[ (df.Material.isin(matCodes)) ].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
 
     elif Type == 'position':
         ax.set_title("Position of SR photons")
