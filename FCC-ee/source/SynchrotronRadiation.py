@@ -1,4 +1,5 @@
 import uproot
+from os.path import isfile
 import matplotlib.pyplot as plt
 from time import time
 from pandas import DataFrame
@@ -15,6 +16,11 @@ class SynchrotronRadiation:
         
         self.ntuples = ntuples
         if len( self.ntuples ) == 0: raise RuntimeError( "*** list of datafiles is empty!" )
+        
+        for ntuple in self.ntuples:
+            if isfile( ntuple ): pass
+            else: raise FileNotFoundError("Ntuple", ntuple, "doesn't exist!")
+
         self.verbose = verbose
         self.plotpath = plotpath
 
@@ -91,7 +97,7 @@ class SynchrotronRadiation:
         #
         for ntuple in self.ntuples:
             
-            if Type == 'hit': columns = ['Material', 'z_eu']
+            if Type == 'hit': columns = ['Material', 'z_eu', 'Creator']
             elif Type == 'position': columns = ['z_eu']
             elif Type == 'origin': columns = ['Process','Creator','z_eu']
             
@@ -100,7 +106,6 @@ class SynchrotronRadiation:
 
             if zlim:
                 defDF = defDF[ (defDF.z_eu > zlim[0]) & (defDF.z_eu < zlim[1]) ]
-        
             plot_defaultData( defDF, ax, self.plotpath, self.__beamType, size, Type, nBin, ticks, self.verbose, legCol, save)        
         
             del defDF

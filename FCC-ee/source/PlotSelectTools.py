@@ -32,9 +32,8 @@ class Tracking:
         # get_value is deprecated and likely to be removed in future releases. This can lead to broken code!
         # at[] or .iat[] both seem slower than get_value() ==> keep get_value() for now. 
         #
-        Z_pos = []; Z_org = []; Z_hit = []; 
+        Z_pos = []; Z_org = []; Z_hit = []
         E_org = []; E_hit = []
-        srcName = []
 
         for row in df.index:
             

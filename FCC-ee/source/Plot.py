@@ -4,6 +4,19 @@ from numpy import mean, std, array
 from PlotSelectTools import Tracking 
 from OpticsSelectTools import DataSelection
 
+# verbose output for materials in the analysis
+#
+def printMats(materials):
+
+    # material codes: Cu" 2, "W" 3, "Gold" 4, "Be" 5
+    #
+    print('checking materials present in the set:')
+    for code in materials:
+        if code == 2: print('found copper')
+        if code == 3: print('found tungsten')
+        if code == 4: print('found gold')
+        if code == 5: print('found beryllium')
+
 # Functions following from here should be put into another class, PlottingData 
 #
 def plot_defaultData( df, ax, plotpath, beam, size = 'all', Type = 'hit', nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
@@ -23,30 +36,28 @@ def plot_defaultData( df, ax, plotpath, beam, size = 'all', Type = 'hit', nBin =
     
     RETURNS: nothing. Simple plottig tool
     """
-    # material codes: Cu" 2, "W" 3, "Gold" 4, "Be" 5
-    #
     matCodes = [2,3,4,5]
-    if verbose > 1: 
-        print('checking materials present in the set: \n')
-        recCodes = df.Material.unique()
-        for code in recCodes:
-            if code == 2: print('found copper')
-            if code == 3: print('found tungsten')
-            if code == 4: print('found gold')
-            if code == 5: print('found beryllium')
+    if verbose > 1: printMats( df.Material.unique() )
 
     if Type == 'hit':    
         ax.set_title("SR photons hitting beampipe")
+        selection = df[ (df.Creator == 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) == 1) ]
+        print(' --- # of entries:', selection.z_eu.count() )        
+
         # ax.hist( df[df.Material == 2].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
-        ax.hist( df[ (df.Material.isin(matCodes)) ].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
+        ax.hist( selection.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
 
     elif Type == 'position':
         ax.set_title("Position of SR photons")
+        print(' --- # of entries:', df.z_eu.count() )        
         ax.hist( df.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
 
     elif Type == 'origin':
         ax.set_title("Origin of SR photons")
-        ax.hist( df[(df.Process == 0) & (df.Creator == 1 )].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False) 
+        selection = df[(df.Process == 0) & (df.Creator == 1 )]
+        print(' --- # of entries:', selection.z_eu.count() )        
+        
+        ax.hist( selection.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False) 
     
     else:
         raise RuntimeError("Invalid selection of Type!")
@@ -59,14 +70,16 @@ def plot_Energy(df, ax, plotpath, beam, size = 'all', Type = 'general', magnets 
     """
 
     from VisualSpecs import myColors as colors
+
+    matCodes = [2,3,4,5]
     
     if Type == 'general':
         ax.hist( df[df.Process == 0].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(beam) )
         # title = 'photon energy distribution - ' + str(Type)
     
     elif Type == 'hit':
-        
-        ax.hist( df[ (df.Creator == 1) & (df.Material == 2) ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(beam) )
+        if verbose > 1: printMats( df.Material.unique() )
+        ax.hist( df[ (df.Creator == 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) == 1) ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(beam) )
     
     else:
         if magnets == []: raise RuntimeError('*** List of magnets empty ...')
@@ -92,6 +105,7 @@ def plotSrcHits(df, ax, beam, elements, nBin = 100, ticks = 5, save = 0, verbose
     RETURNS: the plot
     """
 
+    matCodes = [2,3,4,5]
     # check, if elements is not empty
     #
     if elements == []:
@@ -106,7 +120,7 @@ def plotSrcHits(df, ax, beam, elements, nBin = 100, ticks = 5, save = 0, verbose
         selection = df[df.OrigVol == elem]
         if verbose > 1: print( selection )
 
-        ax.hist( selection[ (selection.Material == 2) & (selection.Creator == 1) ].z_eu, bins = nBin, histtype = 'step', lw = 2.5, fill = False, label = str(elem) )
+        ax.hist( selection[ (selection.Material.isin(matCodes)) & (selection.Creator == 1) & (selection.Material.shift(1) == 1) ].z_eu, bins = nBin, histtype = 'step', lw = 2.5, fill = False, label = str(elem) )
         
         # if verbose > 1: print (hits.Track)
         
