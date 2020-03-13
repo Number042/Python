@@ -1,9 +1,8 @@
 import uproot
-from os.path import isfile
+from os.path import isfile, isdir
 import matplotlib.pyplot as plt
-from time import time
 from pandas import DataFrame
-from re import findall, split
+from re import findall
 
 class SynchrotronRadiation:
     
@@ -21,7 +20,7 @@ class SynchrotronRadiation:
             if isfile( ntuple ): pass
             else: raise FileNotFoundError("Ntuple", ntuple, "doesn't exist!")
 
-        if isfile( plotpath ): pass
+        if isdir( plotpath ): pass
         else: raise FileNotFoundError("plotpath", plotpath, "doesn't exist!")
         self.verbose = verbose
         self.plotpath = plotpath
