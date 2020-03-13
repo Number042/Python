@@ -21,6 +21,8 @@ class SynchrotronRadiation:
             if isfile( ntuple ): pass
             else: raise FileNotFoundError("Ntuple", ntuple, "doesn't exist!")
 
+        if isfile( plotpath ): pass
+        else: raise FileNotFoundError("plotpath", plotpath, "doesn't exist!")
         self.verbose = verbose
         self.plotpath = plotpath
 
