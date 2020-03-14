@@ -4,6 +4,8 @@ from numpy import mean, std, array
 from PlotSelectTools import Tracking 
 from OpticsSelectTools import DataSelection
 
+matCodes = [2,3,4,5]
+
 # verbose output for materials in the analysis
 #
 def printMats(materials):
@@ -36,12 +38,14 @@ def plot_defaultData( df, ax, plotpath, beam, size = 'all', Type = 'hit', nBin =
     
     RETURNS: nothing. Simple plottig tool
     """
-    matCodes = [2,3,4,5]
+
+    condition = (df.Creator == 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) == 1)
+
     if verbose > 1: printMats( df.Material.unique() )
 
     if Type == 'hit':    
         ax.set_title("SR photons hitting beampipe")
-        selection = df[ (df.Creator == 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) == 1) ]
+        selection = df[ condition ]
         print(' --- # of entries:', selection.z_eu.count() )        
 
         # ax.hist( df[df.Material == 2].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
@@ -70,8 +74,8 @@ def plot_Energy(df, ax, plotpath, beam, size = 'all', Type = 'general', magnets 
     """
 
     from VisualSpecs import myColors as colors
-
-    matCodes = [2,3,4,5]
+    
+    # matCodes = [2,3,4,5]
     
     if Type == 'general':
         ax.hist( df[df.Process == 0].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(beam) )
@@ -105,7 +109,6 @@ def plotSrcHits(df, ax, beam, elements, nBin = 100, ticks = 5, save = 0, verbose
     RETURNS: the plot
     """
 
-    matCodes = [2,3,4,5]
     # check, if elements is not empty
     #
     if elements == []:
