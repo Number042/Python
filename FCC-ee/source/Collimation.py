@@ -25,7 +25,7 @@ class SRMasks:
 
     # currently as private. Could also be made publicly available to create selected DFs
     #
-    def __readData( self, ntuple ):
+    def __readData( self, select ):
 
         """
         Provide ntuple as DataFrame
@@ -34,46 +34,95 @@ class SRMasks:
             -- optics:      optional key to distinguish different machine versions
         """
 
-        thefile = uproot.open( ntuple )
-        df = thefile['seco_ntuple;1'].pandas.df( ['Creator', 'Material', 'Name', 'Egamma', 'x_eu', 'y_eu', 'z_eu'] )
-        
-        
-        hits = df[ (df.Creator == 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) == 1) ]
-        
-        return hits
+        for theTuple in self.ntuples:
 
-
-    def SRmasks( self, Type = 'transverse', nbin = 100 ):
-
-        selection = []
-        for tuple in self.ntuples:
-
-            df = self.__readData( tuple )
+            thefile = uproot.open( theTuple )
+            df = thefile['seco_ntuple;1'].pandas.df( ['Creator', 'Material', 'Name', 'Egamma', 'x_eu', 'y_eu', 'z_eu'] )
         
+            if select == 'hit': condition = (df.Creator == 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) == 1)
+            
+            if select == 'scatter': condition = (df.Creator != 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) != 1) & (df.Material.shift(-1) == 1)
+
+            df = df[ condition ]
+
             mskQC1L1 = df[ ((df.Name == b'MASKQC1L1_2') | (df.Name == b'DRIFT_8632')) ]; mskQC1L1.name = 'MASKQC1L1'
             mskQC2L1 = df[ ((df.Name == b'MASKQC2L1_2') | (df.Name == b'DRIFT_8626')) ]; mskQC2L1.name = 'MASKQC2L1'
             mskQC1R1 = df[ ((df.Name == b'MASKQC1R1_2') | (df.Name == b'DRIFT_1')) ]; mskQC1R1.name = 'MASKQC1R1' 
             mskQC2R1 = df[ ((df.Name == b'MASKQC2R1_2') | (df.Name == b'DRIFT_7')) ]; mskQC2R1.name = 'MASKQC2R1'
 
             selection = [mskQC2L1, mskQC1L1, mskQC1R1, mskQC2R1]
-            del df
 
-        plt.figure()
+            for mask in selection: print( mask.Egamma.count(), 'hits on', mask.name, 'with mean energy', mask.Egamma.mean()*1e6, 'keV')
+            
+            del df
+        
+        return selection
+
+
+    def SRmasks( self, Type = 'transverse', nbin = 100, save = 0 ):
+
+        selection = self.__readData('hit')
+        
+        plt.figure( figsize = (12,10) )
         if Type == 'transverse':                
             
             for mask in selection:
                 print( 'Looking at', mask.name )
-                print( mask.Egamma.count(), 'hits on', mask.name, 'with mean energy', mask.Egamma.mean()*1e6, 'keV')
-            #     print( grp.Egamma.mean() )
-                plt.plot( mask.x_eu, mask.y_eu, marker = '.', ls = '', label = '%s' %mask.name)
-        
+                plt.plot( mask.x_eu, mask.y_eu, marker = '.', ls = '', label = '%s' %mask.name )
+
+            plt.xlabel('horizontal position [m]')
+            plt.ylabel('vertical position [m]')
+            plt.title('transverse distribution of df')
+            pltname = "mask_hitsTrnsv.pdf"
+
+        if Type == 'longitudinal':                
+            
+            for mask in selection:
+                print( 'Looking at', mask.name )
+                plt.plot( mask.z_eu, mask.y_eu, marker = '.', ls = '', label = '%s' %mask.name )
+
+            plt.xlabel('longitudinal position [m]')
+            plt.ylabel('vertical position [m]')
+            plt.title('longitudinal distribution of df')
+            pltname = "mask_hitsLngt.pdf"
+
         if Type == 'hitsDistr':
 
             for mask in selection:
                 plt.hist( mask.z_eu, bins = nbin, histtype = 'step', lw = 2 )
-        
+                print( mask.z_eu.count(), 'df on', mask.name )
+                
         # for mask in selection:
         #     plt.hist( mask[mask.Egamma != 0].Egamma*1e6, bins = 100, histtype = 'step' )
             plt.legend()
+            pltname = "mask_hitsAlongZ.pdf"
+
+        if Type == 'energy':
+            
+            # mark a 100 keV
+            plt.axvline(x = 100, lw = 2.5, ls = '--', color = 'red')
+
+            for mask in selection:
+                plt.hist( mask.Egamma*1e6, bins = nbin, histtype = 'step', lw = 2, label = '%s' %mask.name )
+                plt.yscale('log')
+                plt.title('energy of photons striking the mask')
+                plt.xlabel('E$_\\gamma$ [keV]'); plt.ylabel('photons/bin')
+
+            pltname = "mask_hitsEnergy.pdf"
+
+        if save == 1:
+            plt.savefig( self.plotpath + pltname, bbox_inches = 'tight', dpi = 75 )
+            print ( 'saved plot as', self.plotpath, pltname )
+
+        return 0
+
+
+    def FwdScatter( self, save = 0 ):
+        
+        selection = self.__readData('scatter')
+
+        for mask in selection:
+            
+            plt.plot( mask.x_eu, mask.z_eu, marker = '.', ls = '', label = '%s' %mask.name )
 
         return 0
