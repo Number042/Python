@@ -1,11 +1,12 @@
 import uproot
 from matplotlib import pyplot as plt
 from os.path import isfile, isdir
+from scipy.constants import elementary_charge as e
 from Plot import matCodes
 
 class SRMasks:
 
-    def __init__( self, ntuples, plotpath = '/tmp/', verbose = 0 ):
+    def __init__( self, Np, N_MC, tau_BSP, ntuples = [], plotpath = '/tmp/', verbose = 0 ):
 
         """
         Class to study effects of synchrotron radiation on mitigation elements, mainly masks and collimators.
@@ -20,8 +21,13 @@ class SRMasks:
 
         if isdir( plotpath ): pass
         else: raise FileNotFoundError("plotpath", plotpath, "doesn't exist!")
+
         self.verbose = verbose
         self.plotpath = plotpath
+
+        self.Np = Np
+        self.N_MC = N_MC
+        self.tau_BSP = tau_BSP
 
     # currently as private. Could also be made publicly available to create selected DFs
     #
@@ -52,14 +58,24 @@ class SRMasks:
 
             selection = [mskQC2L1, mskQC1L1, mskQC1R1, mskQC2R1]
 
-            for mask in selection: print( mask.Egamma.count(), 'hits on', mask.name, 'with mean energy', mask.Egamma.mean()*1e6, 'keV')
+            frac = self.Np/self.N_MC
+            print( 'fraction of particles =', frac )
+
+            for mask in selection: 
+                count = mask.Egamma.count()
+                P_SR = count*frac*mask.Egamma.mean()*1e9*e/(self.tau_BSP*1e-9)
+
+                print( count, 'hits on', mask.name, 'with mean energy', mask.Egamma.mean()*1e6, 'keV \n resulting in P_SR', P_SR, 'W \n ------------------------------ \n')
+                                
+                
+
             
             del df
         
         return selection
 
 
-    def SRmasks( self, Type = 'transverse', nbin = 100, save = 0 ):
+    def SRmasks( self, Type = 'transverse', xrange = [], nbin = 100, save = 0 ):
 
         selection = self.__readData('hit')
         
@@ -67,12 +83,11 @@ class SRMasks:
         if Type == 'transverse':                
             
             for mask in selection:
-                print( 'Looking at', mask.name )
                 plt.plot( mask.x_eu, mask.y_eu, marker = '.', ls = '', label = '%s' %mask.name )
 
             plt.xlabel('horizontal position [m]')
             plt.ylabel('vertical position [m]')
-            plt.title('transverse distribution of df')
+            plt.title('hits on the masks (transverse)')
             pltname = "mask_hitsTrnsv.pdf"
 
         if Type == 'longitudinal':                
@@ -80,21 +95,22 @@ class SRMasks:
             for mask in selection:
                 print( 'Looking at', mask.name )
                 plt.plot( mask.z_eu, mask.y_eu, marker = '.', ls = '', label = '%s' %mask.name )
+            
+            if xrange: plt.xlim( xrange[0], xrange[1] )
 
             plt.xlabel('longitudinal position [m]')
             plt.ylabel('vertical position [m]')
-            plt.title('longitudinal distribution of df')
+            plt.title('hits on the mask (longitudinal)')
             pltname = "mask_hitsLngt.pdf"
 
         if Type == 'hitsDistr':
 
             for mask in selection:
-                plt.hist( mask.z_eu, bins = nbin, histtype = 'step', lw = 2 )
-                print( mask.z_eu.count(), 'df on', mask.name )
+                plt.hist( mask.z_eu, bins = nbin, histtype = 'step', lw = 2, label = '%s' %mask.name )
+                print( mask.z_eu.count(), 'hits on', mask.name )
                 
         # for mask in selection:
         #     plt.hist( mask[mask.Egamma != 0].Egamma*1e6, bins = 100, histtype = 'step' )
-            plt.legend()
             pltname = "mask_hitsAlongZ.pdf"
 
         if Type == 'energy':
@@ -109,7 +125,9 @@ class SRMasks:
                 plt.xlabel('E$_\\gamma$ [keV]'); plt.ylabel('photons/bin')
 
             pltname = "mask_hitsEnergy.pdf"
-
+        
+        plt.legend()
+        
         if save == 1:
             plt.savefig( self.plotpath + pltname, bbox_inches = 'tight', dpi = 75 )
             print ( 'saved plot as', self.plotpath, pltname )
