@@ -10,7 +10,7 @@ matCodes = [2,3,4,5]
 #
 def printMats(materials):
 
-    # material codes: Cu" 2, "W" 3, "Gold" 4, "Be" 5
+    # material codes: "Vacuum" 1, Cu" 2, "W" 3, "Gold" 4, "Be" 5
     #
     print('checking materials present in the set:')
     for code in materials:
