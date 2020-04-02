@@ -1,0 +1,29 @@
+# Specification of directories/files to ignore on Gitlab
+# ignore all directories but /source and in /source ignore 
+# all but the .py files.
+#                            
+/*
+!.gitignore
+
+!/FCC-ee/
+/FCC-ee/*
+
+!/FCC-ee/source
+/FCC-ee/source/*
+!/FCC-ee/source/*.py
+
+!/BeamGenerator/
+/BeamGenerator/*
+!/BeamGenerator/*.py
+
+!/SingleBend
+/SingleBend/*
+!/SingleBend/*.py
+
+!/SingleSolenoid
+/SingleSolenoid/*
+!/SingleSolenoid/*.py
+
+!/SuperKEKB
+/SuperKEKB/*
+!/SuperKEKB/*.py
