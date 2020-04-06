@@ -99,8 +99,10 @@ class Scattering:
         plt.grid()
         ax = plt.subplot(111)
 
+        if xlim: selection = selection[ (selection.z_eu > xlim[0]) & (selection.z_eu < xlim[1]) ]
+        
         if Type == 'location':
-            if xlim: selection = selection[ (selection.z_eu > xlim[0]) & (selection.z_eu < xlim[1]) ]
+            
             ax.hist( selection.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(self.__beamType), stacked = False)
             title = 'event position'
             name = 'scttrLct.pdf'
@@ -108,18 +110,22 @@ class Scattering:
             print( selection.z_eu.count(), 'scattered tracks have been identified.' )
 
         if Type == 'energy':
+            
             ax.hist( selection.Egamma*1e6, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(self.__beamType), stacked = False)
             title = 'energy - scattered events'
             name = 'scttrEgam.pdf'
             horLab = 'E$_\\gamma$ [keV]'; verLab = '$\\gamma$/bin'
             plt.yscale('log')
             print( selection.z_eu.count(), 'scattered tracks have been identified with <E> =', selection.Egamma.mean()*1e6 )
-        
+
+            # mark a 100 keV
+            plt.axvline(x = 100, lw = 2.5, ls = '--', color = 'red')
+    
         plt.xlabel( horLab ); plt.ylabel( verLab )
         plt.title( title )
         plt.legend()
         ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.15), ncol = legCol)
 
-        if save: plt.savefig( self.plotpath + name, dpi = 75 )
+        if save: plt.savefig( self.plotpath + name, bbox_inches = 'tight', dpi = 50 )
 
         del df

@@ -79,7 +79,7 @@ class Processes:
         print('setting beamType to', self.__beamType, '\n setting aperture to', self.__aper, '\n found size', self.__beamSize )
         print("data types: beamType =", type(self.__beamType), 'aperture =', type(self.__aper), "size =", type(self.__beamSize) ) 
 
-    def showerDistr( self, process = 'all', figSize = [15,10] ):
+    def showerDistr( self, process = 'all', figSize = [15,10], xlim = [] ):
         
         """
         Method to plot a distribution of all processes taking place along the G4 tracklength
@@ -107,6 +107,7 @@ class Processes:
                 elif crtr == 4: proc = 'Rayl'
                 elif crtr == 5: proc = 'annihil'
 
+                if xlim: subframe = subframe[ ( subframe.z_eu > xlim[0] ) & ( subframe.z_eu < xlim[1] ) ]
                 plt.hist( subframe.z_eu, bins = 200, stacked = False, histtype = 'step', lw = 2.5, fill = False, label = proc )
             
             del df
@@ -145,14 +146,14 @@ class Processes:
                 elif crtr == 4: proc = 'Rayl'
                 elif crtr == 5: proc = 'annihil'
 
-                if self.background == 'photons': enrg = subframe.Egamma*1e6
+                if xlim: subframe = subframe[ ( subframe.z_eu > xlim[0] ) & ( subframe.z_eu < xlim[1] ) ]
+
+                if self.background == 'photons': enrg = subframe.Egamma*1e6                
                 elif self.background == 'charged': enrg = subframe.Ptot*1e6
 
                 plt.hist( enrg, bins = 200, stacked = False, histtype = 'step', lw = 2.5, fill = False, label = proc )
 
             del df
-
-        if xlim: plt.xlim( xlim[0], xlim[1] )
 
         plt.legend() 
         pltname = "particlesEMShowerEnrg_" + self.background + ".pdf"
