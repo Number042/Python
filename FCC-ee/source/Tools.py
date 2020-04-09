@@ -93,37 +93,45 @@ def readTwissParams(tfs, elm):
 
 # add apertures in drift spaces to simplify plotting
 #
-def inventAper(s, name, aper ):
+def inventAper(s, name, aper, collAper ):
     """
     FCC specific function to invent apertures in DRIFT. Uses hard coded values for the moment (design report/mechanical design).
         -- s: S position along the accelerator
         -- name: element name
-        -- aper: 
+        -- aper: element aperture from TWISS
+        -- collAper: invented aperture setting for collimators
     """
+    centralPipeRad = 0.015
+    genericPipeRad = 0.035
+
     if s >= 0 and s < 5.6: 
-        if name.startswith('L000013') or name.startswith('IP'): invAper = 0.015
-        elif name.startswith('DRIFT') and aper == 0: invAper = 0.015
+        if name.startswith('L000013') or name.startswith('IP') or name.startswith('SOL'): invAper = centralPipeRad
+        elif name.startswith('DRIFT') and aper == 0: invAper = centralPipeRad
         else: invAper = aper 
+
     elif s > 5.6 and s < 8.2:
         if name.startswith('DRIFT') and aper == 0: invAper = 0.02
         else: invAper = aper 
             
     elif s > -8.2 and s < -5.6:
-        if name.startswith('DRIFT') and aper == 0: invAper = 0.015
+        if name.startswith('DRIFT') and aper == 0: invAper = 0.02
         else: invAper = aper 
+
     elif s > -5.6 and s <= 0:
-        if name.startswith('L000013') or name.startswith('IP') or name.startswith('SOL'): invAper = 0.015
-        elif name.startswith('DRIFT') and aper == 0: invAper = 0.015
+        if name.startswith('L000013') or name.startswith('IP') or name.startswith('SOL'): invAper = centralPipeRad
+        elif name.startswith('DRIFT') and aper == 0: invAper = centralPipeRad
         else: invAper = aper 
-    elif name.startswith('COLL'): invAper = aper
-    else: invAper = 0.035
+        
+    elif name.startswith('COLL'): invAper = collAper
+    
+    else: invAper = genericPipeRad
     
     return invAper
 
-# calculate the beam size based on emittance, beta function, disperion and energy spread
+# calculate the beam size based on emittance, beta function, dispersion and energy spread
 #
 def sigm(bet, disp, eps, delP, scaleXY):
-            return sqrt(bet*eps + (disp*delP)**2)*scaleXY
+            return sqrt( bet*eps + (disp*delP)**2 )*scaleXY
 
 # critical energy for bends
 #
