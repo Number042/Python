@@ -141,4 +141,45 @@ def sigm(bet, disp, eps, delP, scaleXY):
 # radii = [151.631e3, 144.688e3]
 # epsC= [ epsCrit(Lrnt, rh)/1e3 for rh in radii] 
 
+import re
+def collSet( geomFile, collName, collh, verbose = 0 ):
+    with open( geomFile, "r") as sources:
+        lines = sources.readlines()
+        
+    with open( geomFile, "w") as sources:
+        i = 0
+        for line in lines:
 
+            if collName in line: 
+                if verbose: print('collimator (vac) at lines[', i, ']')
+                sources.write( re.sub('rmax="\d+.\d+"', 'rmax="%s"' %str(collh), line) )
+                if verbose > 1: print('writing new rmax to line', line)
+
+            elif 'COLL' in line and collName in lines[i+1]:
+                if verbose: print('collimator (mat) at lines[', i+1, ']')
+                sources.write( re.sub('rmax="\d+.\d+"', 'rmax="%s"' %str(aper + thickness), line) )
+                if verbose > 1: print( 'writing new rmax (material thickness) to line', line )
+                    
+            elif 'DRIFT' in line and collName in lines[i+2]: 
+                if verbose: print('drift (vac) with collimator at lines[',i+2,']')
+                sources.write( re.sub('rmax2="\d+.\d+"', 'rmax2="%s"' %str(collh), line) )
+                if verbose > 1: print('writing new rmax2 to line', line)
+            
+            elif 'DRIFT' in line and collName in lines[i+3]:
+                if verbose: print('drift (mat) with collimator at lines[', i+3, ']')
+                sources.write( re.sub('rmax2="\d+.\d+"', 'rmax2="%s"' %str(aper + thickness), line) )
+                if verbose > 1: print('writing new rmax2 to line', line)
+            
+            elif 'DRIFT' in line and collName in lines[i-1]: 
+                if verbose: print('drift (mat) with collimator at lines[',i-1,']')
+                sources.write( re.sub('rmax1="\d+.\d+"', 'rmax1="%s"' %str(collh + thickness), line) )
+                if verbose > 1: print( 'writing new rmax1 (material thickness) to line', line )
+                    
+            elif 'DRIFT' in line and collName in lines[i-2]: 
+                if verbose: print('drift (vac) with collimator at lines[',i-2,']')
+                sources.write( re.sub('rmax1="\d+.\d+"', 'rmax1="%s"' %str(collh), line) )
+                if verbose > 1: print('writing new rmax1 to line', line)
+                
+            else: sources.write( line )
+            i += 1
+    return 0

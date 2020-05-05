@@ -51,11 +51,15 @@ class SynchrotronRadiation:
         #     pattern = 'pencil\d{1}|gauss\d{2}|gauss\d{1}|ring\d{2}|ring\d{1}|flat\d{2}|flat\d{1}'
         types = 'pencil|gauss|ring|flat'
         sizes = r'\d{2}|\d{1}'
-        apers = r'\D(\d{4})\D'
+        apers = r'\D(\d{4})\D|\D(\d{6})\D'
 
-        self.__beamType = str(findall( types, ntuple )[0] )
-        self.__beamSize = int(findall( sizes, ntuple )[0] )
-        self.__aper = findall( apers, ntuple )
+        name = str(ntuple).split(sep = '_', maxsplit = 1)[1]
+        if self.verbose > 1: print( 'reading beam, size and aperture from', name )
+
+        self.__beamType = str( findall( types, name )[0] )
+        self.__beamSize = int( findall( sizes, name )[0] )
+        if 'coll' in name: self.__aper = str( findall( apers, name )[0] )
+        else: self.__aper = ''
 
         print('setting beamType to', self.__beamType, '\n setting aperture to', self.__aper, '\n found size', self.__beamSize )
         print("data types: beamType =", type(self.__beamType), 'aperture =', type(self.__aper), "size =", type(self.__beamSize) ) 
@@ -98,16 +102,18 @@ class SynchrotronRadiation:
         #
         for ntuple in self.ntuples:
             
-            if Type == 'hit': columns = ['Material', 'z_eu', 'Creator']
-            elif Type == 'position': columns = ['z_eu']
-            elif Type == 'origin': columns = ['Process','Creator','z_eu']
+            if Type == 'hit': columns = [ 'Material', 'z_eu', 'Creator' ]
+            elif Type == 'position': columns = [ 'z_eu' ]
+            elif Type == 'origin': columns = [ 'Process','Creator','z_eu' ]
             
+            if self.verbose > 1: print('Selected Type = ', Type )
+
             defDF = self.__readData( ntuple, columns )
             self.__getBeamAperInfo( ntuple )
 
             if zlim:
                 defDF = defDF[ (defDF.z_eu > zlim[0]) & (defDF.z_eu < zlim[1]) ]
-            plot_defaultData( defDF, ax, self.plotpath, self.__beamType, size, Type, nBin, ticks, self.verbose, legCol, save)        
+            plot_defaultData( defDF, ax, self.plotpath, self.__beamType, self.__aper, size, Type, nBin, ticks, self.verbose, legCol, save)        
         
             del defDF
 
@@ -175,7 +181,7 @@ class SynchrotronRadiation:
             if zlim:
                 enrgDF = enrgDF[ (enrgDF.z_eu > zlim[0]) & (enrgDF.z_eu < zlim[1]) ]
 
-            plot_Energy( enrgDF, ax, self.plotpath, self.__beamType, Type = Type, save = save, magnets = magnets, verbose = self.verbose )
+            plot_Energy( enrgDF, ax, self.plotpath, self.__beamType, self.__aper, Type = Type, save = save, magnets = magnets, verbose = self.verbose )
             del enrgDF
 
         print("plotting done, deleted DF.")
@@ -227,7 +233,7 @@ class SynchrotronRadiation:
             if zlim:
                 elmDF = elmDF[ (elmDF.z_eu > zlim[0]) & (elmDF.z_eu < zlim[1]) ]
 
-            plotSrcHits( elmDF, ax, self.__beamType, elements )
+            plotSrcHits( elmDF, ax, self.__beamType, self.__aper, elements )
             del elmDF
 
         
