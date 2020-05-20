@@ -142,7 +142,16 @@ def sigm(bet, disp, eps, delP, scaleXY):
 # epsC= [ epsCrit(Lrnt, rh)/1e3 for rh in radii] 
 
 import re
-def collSet( geomFile, collName, collh, verbose = 0 ):
+def collSet( geomFile, collName, collh, thickness, verbose = 0 ):
+    """
+    Tool to change aperture in the geometry in the GDML directly. 
+    ! Needs to have geometry with collimator closed a bit to have CONE - TUBE - CONE section !
+        -- geomFile: geometry to work on
+        -- collName: collimator which settings are supposed to be changed
+        -- collh: aperture
+        -- thickness: beam pipe thickness (material)
+        -- verbose: info-output level
+    """
     with open( geomFile, "r") as sources:
         lines = sources.readlines()
         
@@ -157,7 +166,7 @@ def collSet( geomFile, collName, collh, verbose = 0 ):
 
             elif 'COLL' in line and collName in lines[i+1]:
                 if verbose: print('collimator (mat) at lines[', i+1, ']')
-                sources.write( re.sub('rmax="\d+.\d+"', 'rmax="%s"' %str(aper + thickness), line) )
+                sources.write( re.sub('rmax="\d+.\d+"', 'rmax="%s"' %str(collh + thickness), line) )
                 if verbose > 1: print( 'writing new rmax (material thickness) to line', line )
                     
             elif 'DRIFT' in line and collName in lines[i+2]: 
@@ -167,7 +176,7 @@ def collSet( geomFile, collName, collh, verbose = 0 ):
             
             elif 'DRIFT' in line and collName in lines[i+3]:
                 if verbose: print('drift (mat) with collimator at lines[', i+3, ']')
-                sources.write( re.sub('rmax2="\d+.\d+"', 'rmax2="%s"' %str(aper + thickness), line) )
+                sources.write( re.sub('rmax2="\d+.\d+"', 'rmax2="%s"' %str(collh + thickness), line) )
                 if verbose > 1: print('writing new rmax2 to line', line)
             
             elif 'DRIFT' in line and collName in lines[i-1]: 

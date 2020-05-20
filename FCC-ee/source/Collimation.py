@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 from os.path import isfile, isdir
 from scipy.constants import elementary_charge as e
 from Plot import matCodes
+from Scatter import Scattering
 
 class SRMasks:
 
@@ -13,7 +14,7 @@ class SRMasks:
         """
 
         self.ntuples = ntuples
-        if len( self.ntuples ) == 0: raise RuntimeError( "*** list of datafiles is empty!" )
+        if len( self.ntuples ) == 0: raise Warning( "*** list of datafiles is empty!" )
         
         for ntuple in self.ntuples:
             if isfile( ntuple ): pass
@@ -43,18 +44,23 @@ class SRMasks:
         for theTuple in self.ntuples:
 
             thefile = uproot.open( theTuple )
-            df = thefile['seco_ntuple;1'].pandas.df( ['Creator', 'Material', 'Name', 'Egamma', 'x_eu', 'y_eu', 'z_eu'] )
-        
+            df = thefile['seco_ntuple;1'].pandas.df( ['Creator', 'Material', 'Process', 'Name', 'Egamma', 'x_eu', 'y_eu', 'z_eu'] )
+            df['Name'] = [ name.decode("utf-8") for name in df.Name ]
+
             if select == 'hit': condition = (df.Creator == 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) == 1)
             
-            if select == 'scatter': condition = (df.Creator != 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) != 1) & (df.Material.shift(-1) == 1)
+            if select == 'scatter': 
+                procs = [3,4]
+                condition = ( df.Process.isin(procs)) & (df.Material.shift(1) == 1) & (df.Material.shift(-2) == 1) & (df.Name.shift(-2).str.contains("_v") )
+                # condition = (df.Creator != 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) != 1) & (df.Material.shift(-1) == 1)
 
             df = df[ condition ]
+            if df.empty: raise ValueError('Empty Dataframe!')
 
-            mskQC1L1 = df[ ((df.Name == b'MASKQC1L1_2') | (df.Name == b'DRIFT_8632')) ]; mskQC1L1.name = 'MASKQC1L1'
-            mskQC2L1 = df[ ((df.Name == b'MASKQC2L1_2') | (df.Name == b'DRIFT_8626')) ]; mskQC2L1.name = 'MASKQC2L1'
-            mskQC1R1 = df[ ((df.Name == b'MASKQC1R1_2') | (df.Name == b'DRIFT_1')) ]; mskQC1R1.name = 'MASKQC1R1' 
-            mskQC2R1 = df[ ((df.Name == b'MASKQC2R1_2') | (df.Name == b'DRIFT_7')) ]; mskQC2R1.name = 'MASKQC2R1'
+            mskQC1L1 = df[ ((df.Name == 'MASKQC1L1_2') | (df.Name == 'DRIFT_8630')) ]; mskQC1L1.name = 'MASKQC1L1'
+            mskQC2L1 = df[ ((df.Name == 'MASKQC2L1_2') | (df.Name == 'DRIFT_8624')) ]; mskQC2L1.name = 'MASKQC2L1'
+            mskQC1R1 = df[ ((df.Name == 'MASKQC1R1_2') | (df.Name == 'DRIFT_1')) ]; mskQC1R1.name = 'MASKQC1R1' 
+            mskQC2R1 = df[ ((df.Name == 'MASKQC2R1_2') | (df.Name == 'DRIFT_7')) ]; mskQC2R1.name = 'MASKQC2R1'
 
             selection = [mskQC2L1, mskQC1L1, mskQC1R1, mskQC2R1]
 
@@ -65,11 +71,8 @@ class SRMasks:
                 count = mask.Egamma.count()
                 P_SR = count*frac*mask.Egamma.mean()*1e9*e/(self.tau_BSP*1e-9)
 
-                print( count, 'hits on', mask.name, 'with mean energy', mask.Egamma.mean()*1e6, 'keV \n resulting in P_SR', P_SR, 'W \n ------------------------------ \n')
-                                
+                print( count, 'hits on', mask.name, 'with mean energy', mask.Egamma.mean()*1e6, 'keV \n resulting in P_SR', P_SR, 'W \n extrapolated on whole bunch:', count*frac, 'hits on', mask.name, '\n ------------------------------ \n')
                 
-
-            
             del df
         
         return selection
@@ -135,12 +138,14 @@ class SRMasks:
         return 0
 
 
-    def FwdScatter( self, save = 0 ):
+    def FwdScatter( self, save = 0, xlim = [] ):
         
         selection = self.__readData('scatter')
-
+        if self.verbose: 
+            for mask in selection:
+                print( 'Constructed DF', mask.head() )
         for mask in selection:
             
-            plt.plot( mask.x_eu, mask.z_eu, marker = '.', ls = '', label = '%s' %mask.name )
+            Scattering().scatterGlobal( df = mask, xlim = xlim )
 
         return 0

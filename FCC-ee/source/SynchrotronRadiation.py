@@ -26,7 +26,7 @@ class SynchrotronRadiation:
         self.plotpath = plotpath
 
     # currently as private. Could also be made publicly available to create selected DFs
-    def __readData( self, ntuple, columns = [], COL = ['open','open'], optics = 'fcc_ee' ):
+    def __readData( self, ntuple, columns = [], COL = ['3.5','3.5'], optics = 'fcc_ee' ):
         """
         Provide ntuple as DataFrame
             -- columns:     specify required data
@@ -38,7 +38,7 @@ class SynchrotronRadiation:
         df = thefile['seco_ntuple;1'].pandas.df( columns )
         
         COLH,COLV = COL
-        if COL != ['open','open']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COLV )
+        if COL != ['3.5','3.5']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COL )
         else: print('collimators fully open.')
 
         return df
@@ -61,8 +61,10 @@ class SynchrotronRadiation:
         if 'coll' in name: self.__aper = str( findall( apers, name )[0] )
         else: self.__aper = ''
 
-        print('setting beamType to', self.__beamType, '\n setting aperture to', self.__aper, '\n found size', self.__beamSize )
-        print("data types: beamType =", type(self.__beamType), 'aperture =', type(self.__aper), "size =", type(self.__beamSize) ) 
+        if self.verbose:
+            print('setting beamType to', self.__beamType, '\n setting aperture to', self.__aper, '\n found size', self.__beamSize )
+            if self.verbose > 1: 
+                print("data types: beamType =", type(self.__beamType), 'aperture =', type(self.__aper), "size =", type(self.__beamSize) ) 
 
     def __fillOrigVol( self, df ):
 
@@ -90,13 +92,19 @@ class SynchrotronRadiation:
         RETURNS: nothing. Simple plottig tool
         """
         from Plot import plot_defaultData
-        
+        from os import environ
+
         # settings for the plot
         #
         plt.figure(figsize = (15,10))
         ax = plt.subplot(111)
         plt.rc('grid', linestyle = "--", color = 'grey')
         plt.grid()
+
+        # retrieve coll settings from env
+        #
+        COLH = environ['COLH']
+        if not COLH: print(' *** getting coll settings from env failed! \n COLH =', COLH)
 
         # looping over the datafiles
         #
@@ -108,7 +116,7 @@ class SynchrotronRadiation:
             
             if self.verbose > 1: print('Selected Type = ', Type )
 
-            defDF = self.__readData( ntuple, columns )
+            defDF = self.__readData( ntuple, columns, COL = [COLH,COLH] )
             self.__getBeamAperInfo( ntuple )
 
             if zlim:

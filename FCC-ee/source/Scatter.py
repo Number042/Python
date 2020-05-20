@@ -1,4 +1,5 @@
 import uproot
+import warnings 
 from os.path import isfile, isdir
 import matplotlib.pyplot as plt
 from pandas import DataFrame
@@ -16,7 +17,7 @@ class Scattering:
         """
         
         self.ntuples = ntuples
-        if len( self.ntuples ) == 0: raise RuntimeError( "*** list of datafiles is empty!" )
+        if len( self.ntuples ) == 0: warnings.warn('No ntuples provided.', UserWarning) 
         
         for ntuple in self.ntuples:
             if isfile( ntuple ): pass
@@ -38,7 +39,8 @@ class Scattering:
 
         thefile = uproot.open( ntuple )
         df = thefile['seco_ntuple;1'].pandas.df( columns )
-        
+        if df.empty: raise ValueError('Empty Dataframe!')
+
         COLH,COLV = COL
         if COL != ['open','open']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COLV )
         else: print('collimators fully open.')
@@ -72,7 +74,9 @@ class Scattering:
         print('setting beamType to', self.__beamType, '\n setting aperture to', self.__aper, '\n found size', self.__beamSize )
         print("data types: beamType =", type(self.__beamType), 'aperture =', type(self.__aper), "size =", type(self.__beamSize) ) 
 
-    def scatterGlobal( self, nBin = 100, xlim = [], Type = 'location', legCol = 4, save = 0 ):
+        return self.__beamType, self.__beamSize, self.__aper
+
+    def scatterGlobal( self, df = None, nBin = 100, xlim = [], Type = 'location', legCol = 4, save = 0, plotpath = '/tmp/' ):
 
         """
         Display general data of scattering events along the track.
@@ -85,14 +89,27 @@ class Scattering:
 
         columns = ['Name', 'Egamma', 'z_eu', 'Process', 'Material', 'Creator']
         
-        for ntuple in self.ntuples:
+        # Might need to accept external data frame
+        #
+        if df is not None: 
+            beamType = 'none'
+            if 'Name' not in df: raise IndexError("DF seems to not contain column 'Name'!")
+            # df['Name'] = [ name.decode("utf-8") for name in df.Name ]
+            selection = df
+            print('Received external DF \n', selection.head())
+            
+        else:
+            
+            for ntuple in self.ntuples:
 
-            df = self.__readData( ntuple, columns )
-            self.__getBeamAperInfo( ntuple )
-            df['Name'] = [ name.decode("utf-8") for name in df.Name ]
+                beamType = self.__getBeamAperInfo()[0]
+                
+                df = self.__readData( ntuple, columns )
+                self.__getBeamAperInfo( ntuple )
+                df['Name'] = [ name.decode("utf-8") for name in df.Name ]
 
-            condition = (df.Process.isin(procs)) & (df.Material.shift(1) == 1) & (df.Material.shift(-2) == 1) & (df.Name.shift(-2).str.contains("_v"))
-            selection = df[ condition ]
+                condition = (df.Process.isin(procs)) & (df.Material.shift(1) == 1) & (df.Material.shift(-2) == 1) & (df.Name.shift(-2).str.contains("_v"))
+                selection = df[ condition ]
         
         plt.figure( figsize = (12,10) )
         plt.rc('grid', linestyle = "--", color = 'grey')
@@ -103,7 +120,7 @@ class Scattering:
         
         if Type == 'location':
             
-            ax.hist( selection.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(self.__beamType), stacked = False)
+            ax.hist( selection.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beamType), stacked = False)
             title = 'event position'
             name = 'scttrLct.pdf'
             horLab = 'Z [m]'; verLab = '$\\gamma$/bin'
@@ -111,7 +128,7 @@ class Scattering:
 
         if Type == 'energy':
             
-            ax.hist( selection.Egamma*1e6, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(self.__beamType), stacked = False)
+            ax.hist( selection.Egamma*1e6, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beamType), stacked = False)
             title = 'energy - scattered events'
             name = 'scttrEgam.pdf'
             horLab = 'E$_\\gamma$ [keV]'; verLab = '$\\gamma$/bin'
@@ -126,6 +143,6 @@ class Scattering:
         plt.legend()
         ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.15), ncol = legCol)
 
-        if save: plt.savefig( self.plotpath + name, bbox_inches = 'tight', dpi = 50 )
+        if save: plt.savefig( plotpath + name, bbox_inches = 'tight', dpi = 50 )
 
         del df
