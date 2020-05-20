@@ -44,8 +44,9 @@ class SRMasks:
         for theTuple in self.ntuples:
 
             thefile = uproot.open( theTuple )
-            df = thefile['seco_ntuple;1'].pandas.df( ['Creator', 'Material', 'Process', 'Name', 'Egamma', 'x_eu', 'y_eu', 'z_eu'] )
+            df = thefile['seco_ntuple;1'].pandas.df( ['Creator', 'Material', 'Process', 'Name', 'Egamma', 'x_eu', 'y_eu', 'z_eu', 'trackLen'] )
             df['Name'] = [ name.decode("utf-8") for name in df.Name ]
+            # df['OrigVol'] = [ origvol.decode("utf-8") for origvol in df.OrigVol ]
 
             if select == 'hit': condition = (df.Creator == 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) == 1)
             
@@ -57,10 +58,10 @@ class SRMasks:
             df = df[ condition ]
             if df.empty: raise ValueError('Empty Dataframe!')
 
-            mskQC1L1 = df[ ((df.Name == 'MASKQC1L1_2') | (df.Name == 'DRIFT_8630')) ]; mskQC1L1.name = 'MASKQC1L1'
-            mskQC2L1 = df[ ((df.Name == 'MASKQC2L1_2') | (df.Name == 'DRIFT_8624')) ]; mskQC2L1.name = 'MASKQC2L1'
-            mskQC1R1 = df[ ((df.Name == 'MASKQC1R1_2') | (df.Name == 'DRIFT_1')) ]; mskQC1R1.name = 'MASKQC1R1' 
-            mskQC2R1 = df[ ((df.Name == 'MASKQC2R1_2') | (df.Name == 'DRIFT_7')) ]; mskQC2R1.name = 'MASKQC2R1'
+            mskQC1L1 = df[ ((df.Name == 'MASKQC1L1_2') | (df.Name == 'DRIFT_8630')) ]; mskQC1L1.name = 'MSK.QC1L1'
+            mskQC2L1 = df[ ((df.Name == 'MASKQC2L1_2') | (df.Name == 'DRIFT_8624')) ]; mskQC2L1.name = 'MSK.QC2L1'
+            mskQC1R1 = df[ ((df.Name == 'MASKQC1R1_2') | (df.Name == 'DRIFT_1')) ]; mskQC1R1.name = 'MSK.QC1R1' 
+            mskQC2R1 = df[ ((df.Name == 'MASKQC2R1_2') | (df.Name == 'DRIFT_7')) ]; mskQC2R1.name = 'MSK.QC2R1'
 
             selection = [mskQC2L1, mskQC1L1, mskQC1R1, mskQC2R1]
 
@@ -135,6 +136,9 @@ class SRMasks:
             plt.savefig( self.plotpath + pltname, bbox_inches = 'tight', dpi = 75 )
             print ( 'saved plot as', self.plotpath, pltname )
 
+        if self.verbose: print( 'processed data, deleting DF ...' )
+        del selection
+        
         return 0
 
 
@@ -149,3 +153,59 @@ class SRMasks:
             Scattering().scatterGlobal( df = mask, xlim = xlim )
 
         return 0
+
+    
+    def efficiency( self, extdf, logscale, save, xlim = [], Type = 'collEff' ):
+        """
+        Number of photons at masks location as function of collimator closure
+        Method to count the hits +-2m from IP and plot this as fct. of the collimator settings.
+            -- extdf: DF containing the number of photons at the masks for different scenario
+        """
+        
+        if Type == 'collEff':
+            from Plot import plotColEff
+        
+            plotColEff( extdf, logscale, save, self.verbose, plotpath = self.plotpath )
+        
+        else:
+
+            from scipy.constants import speed_of_light as c 
+            selection = self.__readData('hit')
+
+            # set up one figure to hold all plots (compare diff masks directly)
+            #
+            fig, ax = plt.subplots( figsize = (16, 9))
+            newax = ax.twiny()
+            fig.subplots_adjust( bottom = 0.1 )
+
+            newax.set_frame_on(True)
+            newax.patch.set_visible(False)
+            newax.xaxis.set_ticks_position('bottom')
+            newax.xaxis.set_label_position('bottom')
+            newax.spines['bottom'].set_position(('outward', 80))
+
+            # iterate through masks
+            #
+            for mask in selection:
+                ax.hist( mask.trackLen, bins = 100, histtype = 'step', lw = 2.5, fill = False, label = mask.name )
+                newax.hist( mask.trackLen/c*1e9, bins = 100, histtype = 'step', lw = 2.5, fill = False )
+
+            ax.set_xlabel('track length [m]')
+            ax.set_ylabel('$\\gamma\'s$/bin')
+            newax.set_xlabel('arrival time [ns]')
+            
+            if xlim:
+                ax.set_xlim( xlim[0], xlim[1] )
+                newax.set_xlim( xlim[0]/c*1e9, xlim[1]/c*1e9 )
+                
+            if logscale: 
+                ax.set_yscale('log')
+                newax.set_yscale('log')
+            
+            fig.legend( loc = "upper right", bbox_to_anchor = (1,1), bbox_transform = ax.transAxes )
+        
+            
+
+
+
+        

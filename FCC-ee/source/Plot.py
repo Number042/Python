@@ -156,25 +156,53 @@ def plotPrimTrack( df, plotpath, axis = 'all' ):
 
     return
 
-def plot_colEff(df, plotpath, ):
+def plotColEff( df, logscale, save, verbose, plotpath = '/tmp/' ):
     """
-    Method to count the hits +-2m from IP and plot this as fct. of the collimator settings.
-        -- df:          dataframe holding collimation data
-        -- plotpath:    specify location for saving plots
+    Method to visualize data on collimation efficiency stored in an external DF
+        -- df: data source
+        -- logscale: choose whether or not a log scale is applied to enhance details
+        -- save: choose whether or not to save the plot
 
     RETURNS: nothing. Simple plottig tool
     """
-    
-    # first check for right data
-    #
-    aperList = df.CollDim.unique()
-    if aperList == []: raise RuntimeError("No apertures found!")
-    else:
-        print (" -*-*-*-*-*-*-*-*-*-*-*-*- \n", "List of apertures: ", aperList)
+    for key, grp in df.groupby( ['collimator'] ):
+        
+        print('working on', key)
+        
+        color = 'tab:blue'
+        fig, ax = plt.subplots( figsize = (12, 8), dpi = 75)
+        newax = ax.twiny()
+        fig.subplots_adjust( bottom = 0.1 )
 
-    return
+        newax.set_frame_on(True)
+        newax.patch.set_visible(False)
+        newax.xaxis.set_ticks_position('bottom')
+        newax.xaxis.set_label_position('bottom')
+        newax.spines['bottom'].set_position(('outward', 80))
 
-def Plot_Bend_Cones(df, ScaleXY, aper = 0, zrange = [], xrange = [], tangents = 'both', verbose = 0):
+        ax.plot( grp['setting'], grp['rateQC2L'], 'r--', label = 'MSK.QC2L1' )
+        newax.plot( grp['sigma'], grp['rateQC1L'], 'b--', label = 'MSK.QC1L1' )
+
+        ax.set_xlabel('half opening [mm]', color = color )
+        ax.set_ylabel('$\\gamma\'s$/bunch')
+        
+        ax.tick_params(axis = 'x', colors = color )
+        newax.set_xlabel('half opening [$\\sigma$]', color = color )
+        newax.tick_params(axis = 'x', colors = color )
+        
+        if logscale:
+            ax.set_yscale('log')
+            newax.set_yscale('log')
+            
+        fig.legend(loc="upper right", bbox_to_anchor=(1,1), bbox_transform=ax.transAxes)
+        plt.title( 'efficiency COLH.' + str(key) )
+        
+        pltname = 'bckgrRate_' + str(key) +'_' + str(df.name)+ '.pdf'
+        
+        if save: plt.savefig( plotpath + pltname,  bbox_inches = 'tight', dpi = 50)
+
+
+def PlotBendCones(df, ScaleXY, aper = 0, zrange = [], xrange = [], tangents = 'both', verbose = 0):
     """
     Function to plot the tangential lines representing SR fans coming from bending magnets in an accelerator
         -- df: dataframe holding the information

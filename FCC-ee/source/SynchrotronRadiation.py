@@ -37,7 +37,11 @@ class SynchrotronRadiation:
         thefile = uproot.open( ntuple )
         df = thefile['seco_ntuple;1'].pandas.df( columns )
         
+        if 'Names' in columns: df['Name'] = [ name.decode("utf-8") for name in df.Name ]
+        if 'OrigVol' in columns: df['OrigVol'] = [ origvol.decode("utf-8") for origvol in df.OrigVol ]
+
         COLH,COLV = COL
+        
         if COL != ['3.5','3.5']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COL )
         else: print('collimators fully open.')
 
