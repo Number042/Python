@@ -41,25 +41,27 @@ def plot_defaultData( df, ax, plotpath, beam, collSet, size = 'all', Type = 'hit
 
     if verbose > 1: printMats( df.Material.unique() )
 
+    theLabel = str( beam + '_' + size + '_' + collSet )
+
     if Type == 'hit':    
         ax.set_title("SR photons hitting beampipe")
         selection = df[ (df.Creator == 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) == 1) ]
         print(' --- # of entries:', selection.z_eu.count() )        
 
         # ax.hist( df[df.Material == 2].z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str(beam), stacked = False)
-        ax.hist( selection.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str( beam + '_' + collSet ), stacked = False)
+        ax.hist( selection.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = theLabel, stacked = False)
 
     elif Type == 'position':
         ax.set_title("Position of SR photons")
         print(' --- # of entries:', df.z_eu.count() )        
-        ax.hist( df.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str( beam + '_' + collSet ), stacked = False)
+        ax.hist( df.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = theLabel, stacked = False)
 
     elif Type == 'origin':
         ax.set_title("Origin of SR photons")
         selection = df[(df.Process == 0) & (df.Creator == 1 )]
         print(' --- # of entries:', selection.z_eu.count() )        
         
-        ax.hist( selection.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = str( beam + '_' + collSet ), stacked = False) 
+        ax.hist( selection.z_eu, bins = nBin, histtype = 'step', fill = False, linewidth = 2.5, label = theLabel, stacked = False) 
     
     else:
         raise RuntimeError("Invalid selection of Type!")
@@ -156,7 +158,7 @@ def plotPrimTrack( df, plotpath, axis = 'all' ):
 
     return
 
-def plotColEff( df, logscale, save, verbose, plotpath = '/tmp/' ):
+def plotColEff( grp, ax, logscale, save, verbose, plotpath = '/tmp/' ):
     """
     Method to visualize data on collimation efficiency stored in an external DF
         -- df: data source
@@ -165,43 +167,31 @@ def plotColEff( df, logscale, save, verbose, plotpath = '/tmp/' ):
 
     RETURNS: nothing. Simple plottig tool
     """
-    for key, grp in df.groupby( ['collimator'] ):
         
-        print('working on', key)
-        
-        color = 'tab:blue'
-        fig, ax = plt.subplots( figsize = (12, 8), dpi = 75)
-        newax = ax.twiny()
-        fig.subplots_adjust( bottom = 0.1 )
+    color = 'tab:blue'
 
-        newax.set_frame_on(True)
-        newax.patch.set_visible(False)
-        newax.xaxis.set_ticks_position('bottom')
-        newax.xaxis.set_label_position('bottom')
-        newax.spines['bottom'].set_position(('outward', 80))
+    newax = ax.twiny()
 
-        ax.plot( grp['setting'], grp['rateQC2L'], 'r--', label = 'MSK.QC2L1' )
-        newax.plot( grp['sigma'], grp['rateQC1L'], 'b--', label = 'MSK.QC1L1' )
+    newax.set_frame_on(True)
+    newax.patch.set_visible(False)
+    newax.xaxis.set_ticks_position('bottom')
+    newax.xaxis.set_label_position('bottom')
+    newax.spines['bottom'].set_position(('outward', 80))
 
-        ax.set_xlabel('half opening [mm]', color = color )
-        ax.set_ylabel('$\\gamma\'s$/bunch')
-        
-        ax.tick_params(axis = 'x', colors = color )
-        newax.set_xlabel('half opening [$\\sigma$]', color = color )
-        newax.tick_params(axis = 'x', colors = color )
-        
-        if logscale:
-            ax.set_yscale('log')
-            newax.set_yscale('log')
-            
-        fig.legend(loc="upper right", bbox_to_anchor=(1,1), bbox_transform=ax.transAxes)
-        plt.title( 'efficiency COLH.' + str(key) )
-        
-        pltname = 'bckgrRate_' + str(key) +'_' + str(df.name)+ '.pdf'
-        
-        if save: plt.savefig( plotpath + pltname,  bbox_inches = 'tight', dpi = 50)
+    ax.plot( grp['setting'], grp['rateQC2L'], 'r--', label = 'MSK.QC2L1' )
+    newax.plot( grp['sigma'], grp['rateQC1L'], 'b--', label = 'MSK.QC1L1' )
 
-
+    ax.set_xlabel('half opening [mm]', color = color )
+    ax.set_ylabel('$\\gamma\'s$/bunch')
+    
+    ax.tick_params(axis = 'x', colors = color )
+    newax.set_xlabel('half opening [$\\sigma$]', color = color )
+    newax.tick_params(axis = 'x', colors = color )
+    
+    if logscale:
+        ax.set_yscale('log')
+        newax.set_yscale('log')
+        
 def PlotBendCones(df, ScaleXY, aper = 0, zrange = [], xrange = [], tangents = 'both', verbose = 0):
     """
     Function to plot the tangential lines representing SR fans coming from bending magnets in an accelerator

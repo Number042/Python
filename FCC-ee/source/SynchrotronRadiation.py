@@ -42,7 +42,7 @@ class SynchrotronRadiation:
 
         COLH,COLV = COL
         
-        if COL != ['3.5','3.5']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COL )
+        if COL != ['3.5','3.5']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COLV )
         else: print('collimators fully open.')
 
         return df
@@ -61,7 +61,7 @@ class SynchrotronRadiation:
         if self.verbose > 1: print( 'reading beam, size and aperture from', name )
 
         self.__beamType = str( findall( types, name )[0] )
-        self.__beamSize = int( findall( sizes, name )[0] )
+        self.__beamSize = int( findall( sizes, name )[1] )
         if 'coll' in name: self.__aper = str( findall( apers, name )[0] )
         else: self.__aper = ''
 
@@ -76,20 +76,17 @@ class SynchrotronRadiation:
             raise Warning("*** No column OrigVol found in the data set!")
         else: 
             if self.verbose: print( 'forward filling OrigVol, replacing string \"none\" ...' )
-            df['OrigVol'] = df['OrigVol'].replace( b'none' ).ffill()
+            df['OrigVol'] = df['OrigVol'].replace( 'none' ).ffill()
         return df
     
-    def defaultSRData(self, zlim = [], size = 'all', Type = 'hit', nBin = 100, ticks = 10, legCol = 2, save = 0):
+    def defaultSRData(self, zlim = [], Type = 'hit', nBin = 100, ticks = 10, legCol = 2, save = 0):
         """
         Method to plot data from secondary events, taking into account different beam shapes and sizes. 
             -- plotpath:    point to a directory for storing plots
             -- zlim:		array to put zmin and zmax; allows to plot only certain region; default empty 
-            -- beam:        allows to select the beam shape. Available are pencil, gauss, flat and ring
-            -- size:        choose beam sizes; gauss,flat and ring have to start with >0; defaults to 'all'
             -- Type:        choose which spectrum to plot - hits, origin or position
             -- nBin:        choose the binnig, defaults to 100
             -- ticks:       set the number of tickss on the xaxis (acts on binning)
-            -- verbose:     switch on/off verbose output
             -- legCol:      specify number of columns in the legend box, defaults to 2
             -- save:        select whether or not the plots are dumped to pself.df files
         
@@ -100,7 +97,7 @@ class SynchrotronRadiation:
 
         # settings for the plot
         #
-        plt.figure(figsize = (15,10))
+        plt.figure(figsize = (16, 9))
         ax = plt.subplot(111)
         plt.rc('grid', linestyle = "--", color = 'grey')
         plt.grid()
@@ -125,7 +122,7 @@ class SynchrotronRadiation:
 
             if zlim:
                 defDF = defDF[ (defDF.z_eu > zlim[0]) & (defDF.z_eu < zlim[1]) ]
-            plot_defaultData( defDF, ax, self.plotpath, self.__beamType, self.__aper, size, Type, nBin, ticks, self.verbose, legCol, save)        
+            plot_defaultData( defDF, ax, self.plotpath, self.__beamType, self.__aper, str(self.__beamSize), Type, nBin, ticks, self.verbose, legCol, save)        
         
             del defDF
 
@@ -168,7 +165,7 @@ class SynchrotronRadiation:
 
         # settings for the plot
         #
-        plt.figure( figsize = (15,10) )
+        plt.figure( figsize = (16, 9) )
         ax = plt.subplot(111)
         plt.rc('grid', linestyle = "--", color = 'grey')
         plt.grid()
@@ -223,7 +220,7 @@ class SynchrotronRadiation:
         """
         from Plot import plotSrcHits
 
-        plt.figure( figsize = (15,10) )
+        plt.figure( figsize = (16, 9) )
         ax = plt.subplot(111)
         plt.rc('grid', linestyle = '--', color = 'grey')
         plt.grid()
