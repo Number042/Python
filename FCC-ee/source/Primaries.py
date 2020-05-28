@@ -5,7 +5,7 @@ import uproot
 
 class Bunch:
 
-    def __init__(self, ntuples, plotpath = '/tmp/', verbose = 0):
+    def __init__(self, ntuples, emit = [], plotpath = '/tmp/', verbose = 0):
         """
         Class to study G4 output tuple; dedicated to primaries
             -- ntuples:  list of data files (path to the files)
@@ -21,7 +21,8 @@ class Bunch:
 
         if isdir( plotpath ): pass
         else: raise FileNotFoundError("plotpath", plotpath, "doesn't exist!")
-
+        
+        self.emit = emit
         self.verbose = verbose
         self.plotpath = plotpath
 
@@ -36,7 +37,7 @@ class Bunch:
         thefile = uproot.open( ntuple )
         df = thefile[b'prim_nutple;1'].pandas.df( columns )        
 
-        if 'Names' in columns: df['Name'] = [ name.decode("utf-8") for name in df.Name ]
+        if 'Name' in columns: df['Name'] = [ name.decode("utf-8") for name in df.Name ]
         if 'OrigVol' in columns: df['OrigVol'] = [ origvol.decode("utf-8") for origvol in df.OrigVol ]
         
         # if COL != ['3.5','3.5']: print('Collimators not fully opened: \n COLH =', COLH, '\n COLV =', COLV )
@@ -69,10 +70,23 @@ class Bunch:
             if self.verbose > 1: 
                 print("data types: beamType =", type(self.__beamType), 'aperture =', type(self.__aper), "size =", type(self.__beamSize) ) 
 
+    def __beamSizeElm( self, twiss, nameFrmDF ):
+        from numpy import sqrt
+
+        nameSplt = nameFrmDF.split('_')
+        nameInTwiss = '.'.join(nameSplt[:-1])
+        
+        twiss = twiss[ ['NAME','S', 'BETX','BETY'] ]
+        twiss = twiss[ twiss.NAME == nameInTwiss ]
+        print('Using name', nameInTwiss, ':\n', twiss)
+        bmSz = sqrt( self.emit[0]*twiss.iloc[0]['BETX'] ) 
+        
+        return bmSz
+
     def initBeamDistr( self, plane = 'x', logscale = 0, save = 0):
         
         from VisualSpecs import myColors as colors
-
+    
         columns = ['x_eu', 'y_eu', 'z_eu', 'trackLen']
         
         for ntuple in self.ntuples:
@@ -130,10 +144,62 @@ class Bunch:
         """
         return 0
 
-    def BeamDistrElmt():
+    def BeamDistrElmt( self, twiss, names = [], plane = 'x', nbin = 100, save = 0 ):
         """
         Method to plot beam distributions a different elements
         """
+
+        from VisualSpecs import myColors as colors
+        from Tools import sbplSetUp
+
+        columns = ['Name', 'x_eu', 'y_eu', 'z_eu', 'trackLen', 'Type']
+        nmElmt = int(len(names))
+
+        for ntuple in self.ntuples:
+            
+            self.__getBeamAperInfo( ntuple )
+            df = self.__readData( ntuple, columns )
+            df = df[ df.Type == 1 ]
+
+            if self.verbose > 1: print( 'beam passes following elements', df.Name.unique() )
+            axs = sbplSetUp( count = nmElmt, dim = [16, 9] )
+            
+            i = 0
+            
+            for name in names:
+        
+                print( 'looking at beam distribution at', name )
+                selection = df[ df.Name == name ]
+                if self.verbose: print('Number of entries =', len(selection.index) )
+
+                if plane == 'x': 
+
+                    sigm = self.__beamSizeElm( twiss, name )
+                    bmRange = [ selection.x_eu.mean() - 10*sigm, selection.x_eu.mean() + 10*sigm ]
+                    selection = selection[ (selection.x_eu > bmRange[0]) & (selection.x_eu < bmRange[1])  ]
+
+                    if self.verbose:
+                        print('Using range =', bmRange, '\n number of entries in range \n', len(selection.index) )
+                    
+                    data = selection.x_eu*1e3
+                    xlabel = 'x [mm]'
+                
+                elif plane == 'y': 
+                    data = selection.y_eu*1e3
+                    xlabel = 'y [mm]'
+
+                else: raise KeyError('Selected plane', plane, 'invalid')
+                axs[i].hist( data, bins = nbin, lw = 2.5, histtype = 'step', color = colors[i] )
+                axs[i].set_xlabel( xlabel ); axs[i].set_ylabel('primaries/bin')
+                axs[i].set_title( 'distribution in ' + name.split('_')[0] )
+                i += 1
+            
+            plttitle = 'parDistrElm_' + str(self.__beamType) + '_' + str(plane) + '.pdf'
+            plt.tight_layout()
+            if save:
+                print('Saving figure as', self.plotpath + plttitle, '.pdf ... ' )
+                plt.savefig( self.plotpath + plttitle, dpi = 75 )
+
         return 0
 
 
