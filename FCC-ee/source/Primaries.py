@@ -71,10 +71,12 @@ class Bunch:
                 print("data types: beamType =", type(self.__beamType), 'aperture =', type(self.__aper), "size =", type(self.__beamSize) ) 
 
     def __beamSizeElm( self, twiss, nameFrmDF ):
+        
         from numpy import sqrt
 
         nameSplt = nameFrmDF.split('_')
-        nameInTwiss = '.'.join(nameSplt[:-1])
+        if 'DRIFT' in nameSplt: nameInTwiss = '_'.join( nameSplt[:-1] )
+        else: nameInTwiss = '.'.join( nameSplt[:-1] )
         
         twiss = twiss[ ['NAME','S', 'BETX','BETY'] ]
         twiss = twiss[ twiss.NAME == nameInTwiss ]
@@ -168,18 +170,18 @@ class Bunch:
             
             for name in names:
         
-                print( 'looking at beam distribution at', name )
+                print( 'looking at beam distribution in', name )
                 selection = df[ df.Name == name ]
                 if self.verbose: print('Number of entries =', len(selection.index) )
 
                 if plane == 'x': 
 
                     sigm = self.__beamSizeElm( twiss, name )
-                    bmRange = [ selection.x_eu.mean() - 10*sigm, selection.x_eu.mean() + 10*sigm ]
-                    selection = selection[ (selection.x_eu > bmRange[0]) & (selection.x_eu < bmRange[1])  ]
+                    # bmRange = [ selection.x_eu.mean() - 10*sigm, selection.x_eu.mean() + 10*sigm ]
+                    # selection = selection[ (selection.x_eu > bmRange[0]) & (selection.x_eu < bmRange[1])  ]
 
-                    if self.verbose:
-                        print('Using range =', bmRange, '\n number of entries in range \n', len(selection.index) )
+                    # if self.verbose:
+                    #     print('Using range =', bmRange, '\n number of entries in range \n', len(selection.index) )
                     
                     data = selection.x_eu*1e3
                     xlabel = 'x [mm]'

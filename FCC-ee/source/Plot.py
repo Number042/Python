@@ -66,16 +66,18 @@ def plot_defaultData( df, ax, plotpath, beam, collSet, size = 'all', Type = 'hit
     else:
         raise RuntimeError("Invalid selection of Type!")
     
+    ax.axvspan(-10, 10, alpha = 0.15, color = 'lightsteelblue') 
+    del df
+
     return
 
-def plot_Energy(df, ax, plotpath, beam, collSet, size = 'all', Type = 'general', magnets = [], nBin = 100, ticks = 10, verbose = 0, legCol = 2, save = 0):
+def plot_Energy(df, ax, plotpath, beam, collSet, size = 'all', nBin = 100, xlim = [], Type = 'general', magnets = [], ticks = 10, verbose = 0, legCol = 2, save = 0):
     """
     
     """
 
     from VisualSpecs import myColors as colors
-    
-    # matCodes = [2,3,4,5]
+    from numpy import select
     
     if Type == 'general':
         ax.hist( df[df.Process == 0].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str( beam + '_' + collSet ) )
@@ -84,7 +86,26 @@ def plot_Energy(df, ax, plotpath, beam, collSet, size = 'all', Type = 'general',
     elif Type == 'hit':
         if verbose > 1: printMats( df.Material.unique() )
         ax.hist( df[ (df.Creator == 1) & (df.Material.isin(matCodes)) & (df.Material.shift(1) == 1) ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str( beam + '_' + collSet ) )
+
+    elif Type == 'bendVsQuad':
+        df['Keyword'] = select([df.OrigVol.str.contains('B'), df.OrigVol.str.contains('QC'), df.OrigVol.str.contains('SOL')], ['BEND','QUAD','SOLENOID'], default = 'other')
+        df = df[df.Process == 0]
+
+        for key in ['BEND','QUAD']:
+            ax.hist( df[ df.Keyword == key ].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(key) )
     
+    elif Type == 'Solenoid':
+        
+        if magnets == []:
+            df['Keyword'] = select( [df.OrigVol.str.contains('B'), df.OrigVol.str.contains('QC'), df.OrigVol.str.contains('SOL')], ['BEND','QUAD','SOLENOID'], default = 'other' )
+            df = df[(df.Process == 0) & (df.Keyword == 'SOLENOID') ]
+
+            ax.hist(df.Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str('solenoid'))
+        else:
+            incr = 0
+            for magn in magnets:
+                ax.hist( df[(df.OrigVol == magn) & (df.Process == 0)].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(magn), color = colors[incr])
+                incr += 1
     else:
         if magnets == []: raise RuntimeError('*** List of magnets empty ...')
         incr = 0
@@ -92,7 +113,10 @@ def plot_Energy(df, ax, plotpath, beam, collSet, size = 'all', Type = 'general',
             ax.hist( df[(df.OrigVol == magn) & (df.Process == 0)].Egamma*1e6, bins = nBin, histtype = 'step', lw = 2.5, label = str(magn), color = colors[incr])
             incr += 1
         # title = 'photon energy distribution - ' + str(Type)
+    if xlim:
+        ax.set_xlim( xlim[0], xlim[1] )
     
+    del df
     return
 
 def plotSrcHits(df, ax, beam, collSet, elements, nBin = 100, ticks = 5, save = 0, verbose = 0):
@@ -124,9 +148,12 @@ def plotSrcHits(df, ax, beam, collSet, elements, nBin = 100, ticks = 5, save = 0
         if verbose > 1: print( selection )
 
         ax.hist( selection[ (selection.Material.isin(matCodes)) & (selection.Creator == 1) & (selection.Material.shift(1) == 1) ].z_eu, bins = nBin, histtype = 'step', lw = 2.5, fill = False, label = str(elem) )
-        
+
         # if verbose > 1: print (hits.Track)
-        
+    
+    ax.axvspan(-10, 10, alpha = 0.15, color = 'lightsteelblue')     
+    del df
+    
     return 
 
 def plotPrimTrack( df, plotpath, axis = 'all' ):

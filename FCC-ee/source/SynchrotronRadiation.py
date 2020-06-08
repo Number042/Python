@@ -152,7 +152,7 @@ class SynchrotronRadiation:
                 print ('saved plot as', self.plotpath, 'SR_origin_beamshape.pdf')
 
         
-    def energySpectrum(self, Type = 'general', magnets = [], zlim = [], legCol = 2, save = 0):
+    def energySpectrum(self, Type = 'general', nBin = 100, magnets = [], zlim = [], xlim = [], legCol = 2, save = 0):
         """
         Method to plot the energy of SR photons
             -- Type:    global spectrum or magnet specific
@@ -190,14 +190,14 @@ class SynchrotronRadiation:
             if zlim:
                 enrgDF = enrgDF[ (enrgDF.z_eu > zlim[0]) & (enrgDF.z_eu < zlim[1]) ]
 
-            plot_Energy( enrgDF, ax, self.plotpath, self.__beamType, self.__aper, Type = Type, save = save, magnets = magnets, verbose = self.verbose )
+            plot_Energy( enrgDF, ax, self.plotpath, self.__beamType, self.__aper, nBin = nBin, xlim = xlim, Type = Type, save = save, magnets = magnets, verbose = self.verbose )
             del enrgDF
 
         print("plotting done, deleted DF.")
         
         plt.title( 'photon energy distribution - ' + str(Type) )
         plt.legend()
-        ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.1), ncol = legCol)
+        ax.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.2), ncol = legCol)
 
         # mark a 100 keV
         plt.axvline(x = 100, lw = 2.5, ls = '--', color = 'red')
@@ -206,7 +206,7 @@ class SynchrotronRadiation:
             plt.savefig( self.plotpath + "SR_energy_spectrum" + str(Type) + ".pdf", bbox_inches = 'tight', dpi = 50 )
             print ('saved plot as', self.plotpath, 'SR_energy_spectrum' + str(Type) + '.pdf')
     
-    def hitsByElement(self, elements = [], zlim = [], binN = 100, ticksN = 10, save = 0 ):
+    def hitsByElement(self, elements = [], zlim = [], xlim = [], binN = 100, ticksN = 10, save = 0 ):
         """
         Method to select certain elements as sources and plot hits caused BY THESE elements.
         Requires full element names, no groups implemented yet.
@@ -245,6 +245,7 @@ class SynchrotronRadiation:
             plotSrcHits( elmDF, ax, self.__beamType, self.__aper, elements )
             del elmDF
 
+        if xlim: plt.xlim( xlim[0], xlim[1] )
         
         plt.legend()
         ax.legend(loc = 'lower center', bbox_to_anchor = (0.5, -0.2), ncol = 6)
