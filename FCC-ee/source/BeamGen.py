@@ -1,5 +1,4 @@
-from numpy import sqrt, genfromtxt, float32, array, pi, abs, cos, sin
-from random import gauss
+from numpy import sqrt, genfromtxt, float32, array, pi, abs, cos, sin, random
 from matplotlib import pyplot as plt
 from CS_to_EU import FromNorm, RotY
 from TfsTables import TfsReader
@@ -7,10 +6,11 @@ from Tools import sbplSetUp, readTwissParams
 
 class Beam:
     
-    def __init__(self, beamFile, tfs, Npart, halfCross, pc, verbose = 0):
+    def __init__(self, beamFile, strtElm, twiss, Npart, halfCross, pc, verbose = 0):
         
         self.beamFile = beamFile
-        self.tfs = tfs
+        self.strtElm = strtElm
+        self.twiss = twiss
         self.Npart = int(Npart)
         self.verbose = verbose
         self.HalfCross = halfCross
@@ -39,37 +39,46 @@ class Beam:
         elif dim == 'y': 
             if self.verbose: print("selected plane: ", dim, "sigma = ", beamsize[2] )
             return float32(beamsize[2])
+
+    def read_v_EU(self):
+
+        v_eu = genfromtxt( self.beamFile, delimiter = None, skip_header = 3, max_rows = 1 )[3:]
+        if self.verbose: print('reading v_EU from', self.beamFile, '=', v_eu)
         
-    def set_gauss( self ):
+        return array( [float32(v_eu[0]), float32(v_eu[1]), float32(v_eu[2]) ] )
+        
+    def set_gauss( self, beamsize ):
         """
         Method to plot a random Gaussian distribution in x,x' and y,y'.
         Normalization with the emittance epsx
-            -- plotPath: directory to store the plots
+            -- beamsize: specify beam size in x and y as list
 
-        RETURNS: arrays for x,x' and y,y'
+        RETURNS: x,x' and y,y' in normalized coordinates
         """
-        if self.verbose: print ("generate Gaussian beam with ", self.Npart, " particles.")
         
-        # read beam sizes from Fields_from_tfs output. Given is already the std deviation with sqrt(eps)
-        #
-        beamsizeX = self.read_beam_size('x') 
-        beamsizeY = self.read_beam_size('y') 
+        from random import gauss
+        from Tools import Gauss
 
-        # horizontal plane                
-        self.BeamVecX = array([ gauss( 0, beamsizeX ) for i in range(self.Npart) ] )
-        self.BeamVecXprim = array([ gauss( 0, beamsizeX ) for i in range(self.Npart) ] )
+        phi = random.uniform(0, 2*pi)
+        x = random.uniform(0,6)
+        y = random.uniform(0,1)
 
-        # vertical plane
-        self.BeamVecY = array([ gauss( 0, beamsizeY ) for i in range(self.Npart) ] )
-        self.BeamVecYprim = array([ gauss( 0, beamsizeY ) for i in range(self.Npart) ] )
+        val = Gauss(x)
+        if y < val:
+
+            BeamVecX     = beamsize[0]*x*cos(phi)
+            BeamVecXprim = beamsize[0]*x*sin(phi)
+
+            BeamVecY     = beamsize[1]*x*cos(phi)
+            BeamVecYprim = beamsize[1]*x*sin(phi)
+
+            if self.verbose > 1: print ("BeamVecX =", BeamVecX, '\n', "BeamVecY =", BeamVecY)
         
-        if self.verbose > 1: print ("BeamVecX =", self.BeamVecX, '\n', "BeamVecY =", self.BeamVecY)
+            return BeamVecX, BeamVecXprim, BeamVecY, BeamVecYprim
         
-            
-        # better to return v_n_CS directly?
-        return self.BeamVecX, self.BeamVecXprim, self.BeamVecY, self.BeamVecYprim
-    
-    def set_ring(self, Nsig = [2,2] ):
+        else: pass
+
+    def set_ring( self, Nsig, beamsize ):
         """    
         Method to create flat random distribution in x,x'.
         Normalization by +- nsig
@@ -77,21 +86,109 @@ class Beam:
 
         RETURNS: arrays for x,x' and y,y'
         """
+                    
+        # phi = array([2*pi*i/self.Npart for i in range(self.Npart)])
+        phi = random.uniform(0,2*pi)
         
+        # horizontal plane -- generate x,x'
+        #
+        BeamVecX     = abs(Nsig[0])*beamsize[0]*cos(phi)
+        BeamVecXprim = abs(Nsig[0])*beamsize[0]*sin(phi)
+
+        # vertical plane -- generate y,y'
+        #
+        BeamVecY     = abs(Nsig[1])*beamsize[1]*cos(phi)
+        BeamVecYprim = abs(Nsig[1])*beamsize[1]*sin(phi)
+
+        return BeamVecX, BeamVecXprim, BeamVecY, BeamVecYprim
+            
+    def set_expTail( self, Nsig, beamsize):
+
+        from numpy import log
+        from Tools import Gauss, tail
+
+        x = random.uniform(0,6)
+        y = random.uniform(0,1)
+
+        y1 = random.uniform(0,1)
+        y2 = random.uniform(0,1)
+        phi= random.uniform(0,2*pi)
+
+        val = Gauss(x)        
+        xval = beamsize[0]*tail(y1,y2, Nsig[0])
+        yval = beamsize[1]*tail(y1,y2, Nsig[1])
+        
+        if y < val:
+
+            # horizontal plane -- generate x,x'
+            #
+            BeamVecX     = xval*cos(phi)
+            BeamVecXprim = xval*sin(phi)
+            
+            # vertical plane -- generate y,y'
+            #
+            BeamVecY     = yval*cos(phi)
+            BeamVecYprim = yval*sin(phi)
+
+            return BeamVecX, BeamVecXprim, BeamVecY, BeamVecYprim
+        
+        else: pass
+
+    def generate_Bunch( self, Type = 'gauss', Nsig = [10,10] ):
+        
+        from numpy import log, random
+
+        if self.strtElm:
+            print( 'generating beam at', self.strtElm )
+
         beamsizeX = self.read_beam_size('x')
         beamsizeY = self.read_beam_size('y')
-        
-        Phi = array([2*pi*i/self.Npart for i in range(self.Npart)])
-        
-        # horizontal plane
-        self.BeamVecX = array( [ abs(Nsig[0])*beamsizeX*cos(phi) for i,phi in zip(range(self.Npart), Phi) ] ) 
-        self.BeamVecXprim = array( [ abs(Nsig[0])*beamsizeX*sin(phi) for i,phi in zip(range(self.Npart), Phi) ] ) 
-        
-        # vertical plane
-        self.BeamVecY = array( [ abs(Nsig[1])*beamsizeY*cos(phi) for i,phi in zip(range(self.Npart),Phi) ] ) 
-        self.BeamVecYprim = array( [ abs(Nsig[1])*beamsizeY*sin(phi) for i,phi in zip(range(self.Npart),Phi) ] ) 
 
-        return self.BeamVecX, self.BeamVecXprim, self.BeamVecY, self.BeamVecYprim
+        # trafo from normalized CS to CS (at start element)
+        #
+        FrmNrm = FromNorm( self.twiss.loc[self.twiss.NAME == self.strtElm,'BETX'].values[0], self.twiss.loc[self.twiss.NAME == self.strtElm,'BETY'].values[0], 
+                           self.twiss.loc[self.twiss.NAME == self.strtElm,'ALFX'].values[0], self.twiss.loc[self.twiss.NAME == self.strtElm,'ALFY'].values[0] )
+
+        if self.verbose: print('At', self.strtElm, '\nFromNorm = \n', FrmNrm)
+
+    
+        v_EU = genfromtxt( self.beamFile, delimiter = None, skip_header = 3, max_rows = 1 )[3:]
+        if self.verbose: print('reading EU start position from', self.beamFile, '=', v_EU, '\n', type(v_EU) )
+
+        posEU = []; dirEU = []
+        i = 0
+        while i < self.Npart:
+            
+            # generate x,x' and y,y'
+            #
+            if Type == 'gauss':
+                prims = self.set_gauss( [beamsizeX,beamsizeY] )
+            elif Type == 'ring':
+                prims = self.set_ring( Nsig, [beamsizeX,beamsizeY] )
+            elif Type == 'tails':
+                prims = self.set_expTail( Nsig, [beamsizeX,beamsizeY] )
+            
+            # add to v_n_CS
+            #
+            if prims is not None:
+                # in_n_CS = array( [func returns tuple for X (based on input), func returns tuple for Y (based on input), 0, 0] ) same func
+                in_n_CS = array( [prims[0], prims[1], prims[2], prims[3], 0, 0] )
+                # if self.verbose > 1: print(i, prims, '\n', in_n_CS )
+            
+                # trafo v_n_CS to v_CS
+                #
+                inCS = FrmNrm @ in_n_CS
+                posCS = array( [inCS[0], inCS[2], inCS[4]] )
+                dirCS = array( [inCS[1], inCS[3], sqrt(1 - inCS[1]**2 - inCS[3]**2)] )
+
+                # rot to EU
+                #
+                posEU.append( (RotY(-self.HalfCross, posCS) +  v_EU) )
+                dirEU.append( RotY(-self.HalfCross, dirCS) ) 
+                
+                i += 1
+
+        return posEU, dirEU
 
     def gen_BeamEnergy(self, Edes, acceptance):
         """
@@ -111,10 +208,10 @@ class Beam:
 
         RETURNS: array of single dir_EU
         """
-        # new way to implement: hard coded with line number for respective element.
+        # new way wiso implemewist: hard coded with line number for respective element.
         #
-        lineNumber =  readTwissParams( self.tfs, elm )
-        twissParam = genfromtxt( self.tfs, delimiter = None, skip_header = lineNumber, max_rows = 1 )
+        lineNumber =  readTwissParams( self.twiss, elm )
+        twissParam = genfromtxt( self.twiss, delimiter = None, skip_header = lineNumber, max_rows = 1 )
         betx, alfx, bety, alfy = twissParam[3], twissParam[4], twissParam[6], twissParam[7]
         FrmNrm = FromNorm( betx, bety, alfx, alfy )
         print('FromNorm(', elm, ') = \n', FrmNrm)

@@ -154,7 +154,7 @@ class Bunch:
         from VisualSpecs import myColors as colors
         from Tools import sbplSetUp
 
-        columns = ['Name', 'x_eu', 'y_eu', 'z_eu', 'trackLen', 'Type']
+        columns = ['Name', 'x_eu', 'y_eu', 'z_eu', 'trackLen', 'Type', 'Process']
         nmElmt = int(len(names))
 
         for ntuple in self.ntuples:
@@ -164,20 +164,28 @@ class Bunch:
             df = df[ df.Type == 1 ]
 
             if self.verbose > 1: print( 'beam passes following elements', df.Name.unique() )
-            axs = sbplSetUp( count = nmElmt, dim = [16, 9] )
+            # axs = sbplSetUp( count = nmElmt, dim = [16, 9] )
+            figSize = (30, 8)
+
+            if nmElmt == 3: fig,axes = plt.subplots(1, nmElmt, sharex = False, sharey = True, figsize = figSize )
+            elif nmElmt == 4: fig,axes = plt.subplots(2, 2, sharex = 'column', sharey = 'row', figsize = figSize )
+            else: fig,axes = plt.subplots( 3, 3, sharex = 'column', sharey = 'row', figsize = figSize )
             
             i = 0
             
             for name in names:
         
                 print( 'looking at beam distribution in', name )
-                selection = df[ df.Name == name ]
-                if self.verbose: print('Number of entries =', len(selection.index) )
+                
+                selection = df[ (df.Name == name) ]
+                
 
                 if plane == 'x': 
-
-                    sigm = self.__beamSizeElm( twiss, name )
-                    # bmRange = [ selection.x_eu.mean() - 10*sigm, selection.x_eu.mean() + 10*sigm ]
+                    
+                    if name == 'BWL_2_v': selection = selection[ selection.trackLen > 199 ]
+                    if self.verbose: print('Number of entries =', len(selection.index) )
+                    # sigm = self.__beamSizeElm( twiss, name )
+                    # bmRange = [ selection.x_eu.mean() - 5*sigm, selection.x_eu.mean() + 5*sigm ]
                     # selection = selection[ (selection.x_eu > bmRange[0]) & (selection.x_eu < bmRange[1])  ]
 
                     # if self.verbose:
@@ -187,20 +195,25 @@ class Bunch:
                     xlabel = 'x [mm]'
                 
                 elif plane == 'y': 
+
+                    if self.verbose: print('Number of entries =', len(selection.index) )
                     data = selection.y_eu*1e3
                     xlabel = 'y [mm]'
 
                 else: raise KeyError('Selected plane', plane, 'invalid')
-                axs[i].hist( data, bins = nbin, lw = 2.5, histtype = 'step', color = colors[i] )
-                axs[i].set_xlabel( xlabel ); axs[i].set_ylabel('primaries/bin')
-                axs[i].set_title( 'distribution in ' + name.split('_')[0] )
+                axes[i].hist( data, bins = nbin, lw = 2.5, histtype = 'step', color = colors[i] )
+                axes[i].set_xlabel( xlabel )
+                axes[i].set_title( name.split('_')[0] )
+
                 i += 1
-            
+                del selection
+
+            plt.set_ylabel = ('primaries/bin')            
             plttitle = 'parDistrElm_' + str(self.__beamType) + '_' + str(plane) + '.pdf'
             plt.tight_layout()
             if save:
-                print('Saving figure as', self.plotpath + plttitle, '.pdf ... ' )
-                plt.savefig( self.plotpath + plttitle, dpi = 75 )
+                print('Saving figure as', self.plotpath + plttitle, ' ... ' )
+                plt.savefig( self.plotpath + plttitle, bbox_inches = 'tight', dpi = 75 )
 
         return 0
 

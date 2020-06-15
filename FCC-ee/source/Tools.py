@@ -73,7 +73,9 @@ def sbplSetUp(count, dim = [15,10], asp = 'auto'):
     plt.figure( figsize = (dim[0], dim[1]) )
     axs = []
     for i in range(count):
-        ax = plt.subplot(321+i) 
+        if count == 3: 
+            ax = plt.subplot( 331 + i ) 
+        else: ax = plt.subplot( 321 + i ) 
         ax.set_aspect(asp)
         axs.append(ax)
     
@@ -192,3 +194,12 @@ def collSet( geomFile, collName, collh, thickness, verbose = 0 ):
             else: sources.write( line )
             i += 1
     return 0
+
+from numpy import exp
+def Gauss(x):
+    return x*exp(-x**2/2)
+
+from numpy import log
+def tail(y1, y2, N):
+    return y1 - log(y2 + 1/exp(N - 1))
+
