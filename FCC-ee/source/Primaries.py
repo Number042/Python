@@ -52,7 +52,7 @@ class Bunch:
 
         # input to check for beam characteristics and aperture information; works simply on filenames alone
         #
-        types = 'pencil|gauss|ring|flat'
+        types = 'pencil|Gaussian|Ring|Flat|Tails'
         sizes = r'\d{2}|\d{1}'
         apers = r'\D(\d{4})\D|\D(\d{6})\D'
 
@@ -88,9 +88,15 @@ class Bunch:
     def initBeamDistr( self, plane = 'x', logscale = 0, save = 0):
         
         from VisualSpecs import myColors as colors
-    
+        from numpy import histogram, hstack
         columns = ['x_eu', 'y_eu', 'z_eu', 'trackLen']
         
+        plt.figure(figsize = (16, 9))
+        ax = plt.subplot(111)
+        plt.rc('grid', linestyle = "--", color = 'grey')
+        plt.grid()
+
+        distr = []; labels = []
         for ntuple in self.ntuples:
             
             self.__getBeamAperInfo( ntuple )
@@ -113,32 +119,37 @@ class Bunch:
         
             elif plane == 'y':
                 data = df.y_eu.tolist()
-                title = 'initial beam vertical plane'; xlabel = 'y [m]'
+                data = [dat*1e3 for dat in data]
+                title = 'initial beam vertical plane'; xlabel = 'y [mm]'
             
             else: raise KeyError('Selected plane', plane, 'invalid')
             
-            plt.figure(figsize = (16, 9))
-            ax = plt.subplot(111)
-            plt.rc('grid', linestyle = "--", color = 'grey')
-            plt.grid()
-
-            ax.hist( data, bins = 100, color = colors[3], label = str(df.name) + '_' + str(self.__beamSize) + '$\\sigma$', histtype='step', lw = 2.5)
-    
+            distr.append( data )
+            labels.append( str(df.name) + '_' + str(self.__beamSize) + '$\\sigma$' )
             print('plane is', plane, 'title is', title)
             
-            ax.legend() 
             if logscale: ax.set_yscale('log')
 
             ax.set_title( title ); ax.set_xlabel( xlabel ); ax.set_ylabel( 'particles/bin' )
             
-            plt.tight_layout()
-            pltname = 'initBeam_' + str(df.name) + '_' + str(plane) + '.pdf'
-            if save: 
-                print( 'save plot as', self.plotpath, pltname, '...' )
-                plt.savefig( self.plotpath + pltname, dpi = 75)
-    
-        return 0
-    
+        # determine equal bin spacing
+        #
+        bins = histogram( hstack( (distr) ), bins = 100)[1]
+        
+        i = 0
+        for datSet, tag in zip(distr, labels):
+            ax.hist( datSet, bins = bins, color = colors[i], label = tag, histtype = 'step', lw = 2.5)
+            i += 1
+
+        ax.legend() 
+        plt.tight_layout()
+
+        pltname = 'initBeam_' + str(df.name) + '_' + str(plane) + '.pdf'
+        if save: 
+            print( 'save plot as', self.plotpath, pltname, '...' )
+            plt.savefig( self.plotpath + pltname, dpi = 75)
+
+        return 0    
 
     def primTrk():
         """
