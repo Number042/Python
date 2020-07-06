@@ -53,7 +53,7 @@ class SynchrotronRadiation:
         # works simply on filenames alone
         #
         #     pattern = 'pencil\d{1}|gauss\d{2}|gauss\d{1}|ring\d{2}|ring\d{1}|flat\d{2}|flat\d{1}'
-        types = 'pencil|gauss|ring|flat'
+        types = 'pencil|Gaussian|Ring|Flat|Tails'
         sizes = r'\d{2}|\d{1}'
         apers = r'\D(\d{4})\D|\D(\d{6})\D'
 
@@ -140,16 +140,25 @@ class SynchrotronRadiation:
 
         if save == 1:
             if Type == 'hit':
-                plt.savefig( self.plotpath + "SR_hits_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-                print ('saved plot as', self.plotpath, 'SR_hits_beamshape.pdf')
+                if zlim: plotname = "SR_hits_z" + str(zlim[0]) + "_" + str(zlim[1]) + "_.pdf" 
+                else: plotname = "SR_hits.pdf"
+                # plt.savefig( self.plotpath + "SR_hits.pdf", bbox_inches = 'tight', dpi = 150 )
+                # print ('saved plot as', self.plotpath, 'SR_hits.pdf')
 
             elif Type == 'position':
-                plt.savefig( self.plotpath + "SR_position_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-                print ('saved plot as', self.plotpath, 'SR_position_beamshape.pdf')
+                if zlim: plotname = "SR_position_z" + str(zlim[0]) + "_" + str(zlim[1]) + "_.pdf"
+                else: plotname = "SR_position.pdf"
+                # plt.savefig( self.plotpath + "SR_position.pdf", bbox_inches = 'tight', dpi = 75 )
+                # print ('saved plot as', self.plotpath, 'SR_position.pdf')
 
             elif Type == 'origin':
-                plt.savefig( self.plotpath + "SR_origin_beamshape.pdf", bbox_inches = 'tight', dpi = 150 )
-                print ('saved plot as', self.plotpath, 'SR_origin_beamshape.pdf')
+                if zlim: plotname = "SR_origin_z" + str(zlim[0]) + "_" + str(zlim[1]) + "_.pdf"
+                else: plotname = "SR_origin.pdf"
+                # plt.savefig( self.plotpath + "SR_origin.pdf", bbox_inches = 'tight', dpi = 150 )
+                # print ('saved plot as', self.plotpath, 'SR_origin.pdf')
+
+            plt.savefig( self.plotpath + plotname, bbox_inches = 'tight', dpi = 75 )
+            print ( 'saved plot as', self.plotpath, plotname )
 
         
     def energySpectrum(self, Type = 'general', nBin = 100, magnets = [], zlim = [], xlim = [], legCol = 2, save = 0):

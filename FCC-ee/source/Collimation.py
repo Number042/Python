@@ -58,8 +58,9 @@ class SRMasks:
         df = df[ condition ]
         if df.empty: raise ValueError('Empty Dataframe!')
 
-        mskQC1L1 = df[ ((df.Name == 'MASKQC1L1_2') | (df.Name == 'DRIFT_8630')) ]; mskQC1L1.name = 'MSK.QC1L1'
+        # mskQC1L1 = df[ ((df.Name == 'MASKQC1L1_2') | (df.Name == 'DRIFT_8630')) ]; mskQC1L1.name = 'MSK.QC1L1'
         mskQC2L1 = df[ ((df.Name == 'MASKQC2L1_2') | (df.Name == 'DRIFT_8624')) ]; mskQC2L1.name = 'MSK.QC2L1'
+        mskQC1L1 = df[ df.Name.str.contains('_UpStreamBeamPipe_SRmask') ]; mskQC1L1.name = 'MSK.QC1L1'
         mskQC1R1 = df[ ((df.Name == 'MASKQC1R1_2') | (df.Name == 'DRIFT_1')) ]; mskQC1R1.name = 'MSK.QC1R1' 
         mskQC2R1 = df[ ((df.Name == 'MASKQC2R1_2') | (df.Name == 'DRIFT_7')) ]; mskQC2R1.name = 'MSK.QC2R1'
 
@@ -86,7 +87,7 @@ class SRMasks:
 
         # input to check for beam characteristics and aperture information; works simply on filenames alone
         #
-        types = 'pencil|gauss|ring|flat'
+        types = 'pencil|Gaussian|Ring|Flat|Tails'
         sizes = r'\d{2}|\d{1}'
         apers = r'\D(\d{4})\D|\D(\d{6})\D'
 
