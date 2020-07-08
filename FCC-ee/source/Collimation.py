@@ -64,7 +64,11 @@ class SRMasks:
         mskQC1R1 = df[ ((df.Name == 'MASKQC1R1_2') | (df.Name == 'DRIFT_1')) ]; mskQC1R1.name = 'MSK.QC1R1' 
         mskQC2R1 = df[ ((df.Name == 'MASKQC2R1_2') | (df.Name == 'DRIFT_7')) ]; mskQC2R1.name = 'MSK.QC2R1'
 
-        selection = [mskQC2L1, mskQC1L1, mskQC1R1, mskQC2R1]
+        # select central IP chamber (+/- 1m around IP) by material=Gold
+        #
+        cntrChmbr = df[ df.Material == 4]; cntrChmbr.name = 'cntrChmbr'
+
+        selection = [mskQC2L1, mskQC1L1, mskQC1R1, mskQC2R1, cntrChmbr]
 
         frac = self.Np/self.N_MC
         print( 'fraction of particles =', frac )

@@ -37,7 +37,7 @@ class SynchrotronRadiation:
         thefile = uproot.open( ntuple )
         df = thefile['seco_ntuple;1'].pandas.df( columns )
         
-        if 'Names' in columns: df['Name'] = [ name.decode("utf-8") for name in df.Name ]
+        if 'Name' in columns: df['Name'] = [ name.decode("utf-8") for name in df.Name ]
         if 'OrigVol' in columns: df['OrigVol'] = [ origvol.decode("utf-8") for origvol in df.OrigVol ]
 
         COLH,COLV = COL

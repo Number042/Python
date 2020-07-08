@@ -207,6 +207,7 @@ def plotColEff( grp, ax, logscale, save, verbose, plotpath = '/tmp/' ):
 
     ax.plot( grp['setting'], grp['rateQC2L'], 'r--', label = 'MSK.QC2L1' )
     newax.plot( grp['sigma'], grp['rateQC1L'], 'b--', label = 'MSK.QC1L1' )
+    newax.plot( grp['sigma'], grp['rateCntrChm'], 'g--', label = 'central Chamber')
 
     ax.set_xlabel('half opening [mm]', color = color )
     ax.set_ylabel('$\\gamma\'s$/bunch')
