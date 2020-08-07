@@ -58,17 +58,17 @@ class SRMasks:
         df = df[ condition ]
         if df.empty: raise ValueError('Empty Dataframe!')
 
-        # mskQC1L1 = df[ ((df.Name == 'MASKQC1L1_2') | (df.Name == 'DRIFT_8630')) ]; mskQC1L1.name = 'MSK.QC1L1'
-        mskQC2L1 = df[ ((df.Name == 'MASKQC2L1_2') | (df.Name == 'DRIFT_8624')) ]; mskQC2L1.name = 'MSK.QC2L1'
-        mskQC1L1 = df[ df.Name.str.contains('_UpStreamBeamPipe_SRmask') ]; mskQC1L1.name = 'MSK.QC1L1'
-        mskQC1R1 = df[ ((df.Name == 'MASKQC1R1_2') | (df.Name == 'DRIFT_1')) ]; mskQC1R1.name = 'MSK.QC1R1' 
-        mskQC2R1 = df[ ((df.Name == 'MASKQC2R1_2') | (df.Name == 'DRIFT_7')) ]; mskQC2R1.name = 'MSK.QC2R1'
+        mskQC2L = df[ ((df.Name == 'MASKQC2L1_2') | (df.Name == 'DRIFT_8619')) ]; mskQC2L.name = 'MSK.QC2L'
+        mskQC1L = df[ (df.Name.str.contains("_SRmask")) ]; mskQC1L.name = 'MSK.QC1L'
+
+        # mskQC1R1 = df[ ((df.Name == 'MASKQC1R1_2') | (df.Name == 'DRIFT_1')) ]; mskQC1R1.name = 'MSK.QC1R1' 
+        # mskQC2R1 = df[ ((df.Name == 'MASKQC2R1_2') | (df.Name == 'DRIFT_7')) ]; mskQC2R1.name = 'MSK.QC2R1'
 
         # select central IP chamber (+/- 1m around IP) by material=Gold
         #
         cntrChmbr = df[ df.Material == 4]; cntrChmbr.name = 'cntrChmbr'
 
-        selection = [mskQC2L1, mskQC1L1, mskQC1R1, mskQC2R1, cntrChmbr]
+        selection = [mskQC2L, mskQC1L, cntrChmbr]
 
         frac = self.Np/self.N_MC
         print( 'fraction of particles =', frac )
@@ -191,7 +191,7 @@ class SRMasks:
         return 0
 
     
-    def efficiency( self, extdf, logscale, save, xlim = [], Type = 'collEff' ):
+    def efficiency( self, extdf, logscale, save, ylim = [], sigm = 0, xlim = [], Type = 'collEff' ):
         """
         Number of photons at masks location as function of collimator closure
         Method to count the hits +-2m from IP and plot this as fct. of the collimator settings.
@@ -212,8 +212,10 @@ class SRMasks:
                 plt.grid()
                 fig.subplots_adjust( bottom = 0.1 )
 
-                plotColEff( grp, ax, logscale, save, self.verbose, plotpath = self.plotpath )
+                plotColEff( grp, ax, logscale, save, self.verbose, ylim, sigm, plotpath = self.plotpath )
 
+                plt.axvline(x = sigm, lw = 2.5, ls = '-', color = 'steelblue')
+        
                 fig.legend(loc = "upper right", bbox_to_anchor = (1, 1), bbox_transform = ax.transAxes)
                 plt.title( 'efficiency COLH.' + str(key) + ' -- ' + str(extdf.name) )    
                 pltname = 'bckgrRate_' + str(key) +'_' + str(extdf.name) + '.pdf'

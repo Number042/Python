@@ -185,7 +185,7 @@ def plotPrimTrack( df, plotpath, axis = 'all' ):
 
     return
 
-def plotColEff( grp, ax, logscale, save, verbose, plotpath = '/tmp/' ):
+def plotColEff( grp, ax, logscale, save, verbose, ylim = [], sigm = 0, plotpath = '/tmp/' ):
     """
     Method to visualize data on collimation efficiency stored in an external DF
         -- df: data source
@@ -208,7 +208,12 @@ def plotColEff( grp, ax, logscale, save, verbose, plotpath = '/tmp/' ):
     ax.plot( grp['setting'], grp['rateQC2L'], 'r--', label = 'MSK.QC2L1' )
     newax.plot( grp['sigma'], grp['rateQC1L'], 'b--', label = 'MSK.QC1L1' )
     newax.plot( grp['sigma'], grp['rateCntrChm'], 'g--', label = 'central Chamber')
+    
+    if ylim != []: plt.ylim( ylim[0], ylim[1] )
 
+    # add a vertical line at certain sigma
+    if sigm != 0: plt.axvline(x = sigm, lw = 2.5, ls = '--', color = 'red')
+        
     ax.set_xlabel('half opening [mm]', color = color )
     ax.set_ylabel('$\\gamma\'s$/bunch')
     

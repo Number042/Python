@@ -121,9 +121,9 @@ class Processes:
 
         # return graph
 
-    def showerEnerg( self, process = 'all', figsize = [15,10], xlim = [] ):
+    def showerEnerg( self, process = 'all', figsize = [15,10], Elim = [] ):
 
-        graph = plt.figure( figsize = ( figsize[0], figsize[1]) )
+        plt.figure( figsize = ( figsize[0], figsize[1]) )
         plt.yscale('log'); plt.grid()
         plt.title('EM showers - energy distribution')
         plt.xlabel('E [keV]'); plt.ylabel('entries/bin')
@@ -146,7 +146,9 @@ class Processes:
                 elif crtr == 4: proc = 'Rayl'
                 elif crtr == 5: proc = 'annihil'
 
-                if xlim: subframe = subframe[ ( subframe.z_eu > xlim[0] ) & ( subframe.z_eu < xlim[1] ) ]
+                if Elim:
+                    if self.background == 'charged': subframe = subframe[ ( subframe.Ptot*1e6 > Elim[0] ) & ( subframe.Ptot*1e6 < Elim[1] ) ]
+                    else: subframe = subframe[ ( subframe.Egamma*1e6 > Elim[0] ) & ( subframe.Egamma*1e6 < Elim[1]) ]
 
                 if self.background == 'photons': enrg = subframe.Egamma*1e6                
                 elif self.background == 'charged': enrg = subframe.Ptot*1e6
@@ -154,7 +156,8 @@ class Processes:
                 plt.hist( enrg, bins = 200, stacked = False, histtype = 'step', lw = 2.5, fill = False, label = proc )
 
             del df
-
+        
+        # if xlim: plt.xlim( xlim[0], xlim[1] )
         plt.legend() 
         pltname = "particlesEMShowerEnrg_" + self.background + ".pdf"
         
