@@ -6,10 +6,11 @@ from Tools import sbplSetUp, readTwissParams
 
 class Beam:
     
-    def __init__(self, beamFile, strtElm, twiss, Npart, halfCross, pc, verbose = 0):
+    def __init__(self, beamFile, strtElm, twiss, Emit, Npart, halfCross, pc, verbose = 0):
         
         self.beamFile = beamFile
         self.strtElm = strtElm
+        self.Emit = Emit
         self.twiss = twiss
         self.Npart = int(Npart)
         self.verbose = verbose
@@ -46,8 +47,25 @@ class Beam:
         if self.verbose: print('reading v_EU from', self.beamFile, '=', v_eu)
         
         return array( [float32(v_eu[0]), float32(v_eu[1]), float32(v_eu[2]) ] )
+
+    def set_pencil( self ):
+
+        # maybe not required
+        #
+        phi = random.uniform(0, 2*pi)
+        x = random.uniform(0,1)
+
+        # all centered at 0 
+        #
+        BeamVecX     = 0*x*cos(phi)
+        BeamVecXprim = 0*x*sin(phi)
+
+        BeamVecY     = 0*x*cos(phi)
+        BeamVecYprim = 0*x*sin(phi)
+
+        return BeamVecX, BeamVecXprim, BeamVecY, BeamVecYprim
         
-    def set_gauss( self, beamsize ):
+    def set_gauss( self ):
         """
         Method to plot a random Gaussian distribution in x,x' and y,y'.
         Normalization with the emittance epsx
@@ -63,6 +81,11 @@ class Beam:
         x = random.uniform(0,6)
         y = random.uniform(0,1)
 
+        print('Beam size not provided. Read from TWISS based on start element', self.strtElm )
+        sigmX = sqrt( self.twiss.loc[ self.twiss.NAME == self.strtElm,'BETX' ].values[0]*self.Emit[0] )
+        sigmY = sqrt( self.twiss.loc[ self.twiss.NAME == self.strtElm,'BETY' ].values[0]*self.Emit[1] )
+        beamsize = [sigmX, sigmY]
+        
         val = Gauss(x)
         if y < val:
 
@@ -134,7 +157,7 @@ class Beam:
         
         else: pass
 
-    def generate_Bunch( self, Type = 'gauss', Nsig = [10,10] ):
+    def generate_Bunch( self, Type = 'pencil', Nsig = [10,10] ):
         
         from numpy import log, random
 
@@ -161,7 +184,9 @@ class Beam:
             
             # generate x,x' and y,y'
             #
-            if Type == 'gauss':
+            if Type == 'pencil':
+                prims = self.set_pencil()
+            elif Type == 'gauss':
                 prims = self.set_gauss( [beamsizeX,beamsizeY] )
             elif Type == 'ring':
                 prims = self.set_ring( Nsig, [beamsizeX,beamsizeY] )
@@ -191,6 +216,8 @@ class Beam:
         return posEU, dirEU
 
     def gen_BeamEnergy(self, Edes, acceptance):
+
+        from random import gauss
         """
         Function to generate the beam energy according to a Gaussian distribution.
             -- Edes:        design energy
@@ -210,10 +237,11 @@ class Beam:
         """
         # new way wiso implemewist: hard coded with line number for respective element.
         #
-        lineNumber =  readTwissParams( self.twiss, elm )
-        twissParam = genfromtxt( self.twiss, delimiter = None, skip_header = lineNumber, max_rows = 1 )
-        betx, alfx, bety, alfy = twissParam[3], twissParam[4], twissParam[6], twissParam[7]
-        FrmNrm = FromNorm( betx, bety, alfx, alfy )
+        # lineNumber =  readTwissParams( self.twiss, elm )
+        # twissParam = genfromtxt( self.twiss, delimiter = None, skip_header = lineNumber, max_rows = 1 )
+        # betx, alfx, bety, alfy = twissParam[3], twissParam[4], twissParam[6], twissParam[7]
+        FrmNrm = FromNorm( self.twiss.loc[self.twiss.NAME == elm,'BETX'].values[0], self.twiss.loc[self.twiss.NAME == elm,'BETY'].values[0], 
+                           self.twiss.loc[self.twiss.NAME == elm,'ALFX'].values[0], self.twiss.loc[self.twiss.NAME == elm,'ALFY'].values[0] )
         print('FromNorm(', elm, ') = \n', FrmNrm)
 
         vecsNCS = array( [array([self.BeamVecX[i], self.BeamVecXprim[i], self.BeamVecY[i], self.BeamVecYprim[i], 0, 0]) for i in range(self.Npart) ] )

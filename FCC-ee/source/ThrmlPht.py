@@ -7,23 +7,30 @@ import matplotlib.pyplot as plt
 # input all global parameters for the beam here at initialization (as a dict)? 
 class Scatter():
 
-    def __init__(self, beamfile, tfs, Npart, HalfCross, pc, T, verbose = 0 ):
+    def __init__(self, beamfile, tfs, Emit, Npart, HalfCross, pc, T, plot = 0, plotpath = '/tmp/', save = 0, verbose = 0 ):
         self.beamfile = beamfile
         self.tfs = tfs
+        self.Emit = Emit
         self.Npart = int(Npart)
         self.HalfCross = HalfCross
         self.pc = pc
         self.T = T
+        self.plot = plot,
+        self.plotpath = plotpath,
+        self.save = save
         self.verbose = verbose
+        if verbose > 1: print( 'check init arguments:', self.beamfile, '\n', self.tfs, '\n', self.Npart, '\n', self.HalfCross, '\n', self.pc, '\n', self.T )
 
         self.m0 = 511e-6 # in [GeV]
         self.labels = ['E', '$p_x$', '$p_y$', '$p_z$']
         self.verbCond = self.verbose and self.Npart < 1e5
+        
 
     def genBeam( self, elm ):
-        b1 = Beam(self.beamfile, self.tfs, self.Npart, self.HalfCross, self.pc)
+        b1 = Beam( self.beamfile, elm, self.tfs, self.Emit, self.Npart, self.HalfCross, self.pc )
         b1.set_gauss( )
-        p_e = b1.gen_BeamMom( elm )
+        # p_e = b1.gen_BeamMom( elm )
+        p_e = b1.generate_Bunch()[1]
 
         # generate beam energy based on normal distribution (2% acceptance), calculate lorentz gamma and beta
         Scatter.Ebeam = b1.gen_BeamEnergy(self.pc, 0.02*self.pc)
@@ -40,28 +47,33 @@ class Scatter():
         
         # some visualization of the inital four momentum
         #
-        if self.verbCond:
-
+        if self.plot:
             axs = sbplSetUp(4)
             for j in range(0,4):
                 axs[j].hist([mom[j] for mom in Scatter.qe_in], bins = 100)
                 axs[j].set_xlabel(self.labels[j])
             plt.tight_layout()
+            print( 'plot incoming electron 4momentum' )
 
+            # if self.save: plt.savefig( self.plotpath + '', dpi = 75)
 
         # rotate the beam exactly to z direction (in most cases rather minor correction)
         #
         Scatter.angles_qe = array( [getRotVec3(vec) for vec in p_e] )
-
         Scatter.qe_in_z = array([RotToZ(ang[0], ang[1]) @ vec for vec,ang in zip(Scatter.qe_in, Scatter.angles_qe)])
 
-        if self.verbCond:
-            print( len(p_e), '\n', p_e, '\n', Scatter.qe_in, '\n', Scatter.angles_qe, '\n', Scatter.qe_in_z )
+        if self.plot:
             axs = sbplSetUp(4)
             for j in range(0,4):
-                axs[j].hist([mom[j] for mom in Scatter.qe_in_z], bins = 100)
+                axs[j].hist( [mom[j] for mom in Scatter.qe_in_z], bins = 100 )
                 axs[j].set_xlabel(self.labels[j])
             plt.tight_layout()
+            print( 'plot 4momentum after rotating qe_in_z to z \n' )
+
+            # if self.save: plt.savefig( self.plotpath + '', dpi = 75 )
+        
+        if self.verbCond:
+            print( 'length(p_e)', len(p_e), '\n p_e =', p_e, '\n qe_in =', Scatter.qe_in, '\n angles_qe =', Scatter.angles_qe, '\n qe_in_z =', Scatter.qe_in_z )
 
     def genPhot(self):
         """
@@ -69,18 +81,24 @@ class Scatter():
         Also rotates the photon momenta in z direction (same amount as for the inital beam).
         """
         from Generators import genPlanck
+        from VisualSpecs import myColors as colors
         k = 8.617e-5 # given in [eV/K]
 
         values = genPlanck(self.Npart)
-        Scatter.Ei = k*self.T*values/1e9
-        
-        
+        Scatter.Ei = k*self.T*values
+
+        if self.plot:
+            plotname = "initial photon energy"
+            plt.figure( figsize = (16, 9) )
+            plt.hist( Scatter.Ei, histtype = 'step', lw = 2.5, color = colors[3], bins = 200 )
+            plt.xlabel('$E_\\gamma$ [eV]'); plt.ylabel('photons/bin')
+            plt.title( plotname )
+
+            if self.save: plt.savefig( '/tmp/initial photon energy.pdf', bbox_inches = 'tight', dpi = 75 )
+         
         if self.verbCond:
-            print(len(Scatter.Ei), Scatter.Ei)
-            plt.figure( figsize = (15,10) )
-            plt.hist( Scatter.Ei, bins = 200 )
-            plt.xlabel('$E_\\gamma$ [GeV]'); plt.ylabel('photons/bin')
-        
+            print('len(Ei) =', len(Scatter.Ei), 'Ei =', Scatter.Ei)
+       
         # generate cosPsi, sinPsi and phi
         #
         CosPsi = array( [random.uniform(-1,1) for i in range(self.Npart)] )
@@ -96,17 +114,14 @@ class Scatter():
         # some visualization
         #
         if self.verbCond:
-            print(len(Scatter.qk_in), len(Scatter.qk_in_z))  
+            print( 'len(qk_in) =', len(Scatter.qk_in), '\n len(qk_in_z) =', len(Scatter.qk_in_z) )  
             axs = sbplSetUp(4)
             for j in range(4):
                 axs[j].hist( [vec[j] for vec in Scatter.qk_in], bins = 100 )
             axs1 = sbplSetUp(4)
             for j in range(4):
                 axs1[j].hist( [vec[j] for vec in Scatter.qk_in_z], bins = 100)
-
-
             # plt.figure(); plt.plot( qk2 ); plt.xlabel('#'); plt.ylabel('$q_k^2$');
-
 
     def toREST(self):
         from RelKin import Boost
@@ -125,6 +140,7 @@ class Scatter():
         # some visualization
         #
         if self.verbCond:
+            print( 'qkstar =', Scatter.qkstar, '\n pk_star =', pk_star, '\n qestar =', Scatter.qestar )
             axs = sbplSetUp(4, [10, 15])
             for j in range(0,4):
                 axs[j].hist( [vec[j] for vec in Scatter.qkstar], bins = 100 ); 
@@ -141,7 +157,8 @@ class Scatter():
 
         from Generators import genCompt, kratio
 
-        cost = [ genCompt( qkst[0], self.m0 ) for qkst in Scatter.qkstar ]
+        cost = [ genCompt( qkst[0], self.m0 )[0] for qkst in Scatter.qkstar ]
+        print( 'cost =', cost )
         sint = [ sqrt(1 - cos**2) for cos in cost]
         phi = [ random.uniform(0,2*pi) for i in range(self.Npart)]
 
@@ -156,7 +173,7 @@ class Scatter():
         # qkstsct2 = [ fourMom2(qkstsct) for qkstsct in qkstar_sct_z ]
 
         if self.verbCond:
-
+            print('kstar =', kstar, '\n qkstar_sct_z =', Scatter.qkstar_sct_z )
             axs = sbplSetUp(4)
             axs[0].hist( kstar, bins = 200); axs[0].set_xlabel('$E$')
             axs[2].hist( cost, bins = 200); axs[2].set_xlabel('$cos\\theta$')
