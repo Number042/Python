@@ -1,15 +1,16 @@
 from pandas import read_table
 import matplotlib.pyplot as plt
-from numpy import pi
+from numpy import pi, double
 from Tools import rel_s
 
 # read twiss files, should be as flexible as possible
 class TfsReader:
     
-    def __init__(self, tfs):
+    def __init__(self, tfs, verbose = 1):
         self.tfs = tfs
+        self.verbose = verbose
 
-    def read_twiss(self, relS = 0, verbose = 0):
+    def read_twiss(self, relS = 0 ):
         
         """
         Function to read general twiss files.
@@ -31,7 +32,7 @@ class TfsReader:
         # read columns and drop the first one (*) to actually match the right header
         #
         twissHeader = df.columns[1:]
-        if verbose: print( 'set twiss header:', twissHeader )
+        if self.verbose: print( 'set twiss header:', twissHeader )
 
         # drop last NaN column and reset header 
         # (1st single space in TWISS header causes the issue )
@@ -43,7 +44,7 @@ class TfsReader:
         #
         Lmax = df.S.max()
 
-        if verbose:
+        if self.verbose:
             print("----------------------------------")
             print(" DF contains: \n", df.keys(), "\n data tpes are: \n", df.dtypes)
             print("----------------------------------")
@@ -53,6 +54,18 @@ class TfsReader:
             df["rel_S"] = df.apply( lambda row: rel_s( df, row, Lmax = Lmax ), axis = 1 )
         
         return df
+
+    def read_twiss_header( self, parameter ):
+        
+        header = read_table( self.tfs, nrows = 45, sep = r'\s+' )
+        header = header.drop( header.columns[[0, 2]], axis = 1 )
+        
+        header.columns = ['Parameter', 'Value']
+        
+        param = double( header.loc[ header.Parameter == parameter,'Value'].values[0])
+        if self.verbose: print( param, type(param))
+
+        return param
     
     def read_survey(self, relS = 0, verbose = 0):
         """
